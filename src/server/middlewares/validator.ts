@@ -40,7 +40,6 @@ export default (
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const { err, value } = validate(req[context], schema);
-console.log("req student_data", req.student_data)
     if (!err) {
       req[context] = value;
       return next();

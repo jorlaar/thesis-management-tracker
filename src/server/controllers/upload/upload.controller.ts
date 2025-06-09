@@ -27,7 +27,6 @@ export default class UploadController extends BaseController {
 
       // Access other form fields
       const otherField = req.body.otherField;
-      console.log('>>>>> otherField', otherField);
       const fileUpload = await cloudinaryService.uploadFile(
         file_url as unknown as string,
         `babcock-thesis`,

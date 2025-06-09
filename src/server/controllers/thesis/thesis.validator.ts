@@ -1,13 +1,10 @@
 import { THESIS_CHAPTER } from '@app/data/thesis/thesis.model';
 import joi from 'joi';
 
-export const thesisUploadValidator = joi.object({
-  file_url: joi
-    .string()
-    .required()
-    .uri(), // Ensure it's a valid URL
-    // .regex(/\.(docx?|pdf)$/i) // Match .doc, .docx, or .pdf (case-insensitive)
-    // .message('File must be a Word (.doc/.docx) or PDF (.pdf)'),
+export const studentUploadThesisValidator = joi.object({
+  file_url: joi.string().required().uri(), // Ensure it's a valid URL
+  // .regex(/\.(docx?|pdf)$/i) // Match .doc, .docx, or .pdf (case-insensitive)
+  // .message('File must be a Word (.doc/.docx) or PDF (.pdf)'),
   comment: joi.string().trim(),
   lecturer_email: joi
     .string()
@@ -24,3 +21,33 @@ export const thesisUploadValidator = joi.object({
     )
     .required()
 });
+
+export const lecturerUploadCommentValidator = joi.object({
+  file_url: joi.string().uri(), // Ensure it's a valid URL
+  // .regex(/\.(docx?|pdf)$/i) // Match .doc, .docx, or .pdf (case-insensitive)
+  // .message('File must be a Word (.doc/.docx) or PDF (.pdf)'),
+  comment: joi.string().trim().required(),
+  student_email: joi
+    .string()
+    .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
+    .pattern(/^[a-zA-Z0-9._%+-]+@pg\.babcock\.edu\.ng$/)
+    .trim()
+    .required(),
+});
+
+export const methodologyUploadCommentValidator = joi.object({
+  file_url: joi.string().uri(), // Ensure it's a valid URL
+  // .regex(/\.(docx?|pdf)$/i) // Match .doc, .docx, or .pdf (case-insensitive)
+  // .message('File must be a Word (.doc/.docx) or PDF (.pdf)'),
+  comment: joi.string().trim().required(),
+  student_email: joi
+    .string()
+    .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
+    .pattern(/^[a-zA-Z0-9._%+-]+@pg\.babcock\.edu\.ng$/)
+    .trim()
+    .required(),
+});
+
+
+
+
