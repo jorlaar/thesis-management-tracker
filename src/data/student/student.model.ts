@@ -14,8 +14,7 @@ export interface IStudentModel extends Model {
   level: StudentLevel;
   faculty: string;
 
-
-  // add transaction_pin change timestamp
+  // add auth_password change timestamp
   password_changed_at?: Date;
 
   updatePassword: (plainText: string) => Promise<IStudentModel>;

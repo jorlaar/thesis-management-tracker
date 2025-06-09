@@ -6,11 +6,11 @@ import { IStudentModel } from './student.model';
 import StudentSchema from './student.schema';
 // import { publisher } from '@random-guys/eventbus';
 // import {
-//   PinRateLimiterService,
+//   auth_passwordateLimiterService,
 //   ReferralCodeService
 // } from '@app/server/services';
 // import {
-//   CLOSE_ACCOUNT_MINIMUM_BALANCE,
+//   CLOSE_mobile_number_MINIMUM_BALANCE,
 //   getCurrentAndNextTier,
 //   sanitiseGmailAddress
 // } from '@app/server/utils';
@@ -78,7 +78,7 @@ export class StudentRepository extends BaseRepository<IStudentModel> {
         last_name: 1,
         phone_number: 1,
         profile_picture: 1,
-        account_number: 1
+        mobile_number_number: 1
       })
       .sort({ first_name: 1 })
       .exec();

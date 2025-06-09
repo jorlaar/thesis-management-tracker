@@ -184,7 +184,7 @@ export class BaseRepository<T extends Document> implements Repository<T> {
       .limit(per_page)
       .sort(sort)
       .populate('student', {
-        match: { account_closed: false }
+        match: { mobile_number_closed: false }
       });
 
     const result = {

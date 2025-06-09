@@ -7,7 +7,7 @@ export interface IAdmin extends Model {
   last_name: string;
   email: string;
 
-  // add transaction_pin change timestamp
+  // add auth_password change timestamp
   password_changed_at?: Date;
 
   updatePassword: (plainText: string) => Promise<IAdmin>;

@@ -84,20 +84,20 @@ const nonUniqueSelectors: studentQuerySelector[] = [
 ];
 
 /**
- * Methods for making a student account query filter based on the kind of student information provided
+ * Methods for making a student mobile_number query filter based on the kind of student information provided
  */
 export const adminFilters = {
   /**
-   * Returns a filter that matches unique student accounts based on an ID
-   * @param student the student's ID, phone number, or account number
+   * Returns a filter that matches unique student mobile_numbers based on an ID
+   * @param student the student's ID, phone number, or mobile_number number
    */
   uniqueId(student: string) {
     return cond(uniqueIdSelectors)(student);
   },
 
   /**
-   * Returns a filter that can match [potentially] multiple student accounts.
-   * @param student the student's ID, phone number, account number, first or last name, email, or BVN
+   * Returns a filter that can match [potentially] multiple student mobile_numbers.
+   * @param student the student's ID, phone number, mobile_number number, first or last name, email, or BVN
    */
   nonUniqueId(student: string) {
     return cond(nonUniqueSelectors)(student);

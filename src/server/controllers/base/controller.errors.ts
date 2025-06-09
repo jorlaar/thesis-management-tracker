@@ -73,7 +73,7 @@ export class ConflictError extends ControllerError {
 
 export class studentNotFoundError extends ControllerError {
   constructor(message: string) {
-    const errorMessage = `Account: (${message}) not found`;
+    const errorMessage = `mobile_number: (${message}) not found`;
     super(errorMessage);
 
     this.code = HttpStatus.NOT_FOUND;
@@ -95,7 +95,7 @@ export class studentExistsError extends ControllerError {
 export class ExistingEmailAndPhoneNumberMismatchError extends ControllerError {
   constructor() {
     const errorMessage =
-      'This number or email is linked to an existing account. Can’t remember your details? Recover your account in 2 minutes! ';
+      'This number or email is linked to an existing mobile_number. Can’t remember your details? Recover your mobile_number in 2 minutes! ';
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;
@@ -138,7 +138,7 @@ export class InvalidBVNError extends ControllerError {
 export class GovernmentIDNotFoundError extends ControllerError {
   constructor() {
     const errorMessage =
-      'No record found for the provided BVN/NIN. Please verify the details and try again. If issue persists, kindly contact support via gomoneysupport@gomoney.global';
+      'No record found for the provided BVN/NIN. Please verify the details and try again. If issue persists, kindly contact support via john_doesupport@john_doexyz';
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;
@@ -149,7 +149,7 @@ export class GovernmentIDNotFoundError extends ControllerError {
 export class GovernmentIDNoMatchError extends ControllerError {
   constructor() {
     const errorMessage =
-      'No matching record found for the details provided. Please verify and try again. If issue persists, kindly contact support via gomoneysupport@gomoney.global';
+      'No matching record found for the details provided. Please verify and try again. If issue persists, kindly contact support via john_doesupport@john_doexyz';
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;
@@ -160,7 +160,7 @@ export class GovernmentIDNoMatchError extends ControllerError {
 export class GovernmentIDTransposedMatchError extends ControllerError {
   constructor() {
     const errorMessage =
-      "Name order doesn't match the arrangement on BVN/NIN. Please correct it and try again. If issue persists, kindly contact support via gomoneysupport@gomoney.global";
+      "Name order doesn't match the arrangement on BVN/NIN. Please correct it and try again. If issue persists, kindly contact support via john_doesupport@john_doexyz";
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;
@@ -171,7 +171,7 @@ export class GovernmentIDTransposedMatchError extends ControllerError {
 export class GovernmentIDPartialMatchError extends ControllerError {
   constructor() {
     const errorMessage =
-      'Name partially matches BVN/NIN. Please review and correct before trying again. If issue persists, kindly contact support via gomoneysupport@gomoney.global';
+      'Name partially matches BVN/NIN. Please review and correct before trying again. If issue persists, kindly contact support via john_doesupport@john_doexyz';
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;
@@ -182,7 +182,7 @@ export class GovernmentIDPartialMatchError extends ControllerError {
 export class GovernmentIDInvalidResponseError extends ControllerError {
   constructor() {
     const errorMessage =
-      "Oops! We couldn't retrieve enough information from our provider to verify your details. Please contact support at gomoneysupport@gomoney.global for assistance.";
+      "Oops! We couldn't retrieve enough information from our provider to verify your details. Please contact support at john_doesupport@john_doexyz for assistance.";
     super(errorMessage);
 
     this.code = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -192,7 +192,7 @@ export class GovernmentIDInvalidResponseError extends ControllerError {
 
 export class IDVerificationLimitError extends ControllerError {
   constructor() {
-    const errorMessage = `Your failed BVN/NIN verification limit has been exceeded. Kindly contact support via gomoneysupport@gomoney.global`;
+    const errorMessage = `Your failed BVN/NIN verification limit has been exceeded. Kindly contact support via john_doesupport@john_doexyz`;
     super(errorMessage);
 
     this.code = HttpStatus.TOO_MANY_REQUESTS;
@@ -224,7 +224,7 @@ export class BVNNotSetError extends ControllerError {
 export class BVNExistsError extends ControllerError {
   constructor() {
     const errorMessage =
-      'An account already exists with the provided BVN, don’t remember your details?\nYou can recover your account in 2 minutes!';
+      'An mobile_number already exists with the provided BVN, don’t remember your details?\nYou can recover your mobile_number in 2 minutes!';
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;
@@ -235,7 +235,7 @@ export class BVNExistsError extends ControllerError {
 export class NINExistsError extends ControllerError {
   constructor() {
     const errorMessage =
-      'Oops! We are unable to verify your details at the moment, kindly contact support via gomoneysupport@gomoney.global';
+      'Oops! We are unable to verify your details at the moment, kindly contact support via john_doesupport@john_doexyz';
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;
@@ -258,7 +258,7 @@ export class InvalidPasswordError extends ControllerError {
 export class LockedOutError extends ControllerError {
   constructor() {
     const errorMessage =
-      'Your account has been restricted. Kindly contact support';
+      'Your mobile_number has been restricted. Kindly contact support';
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;
@@ -266,10 +266,10 @@ export class LockedOutError extends ControllerError {
   }
 }
 
-export class AccountClosedError extends ControllerError {
+export class mobile_numberClosedError extends ControllerError {
   constructor() {
     const errorMessage =
-      'Details provided is linked to a closed account. Kindly contact support to recover your account';
+      'Details provided is linked to a closed mobile_number. Kindly contact support to recover your mobile_number';
     super(errorMessage);
 
     this.code = HttpStatus.FORBIDDEN;
@@ -277,7 +277,7 @@ export class AccountClosedError extends ControllerError {
   }
 }
 
-export class AccountRedisLockedError extends ControllerError {
+export class mobile_numberRedisLockedError extends ControllerError {
   constructor() {
     const errorMessage =
       'student has been unlocked by admin and should be redirected to the password recovery flow';
@@ -422,9 +422,9 @@ export class KycNotSetError extends ControllerError {
   }
 }
 
-export class AccountBlockRangeInvalidError extends ControllerError {
+export class mobile_numberBlockRangeInvalidError extends ControllerError {
   constructor(min: number, max: number) {
-    const errorMessage = `invalid account block range (min: ${min}, max: ${max})`;
+    const errorMessage = `invalid mobile_number block range (min: ${min}, max: ${max})`;
     super(errorMessage);
 
     this.code = HttpStatus.EXPECTATION_FAILED;
@@ -432,9 +432,9 @@ export class AccountBlockRangeInvalidError extends ControllerError {
   }
 }
 
-export class AccountBlockRangeOverlapError extends ControllerError {
+export class mobile_numberBlockRangeOverlapError extends ControllerError {
   constructor(min: number, max: number, _min: number, _max: number) {
-    const errorMessage = `account block range (min: ${min}, max: ${max}) overlaps with existing range (min: ${_min}, max: ${_max})`;
+    const errorMessage = `mobile_number block range (min: ${min}, max: ${max}) overlaps with existing range (min: ${_min}, max: ${_max})`;
     super(errorMessage);
 
     this.code = HttpStatus.EXPECTATION_FAILED;
@@ -442,7 +442,7 @@ export class AccountBlockRangeOverlapError extends ControllerError {
   }
 }
 
-export class AccountBlockCodeUsedError extends ControllerError {
+export class mobile_numberBlockCodeUsedError extends ControllerError {
   constructor() {
     const errorMessage = `this channel is in use`;
     super(errorMessage);
@@ -547,7 +547,7 @@ export class InvalidstudentAgentError extends ControllerError {
 
 export class WalletBalanceBlockError extends ControllerError {
   constructor(tier: number, next_tier: number) {
-    const errorMessage = `You have exceeded the limit for tier ${tier}. You need to upgrade your account to tier ${next_tier} to continue transacting.`;
+    const errorMessage = `You have exceeded the limit for tier ${tier}. You need to upgrade your mobile_number to tier ${next_tier} to continue transacting.`;
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;
@@ -557,16 +557,16 @@ export class WalletBalanceBlockError extends ControllerError {
 
 export class FrozenWalletError extends ControllerError {
   constructor() {
-    super('Your account has been frozen. Kindly contact support.');
+    super('Your mobile_number has been frozen. Kindly contact support.');
 
     this.code = HttpStatus.BAD_REQUEST;
     this.error_code = 102;
   }
 }
 
-export class MinimumAccountBalanceError extends ControllerError {
+export class Minimummobile_numberBalanceError extends ControllerError {
   constructor() {
-    super(`Please empty out your account before proceeding`);
+    super(`Please empty out your mobile_number before proceeding`);
 
     this.code = HttpStatus.BAD_REQUEST;
     this.error_code = 118;

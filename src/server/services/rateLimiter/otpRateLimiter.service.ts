@@ -13,7 +13,7 @@ const OTP_TRIES_KEY = 'otp:reg';
 export class OTPRateLimiterService {
   /**
    * Build the redis key
-   * @param phone_number student account number
+   * @param phone_number student mobile_number number
    */
 
   private attemptsKey(phone_number: string) {
