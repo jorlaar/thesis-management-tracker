@@ -26,7 +26,7 @@ export default class UploadController extends BaseController {
       const thesis_tracking_id = generateId();
 
       // Access other form fields
-      const otherField = req.body.otherField;
+      req.body.otherField;
       const fileUpload = await cloudinaryService.uploadFile(
         file_url as unknown as string,
         `babcock-thesis`,
