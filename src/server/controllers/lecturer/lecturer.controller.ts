@@ -33,10 +33,9 @@ export default class lecturerController extends BaseController {
         id: lecturer._id,
         email: lecturer.email,
         department: lecturer.department,
-        faculty: lecturer.faculty
+        faculty: lecturer.faculty,
+        type: 'lecturer'
       };
-      console.log('>>>>>> lecturer', lecturer);
-
       const token = await jwt.sign(
         {
           data: signedData
@@ -44,8 +43,6 @@ export default class lecturerController extends BaseController {
         env.jwt_secret,
         { expiresIn: '1d' }
       );
-      console.log('>>>>>> lecturer', token);
-
       this.handleSuccess(req, res, { id: lecturer._id, token });
     } catch (err) {
       this.handleError(req, res, err);
@@ -60,13 +57,12 @@ export default class lecturerController extends BaseController {
   ) {
     try {
       const lecturer = await lecturerRepo.model.findOne({ email: body.email });
-      console.log('>>>>>> lecturer', lecturer);
       let signedData = {
         id: lecturer._id,
         email: lecturer.email,
         department: lecturer.department,
-        faculty: lecturer.faculty
-
+        faculty: lecturer.faculty,
+        type: 'lecturer'
       };
 
       const token = jwt.sign(
@@ -76,8 +72,6 @@ export default class lecturerController extends BaseController {
         env.jwt_secret,
         { expiresIn: '1d' }
       );
-      console.log('>>>>>> lecturer', token);
-
       this.handleSuccess(req, res, { id: lecturer._id, token });
     } catch (err) {
       this.handleError(req, res, err);

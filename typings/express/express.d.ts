@@ -4,6 +4,7 @@ declare global {
   namespace Express {
     export interface Request {
       data: any;
+      user_data: any;
       student_data: any;
       lecturer_data: any;
       admin_data: any;

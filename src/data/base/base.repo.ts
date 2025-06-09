@@ -39,7 +39,6 @@ export class BaseRepository<T extends Document> implements Repository<T> {
    */
   async create(attributes: any, session: ClientSession = null): Promise<T> {
     try {
-      console.log(">>>>>> attr", attributes)
       const result = session
         ? (await this.model.create([attributes], { session }))[0]
         : await this.model.create(attributes);

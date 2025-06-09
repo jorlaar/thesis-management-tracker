@@ -8,9 +8,6 @@ import logger from '@app/common/services/logger';
 export default async (req: Request, res: Response, next: NextFunction) => {
   let token: string;
 
-  console.log('>>>>>> req.headers.authorization', req.headers.authorization);
-  console.log('>>>>>> req.headers.authorization', req.body.token);
-
   if (
     req.headers.authorization &&
     req.headers.authorization.split(' ')[0] === 'Bearer'
@@ -29,7 +26,6 @@ export default async (req: Request, res: Response, next: NextFunction) => {
       StatusCodes.UNAUTHORIZED
     );
   }
-  console.log('>>>>>> payload', token);
 
   let payload;
 
@@ -71,10 +67,8 @@ export default async (req: Request, res: Response, next: NextFunction) => {
       StatusCodes.INTERNAL_SERVER_ERROR
     );
   }
-//   console.log('>>>>>> payload', payload);
 
-  req.student_data = payload.data;
-  console.log('>>>>>>   req.data', req.student_data);
+  req.user_data = payload.data;
 
   next();
 };

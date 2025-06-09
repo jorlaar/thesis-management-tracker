@@ -31,7 +31,6 @@ export default class App {
    */
   private registerMiddlewares() {
     this.server.setConfig((app: Application) => {
-      // console.log(">>>>>> app", app)
 
       app.use(express.json({ limit: '10mb' }));
       app.use(express.urlencoded({ extended: false, limit: '10mb' }));

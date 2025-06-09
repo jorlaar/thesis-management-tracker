@@ -33,10 +33,9 @@ export default class methodologyController extends BaseController {
         id: methodology._id,
         email: methodology.email,
         department: methodology.department,
-        faculty: methodology.faculty
+        faculty: methodology.faculty,
+        type: 'methodology'
       };
-      console.log('>>>>>> methodology', methodology);
-
       const token = await jwt.sign(
         {
           data: signedData
@@ -44,8 +43,6 @@ export default class methodologyController extends BaseController {
         env.jwt_secret,
         { expiresIn: '1d' }
       );
-      console.log('>>>>>> methodology', token);
-
       this.handleSuccess(req, res, { id: methodology._id, token });
     } catch (err) {
       this.handleError(req, res, err);
@@ -62,12 +59,12 @@ export default class methodologyController extends BaseController {
       const methodology = await methodologyRepo.model.findOne({
         email: body.email
       });
-      console.log('>>>>>> methodology', methodology);
       let signedData = {
         id: methodology._id,
         email: methodology.email,
         department: methodology.department,
-        faculty: methodology.faculty
+        faculty: methodology.faculty,
+        type: 'methodology'
       };
 
       const token = jwt.sign(
@@ -77,8 +74,6 @@ export default class methodologyController extends BaseController {
         env.jwt_secret,
         { expiresIn: '1d' }
       );
-      console.log('>>>>>> methodology', token);
-
       this.handleSuccess(req, res, { id: methodology._id, token });
     } catch (err) {
       this.handleError(req, res, err);

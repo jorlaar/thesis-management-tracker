@@ -1,7 +1,7 @@
 import { Model } from '../base';
 
 export interface IThesis extends Model {
-  comment_id?: string;
+  comment?: string;
   lecturer_id?: string;
   methodology_id?: string;
   file_url?: string;
@@ -11,8 +11,8 @@ export interface IThesis extends Model {
   lecturer_review_time_stamp?: Date;
   methodology_review_time_stamp?: Date;
   thesis_status: THESIS_STATUS;
-  thesis_level: THESIS_LEVEL;
-  thesis_chapter: THESIS_CHAPTER[];
+  thesis_level?: THESIS_LEVEL;
+  thesis_chapter?: THESIS_CHAPTER[];
 }
 
 export type THESIS_LEVEL = 'pre_field' | 'post_field';
