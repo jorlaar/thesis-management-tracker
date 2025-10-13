@@ -19,7 +19,7 @@ import studentRepo from '@app/data/student/student.repo';
 import thesisRepo from '@app/data/thesis/thesis.repo';
 import authVerify from '@app/server/middlewares/auth.verify';
 
-@controller('/admin', authVerify)
+@controller('/admin')
 export default class adminController extends BaseController {
   /**
    * signup admin
@@ -81,7 +81,7 @@ export default class adminController extends BaseController {
     }
   }
 
-  @httpGet('/:studentEmail/one')
+  @httpGet('/:studentEmail/one', authVerify)
   async adminGetMostRecentThesis(
     @request() req: Request,
     @response() res: Response,
@@ -110,7 +110,7 @@ export default class adminController extends BaseController {
     }
   }
 
-  @httpGet('/:thesisId/view')
+  @httpGet('/:thesisId/view', authVerify)
   async adminGetOneThesis(
     @request() req: Request,
     @response() res: Response,
@@ -134,7 +134,7 @@ export default class adminController extends BaseController {
     }
   }
 
-  @httpGet('/:studentEmail/all')
+  @httpGet('/:studentEmail/all', authVerify)
   async adminGetAllStudentThesis(
     @request() req: Request,
     @response() res: Response,
@@ -175,7 +175,7 @@ export default class adminController extends BaseController {
   }
 
   // add tracker endpoint for analysis
-  @httpGet('/:studentEmail/submission/timetrend')
+  @httpGet('/:studentEmail/submission/timetrend', authVerify)
   async adminGetAllStudentThesisSubmissionTimeTrend(
     @request() req: Request,
     @response() res: Response,
