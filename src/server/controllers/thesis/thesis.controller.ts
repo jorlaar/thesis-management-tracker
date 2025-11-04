@@ -1,8 +1,3 @@
-//upload thesis
-// create upload file
-// lecturer review thesis either with comment or no comment
-//methodology review thesis with comment or no comment
-
 import { Request, Response } from 'express';
 import { BaseController } from '@app/server/controllers/base/base.controller';
 import validator from '@app/server/middlewares/validator';
@@ -26,11 +21,8 @@ import {
   ThesisDTO,
   ThesisQuery
 } from './thesis.dto';
-// import env from '@app/common/config/env';
 import authVerify from '@app/server/middlewares/auth.verify';
-// import studentRepo from '@app/data/student/student.repo';
 import lecturerRepo from '@app/data/lecturer/lecturer.repo';
-// import cloudinaryService from '@app/server/services/cloudinary/cloudinary.service';
 import { generateId } from '@app/server/utils';
 import thesisRepo from '@app/data/thesis/thesis.repo';
 import { THESIS_STATUS } from '@app/data/thesis/thesis.model';

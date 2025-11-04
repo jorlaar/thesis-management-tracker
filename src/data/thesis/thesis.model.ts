@@ -1,11 +1,13 @@
 import { Model } from '../base';
 
 export interface IThesis extends Model {
-  comment?: string;
+  // comment?: string;
+  comment_id?: string;
   lecturer_id?: string;
   methodology_id?: string;
   file_url?: string;
   student_id: string;
+  id?: string;
   thesis_tracking_id: string;
   student_upload_time_stamp?: Date;
   lecturer_review_time_stamp?: Date;

@@ -28,21 +28,23 @@ export default class StudentController extends BaseController {
     try {
       const student = await studentRepo.create(body);
 
-      let signedData = {
+      let signedData: object = {
         id: student._id,
         email: student.email,
         department: student.department,
         faculty: student.faculty,
         type: 'student'
       };
-      const token = await jwt.sign(
+
+      const token = jwt.sign(
         {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: '1d' }
+        { expiresIn: Number(env.expires_at) }
       );
-      this.handleSuccess(req, res, { id: student._id, token });
+
+      this.handleSuccess(req, res, { ...signedData, token });
     } catch (err) {
       this.handleError(req, res, err);
     }
@@ -56,7 +58,16 @@ export default class StudentController extends BaseController {
   ) {
     try {
       const student = await studentRepo.model.findOne({ email: body.email });
-      let signedData = {
+
+      let signedData: object = {
+        id: student._id,
+        email: student.email,
+        department: student.department,
+        faculty: student.faculty,
+        type: 'student'
+      };
+
+      let data: object = {
         id: student._id,
         email: student.email,
         department: student.department,
@@ -69,9 +80,10 @@ export default class StudentController extends BaseController {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: '1d' }
+        { expiresIn: env.expires_at }
       );
-      this.handleSuccess(req, res, { id: student._id, token });
+
+      this.handleSuccess(req, res, { ...data, token });
     } catch (err) {
       this.handleError(req, res, err);
     }

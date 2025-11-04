@@ -33,21 +33,21 @@ export default class adminController extends BaseController {
     try {
       const admin = await adminRepo.create(body);
 
-      let signedData = {
+      let signedData: object = {
         id: admin._id,
         email: admin.email,
         type: 'admin'
       };
 
-      const token = await jwt.sign(
+      const token = jwt.sign(
         {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: '1d' }
+        { expiresIn: Number(env.expires_at) }
       );
 
-      this.handleSuccess(req, res, { id: admin._id, token });
+      this.handleSuccess(req, res, { ...signedData, token });
     } catch (err) {
       this.handleError(req, res, err);
     }
@@ -61,7 +61,8 @@ export default class adminController extends BaseController {
   ) {
     try {
       const admin = await adminRepo.model.findOne({ email: body.email });
-      let signedData = {
+
+      let signedData: object = {
         id: admin._id,
         email: admin.email,
         type: 'admin'
@@ -72,10 +73,10 @@ export default class adminController extends BaseController {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: '1d' }
+        { expiresIn: Number(env.expires_at) }
       );
 
-      this.handleSuccess(req, res, { id: admin._id, token });
+      this.handleSuccess(req, res, { ...signedData, token });
     } catch (err) {
       this.handleError(req, res, err);
     }
@@ -247,7 +248,6 @@ export default class adminController extends BaseController {
         }
       });
     } catch (error) {
-
       this.handleError(req, res, error);
     }
   }

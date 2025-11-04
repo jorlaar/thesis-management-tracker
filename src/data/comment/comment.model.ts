@@ -6,4 +6,5 @@ export interface IComment extends Model {
   thesis_id: string;
   lecturer_id?: string;
   methodology_id?: string;
+  student_id?: string;
 }

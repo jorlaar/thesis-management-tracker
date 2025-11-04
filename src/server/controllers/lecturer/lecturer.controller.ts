@@ -3,7 +3,6 @@ import { BaseController } from '@app/server/controllers/base/base.controller';
 import validator from '@app/server/middlewares/validator';
 import {
   controller,
-  // httpGet,
   httpPost,
   response,
   request,
@@ -29,21 +28,23 @@ export default class lecturerController extends BaseController {
     try {
       const lecturer = await lecturerRepo.create(body);
 
-      let signedData = {
+      let signedData: object = {
         id: lecturer._id,
         email: lecturer.email,
         department: lecturer.department,
         faculty: lecturer.faculty,
         type: 'lecturer'
       };
-      const token = await jwt.sign(
+
+      const token = jwt.sign(
         {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: '1d' }
+        { expiresIn: Number(env.expires_at) }
       );
-      this.handleSuccess(req, res, { id: lecturer._id, token });
+
+      this.handleSuccess(req, res, { ...signedData, token });
     } catch (err) {
       this.handleError(req, res, err);
     }
@@ -57,7 +58,8 @@ export default class lecturerController extends BaseController {
   ) {
     try {
       const lecturer = await lecturerRepo.model.findOne({ email: body.email });
-      let signedData = {
+
+      let signedData: object = {
         id: lecturer._id,
         email: lecturer.email,
         department: lecturer.department,
@@ -70,9 +72,10 @@ export default class lecturerController extends BaseController {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: '1d' }
+        { expiresIn: Number(env.expires_at) }
       );
-      this.handleSuccess(req, res, { id: lecturer._id, token });
+
+      this.handleSuccess(req, res, { ...signedData, token });
     } catch (err) {
       this.handleError(req, res, err);
     }
