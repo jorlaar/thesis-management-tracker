@@ -29,21 +29,23 @@ export default class methodologyController extends BaseController {
     try {
       const methodology = await methodologyRepo.create(body);
 
-      let signedData = {
+      let signedData: object = {
         id: methodology._id,
         email: methodology.email,
         department: methodology.department,
         faculty: methodology.faculty,
         type: 'methodology'
       };
-      const token = await jwt.sign(
+
+      const token = jwt.sign(
         {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: '1d' }
+        { expiresIn: Number(env.expires_at) }
       );
-      this.handleSuccess(req, res, { id: methodology._id, token });
+
+      this.handleSuccess(req, res, { ...signedData, token });
     } catch (err) {
       this.handleError(req, res, err);
     }
@@ -59,7 +61,8 @@ export default class methodologyController extends BaseController {
       const methodology = await methodologyRepo.model.findOne({
         email: body.email
       });
-      let signedData = {
+
+      let signedData: object = {
         id: methodology._id,
         email: methodology.email,
         department: methodology.department,
@@ -72,9 +75,10 @@ export default class methodologyController extends BaseController {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: '1d' }
+        { expiresIn: Number(env.expires_at) }
       );
-      this.handleSuccess(req, res, { id: methodology._id, token });
+
+      this.handleSuccess(req, res, { ...signedData, token });
     } catch (err) {
       this.handleError(req, res, err);
     }

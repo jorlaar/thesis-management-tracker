@@ -18,7 +18,7 @@ export class DB {
     await mongoose.connect(env.mongodb_url, {
       maxPoolSize: 10,
       ...(productionOrStagingEnvironment && {
-        student: env.mongodb_studentname,
+        student: env.mongodb_name,
         pass: env.mongodb_password
       })
     });
