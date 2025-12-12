@@ -10,9 +10,9 @@ export const adminSignup = joi.object({
   password: joi
     .string()
     .trim()
-    .min(8)
+    .min(6)
     .max(30)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
     .required(),
   first_name: joi.string().trim().required(),
   last_name: joi.string().trim().required()
@@ -28,8 +28,25 @@ export const adminLogin = joi.object({
   password: joi
     .string()
     .trim()
-    .min(8)
+    .min(6)
     .max(30)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .required()
+});
+
+export const changeAdminPassword = joi.object({
+  old_password: joi
+    .string()
+    .trim()
+    .min(6)
+    .max(30)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .required(),
+  new_password: joi
+    .string()
+    .trim()
+    .min(6)
+    .max(30)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
     .required()
 });

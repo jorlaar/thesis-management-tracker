@@ -27,7 +27,8 @@ import { generateId } from '@app/server/utils';
 import thesisRepo from '@app/data/thesis/thesis.repo';
 import { THESIS_STATUS } from '@app/data/thesis/thesis.model';
 import studentRepo from '@app/data/student/student.repo';
-import methodologyRepo from '@app/data/methodology/methodology.repo';
+// import methodologyRepo from '@app/data/methodology/methodology.repo';
+import { ActionNotAllowedError, BadRequestError, NotFoundError } from '../base';
 
 @controller('/thesis', authVerify)
 export default class ThesisController extends BaseController {
@@ -39,19 +40,21 @@ export default class ThesisController extends BaseController {
   ) {
     try {
       if (req.user_data.type !== 'student') {
-        throw new Error('Only a student can access to perform this operation');
+        throw new ActionNotAllowedError(
+          'Only a student can access to perform this operation'
+        );
       }
       const supervisor_details = await lecturerRepo.model.findOne({
         email: body.lecturer_email
       });
 
       if (!supervisor_details) {
-        throw new Error('Supervisor not found');
+        throw new NotFoundError('Supervisor not found');
       }
 
       const thesis_tracking_id = generateId();
 
-      const isMultiSave = Array.isArray(body.thesis_chapter);
+      // const isMultiSave = Array.isArray(body.thesis_chapter);
 
       const thesisId = await thesisRepo.create({
         student_id: req.user_data.id,
@@ -59,9 +62,10 @@ export default class ThesisController extends BaseController {
         thesis_tracking_id,
         lecturer_id: supervisor_details._id,
         thesis_level: body.thesis_level,
-        thesis_chapter: isMultiSave
-          ? [...body.thesis_chapter]
-          : body.thesis_chapter,
+        // thesis_chapter: isMultiSave
+        //   ? [...body.thesis_chapter]
+        //   : body.thesis_chapter,
+        thesis_chapter: body.thesis_chapter,
         thesis_status: THESIS_STATUS.awaiting_supervisor_review,
         student_upload_time_stamp: new Date(),
         ...(body?.comment && { comment: body.comment }) // Only include if usercomment exists
@@ -74,53 +78,75 @@ export default class ThesisController extends BaseController {
     }
   }
 
-  @httpGet('/:studentEmail/latest/student/thesis')
-  async lecturerAndMethodologyGetMostRecentThesis(
+  @httpGet('/lecturer/:studentEmail/one/:thesisId')
+  async lecturerGetOneThesis(
     @request() req: Request,
     @response() res: Response,
-    @requestParam('studentEmail') studentEmail: string
+    @requestParam('studentEmail') studentEmail: string,
+    @requestParam('thesisId') thesisId: string
   ) {
     try {
-      if (!['lecturer', 'methodology'].includes(req.user_data.type)) {
-        throw new Error("You can't  perform this operation");
+      if (req.user_data.type !== 'lecturer') {
+        throw new ActionNotAllowedError("You can't perform this operation");
       }
-
       const student_details = await studentRepo.model.findOne({
         email: studentEmail
       });
       if (!student_details) {
-        throw new Error('Student not found');
+        throw new NotFoundError('Student not found');
       }
-      const query: ThesisQuery = {
-        student_id: student_details.id
+      const query = {
+        _id: thesisId
       };
 
-      if (req.user_data.type === 'lecturer') {
-        query.lecturer_id = req.user_data.id;
-      } else if (req.user_data.type === 'methodology') {
-        query.methodology_id = req.user_data.id;
-      }
-      const viewThesis = await thesisRepo.model
-        .findOne(query)
-        .sort({ createdAt: -1 });
+      const viewThesis = await thesisRepo.model.findOne(query);
 
-      this.handleSuccess(req, res, {
-        viewThesis
-      });
+      this.handleSuccess(req, res, { viewThesis });
     } catch (error) {
       this.handleError(req, res, error);
     }
   }
 
-  @httpGet('/:studentEmail')
-  async lecturerAndMethodologyGetAllStudentThesis(
+  @httpGet('/lecturer/:studentEmail/latest/student')
+  async lecturerGetMostRecentThesis(
     @request() req: Request,
     @response() res: Response,
     @requestParam('studentEmail') studentEmail: string
   ) {
     try {
-      if (!['lecturer', 'methodology'].includes(req.user_data.type)) {
-        throw new Error("You can't  perform this operation");
+      if (req.user_data.type !== 'lecturer') {
+        throw new ActionNotAllowedError("You can't perform this operation");
+      }
+      const student_details = await studentRepo.model.findOne({
+        email: studentEmail
+      });
+      if (!student_details) {
+        throw new NotFoundError('Student not found');
+      }
+      const query: ThesisQuery = {
+        student_id: student_details.id,
+        lecturer_id: req.user_data.id
+      };
+
+      const viewThesis = await thesisRepo.model
+        .findOne(query)
+        .sort({ created_at: -1 });
+
+      this.handleSuccess(req, res, { viewThesis });
+    } catch (error) {
+      this.handleError(req, res, error);
+    }
+  }
+
+  @httpGet('/lecturer/:studentEmail')
+  async lecturerGetAllStudentThesis(
+    @request() req: Request,
+    @response() res: Response,
+    @requestParam('studentEmail') studentEmail: string
+  ) {
+    try {
+      if (req.user_data.type !== 'lecturer') {
+        throw new ActionNotAllowedError("You can't perform this operation");
       }
 
       const student_details = await studentRepo.model.findOne(
@@ -129,7 +155,7 @@ export default class ThesisController extends BaseController {
       );
 
       if (!student_details) {
-        throw new Error('Student not found');
+        throw new NotFoundError('Student not found');
       }
 
       // const thesis_details_one = await thesisRepo.model.findById(
@@ -164,21 +190,23 @@ export default class ThesisController extends BaseController {
   ) {
     try {
       if (req.user_data.type !== 'lecturer') {
-        throw new Error('Only a lecturer can access to perform this operation');
+        throw new ActionNotAllowedError(
+          'Only a lecturer can access to perform this operation'
+        );
       }
-      const student_details = await lecturerRepo.model.findOne({
+      const student_details = await studentRepo.model.findOne({
         email: body.student_email
       });
 
       if (!student_details) {
-        throw new Error('Student not found');
+        throw new NotFoundError('Student not found');
       }
       const viewThesis = await thesisRepo.model
         .findOne({
           student_id: student_details.id,
           lecturer_id: req.user_data.id
         })
-        .sort({ createdAt: 1 });
+        .sort({ created_at: 1 });
 
       const thesisId = await thesisRepo.create({
         student_id: student_details._id,
@@ -203,21 +231,23 @@ export default class ThesisController extends BaseController {
   ) {
     try {
       if (req.user_data.type !== 'lecturer') {
-        throw new Error('Only a lecturer can access to perform this operation');
+        throw new ActionNotAllowedError(
+          'Only a lecturer can access to perform this operation'
+        );
       }
-      const student_details = await lecturerRepo.model.findOne({
+      const student_details = await studentRepo.model.findOne({
         email: body.student_email
       });
 
       if (!student_details) {
-        throw new Error('Student not found');
+        throw new NotFoundError('Student not found');
       }
       const viewThesis = await thesisRepo.model
         .findOne({
           student_id: student_details.id,
           lecturer_id: req.user_data.id
         })
-        .sort({ createdAt: 1 });
+        .sort({ created_at: 1 });
 
       const thesisId = await thesisRepo.create({
         student_id: student_details._id,
@@ -242,21 +272,23 @@ export default class ThesisController extends BaseController {
   ) {
     try {
       if (req.user_data.type !== 'lecturer') {
-        throw new Error('Only a lecturer can access to perform this operation');
+        throw new ActionNotAllowedError(
+          'Only a lecturer can access to perform this operation'
+        );
       }
-      const student_details = await lecturerRepo.model.findOne({
+      const student_details = await studentRepo.model.findOne({
         email: body.student_email
       });
 
       if (!student_details) {
-        throw new Error('Student not found');
+        throw new NotFoundError('Student not found');
       }
       const viewThesis = await thesisRepo.model
         .findOne({
           student_id: student_details.id,
           lecturer_id: req.user_data.id
         })
-        .sort({ createdAt: 1 });
+        .sort({ created_at: 1 });
 
       const thesisId = await thesisRepo.create({
         student_id: student_details._id,
@@ -273,6 +305,113 @@ export default class ThesisController extends BaseController {
     }
   }
 
+  @httpGet('/methodology/:studentEmail')
+  async methodologyGetAllStudentThesis(
+    @request() req: Request,
+    @response() res: Response,
+    @requestParam('studentEmail') studentEmail: string
+  ) {
+    try {
+      if (req.user_data.type !== 'methodology') {
+        throw new ActionNotAllowedError("You can't perform this operation");
+      }
+
+      const student_details = await studentRepo.model.findOne(
+        { email: studentEmail },
+        { _id: 1 } // Only fetch the _id field
+      );
+
+      if (!student_details) {
+        throw new NotFoundError('Student not found');
+      }
+
+      // const thesis_details_one = await thesisRepo.model.findById(
+      //   student_details._id
+      // );
+
+      const viewThesis = await thesisRepo.model.find(
+        { student_id: student_details._id },
+        null, // Return all fields
+        { sort: { created_at: -1 } } // Sort by most recent first
+      );
+
+      if (!viewThesis || viewThesis.length === 0) {
+        return this.handleSuccess(req, res, {
+          message: 'No thesis documents found for this student',
+          viewThesis: []
+        });
+      }
+      this.handleSuccess(req, res, {
+        viewThesis
+      });
+    } catch (error) {
+      this.handleError(req, res, error);
+    }
+  }
+
+  @httpGet('/methodology/:studentEmail/latest/student')
+  async methodologyGetMostRecentThesis(
+    @request() req: Request,
+    @response() res: Response,
+    @requestParam('studentEmail') studentEmail: string
+  ) {
+    try {
+      if (req.user_data.type !== 'methodology') {
+        throw new ActionNotAllowedError("You can't perform this operation");
+      }
+
+      const student_details = await studentRepo.model.findOne({
+        email: studentEmail
+      });
+      if (!student_details) {
+        throw new NotFoundError('Student not found');
+      }
+      const query: ThesisQuery = {
+        student_id: student_details.id,
+        methodology_id: req.user_data.id
+      };
+
+      const viewThesis = await thesisRepo.model
+        .findOne(query)
+        .sort({ created_at: -1 });
+
+      this.handleSuccess(req, res, {
+        viewThesis
+      });
+    } catch (error) {
+      this.handleError(req, res, error);
+    }
+  }
+
+  @httpGet('/methodology/:studentEmail/one/:thesisId')
+  async methodologyGetOneThesis(
+    @request() req: Request,
+    @response() res: Response,
+    @requestParam('studentEmail') studentEmail: string,
+    @requestParam('thesisId') thesisId: string
+  ) {
+    try {
+      if (req.user_data.type !== 'methodology') {
+        throw new ActionNotAllowedError("You can't perform this operation");
+      }
+      const student_details = await studentRepo.model.findOne({
+        email: studentEmail
+      });
+      if (!student_details) {
+        throw new NotFoundError('Student not found');
+      }
+      const query = {
+        _id: thesisId
+      };
+
+      const viewThesis = await thesisRepo.model.findOne(query);
+
+      this.handleSuccess(req, res, { viewThesis });
+    } catch (error) {
+      this.handleError(req, res, error);
+    }
+  }
+
   @httpPut('/methodology/review', validator(methodologyUploadCommentValidator))
   async methodologyUploadThesisComment(
     @request() req: Request,
@@ -281,21 +420,29 @@ export default class ThesisController extends BaseController {
   ) {
     try {
       if (req.user_data.type !== 'methodology') {
-        throw new Error('Only a methodology can perform this operation');
+        throw new ActionNotAllowedError(
+          'Only a methodology can perform this operation'
+        );
       }
-      const student_details = await methodologyRepo.model.findOne({
+      const student_details = await studentRepo.model.findOne({
         email: body.student_email
       });
 
       if (!student_details) {
-        throw new Error('Student not found');
+        throw new NotFoundError('Student not found');
       }
       const viewThesis = await thesisRepo.model
         .findOne({
           student_id: student_details.id,
           thesis_status: THESIS_STATUS.approved_by_supervisor
         })
-        .sort({ createdAt: 1 });
+        .sort({ created_at: 1 });
+
+      if (!viewThesis) {
+        throw new BadRequestError(
+          "Thesis is still awaiting supervisor's approval"
+        );
+      }
 
       const thesisId = await thesisRepo.create({
         student_id: student_details._id,
@@ -320,21 +467,23 @@ export default class ThesisController extends BaseController {
   ) {
     try {
       if (req.user_data.type !== 'methodology') {
-        throw new Error('Only a methodology can perform this operation');
+        throw new ActionNotAllowedError(
+          'Only a methodology can perform this operation'
+        );
       }
-      const student_details = await methodologyRepo.model.findOne({
+      const student_details = await studentRepo.model.findOne({
         email: body.student_email
       });
 
       if (!student_details) {
-        throw new Error('Student not found');
+        throw new NotFoundError('Student not found');
       }
       const viewThesis = await thesisRepo.model
         .findOne({
           student_id: student_details.id,
           thesis_status: THESIS_STATUS.approved_by_supervisor
         })
-        .sort({ createdAt: 1 });
+        .sort({ created_at: 1 });
 
       const thesisId = await thesisRepo.create({
         student_id: student_details._id,
@@ -359,21 +508,23 @@ export default class ThesisController extends BaseController {
   ) {
     try {
       if (req.user_data.type !== 'methodology') {
-        throw new Error('Only a methodology can perform this operation');
+        throw new ActionNotAllowedError(
+          'Only a methodology can perform this operation'
+        );
       }
-      const student_details = await methodologyRepo.model.findOne({
+      const student_details = await studentRepo.model.findOne({
         email: body.student_email
       });
 
       if (!student_details) {
-        throw new Error('Student not found');
+        throw new NotFoundError('Student not found');
       }
       const viewThesis = await thesisRepo.model
         .findOne({
           student_id: student_details.id,
           thesis_status: THESIS_STATUS.approved_by_supervisor
         })
-        .sort({ createdAt: 1 });
+        .sort({ created_at: 1 });
 
       const thesisId = await thesisRepo.create({
         student_id: student_details._id,

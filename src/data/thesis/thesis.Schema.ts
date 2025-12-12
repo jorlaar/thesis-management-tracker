@@ -16,7 +16,7 @@ const ThesisSchema = SchemaFactory({
     required: false
   },
   thesis_chapter: {
-    ...trimmedString,
+    type: [String],
     enum: Object.values(THESIS_CHAPTER),
     required: false
   },
@@ -33,7 +33,7 @@ const ThesisSchema = SchemaFactory({
 ThesisSchema.index({ student_id: 1 });
 
 // Already unique, but ensure index exists for tracking ID lookups
-ThesisSchema.index({ thesis_tracking_id: 1 }, { unique: true });
+ThesisSchema.index({ thesis_tracking_id: 1 }, { sparse: true });
 
 // For lecturer-specific reviews (e.g., "find theses assigned to lecturer Y")
 ThesisSchema.index({ lecturer_id: 1 });

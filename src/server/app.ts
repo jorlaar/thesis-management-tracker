@@ -10,6 +10,9 @@ import jsend from './middlewares/jsend';
 import { logResponseBody } from './middlewares/logResponseBody';
 import { StatusCodes } from 'http-status-codes';
 import MetricsService from './services/metrics/metrics.service';
+import { redis } from '@app/common/services/redis';
+import logger from '@app/common/services/logger';
+import db from './db';
 // import { handleUploadErrors } from './middlewares/error.upload';
 
 export default class App {
@@ -31,7 +34,6 @@ export default class App {
    */
   private registerMiddlewares() {
     this.server.setConfig((app: Application) => {
-
       app.use(express.json({ limit: '10mb' }));
       app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
@@ -71,11 +73,29 @@ export default class App {
     });
   }
 
+  async createDefaultKeys() {
+    try {
+      const data = { sample1: 'channel1', sample2: 'channel2' };
+      redis.set('KEY_BLOCKS', JSON.stringify(data));
+      logger.message('😎  default channels created');
+    } catch (error) {
+      logger.error(error, 'error creating keys');
+    }
+  }
+
   /**
    * Applies all routes and configuration to the server, returning the express application server.
    */
   build() {
     const app = this.server.build();
     return app;
+  }
+
+  /**
+   * Closes MongoDB and Redis connections.
+   */
+  async closeDB() {
+    await db.disconnect();
+    await redis.quit();
   }
 }

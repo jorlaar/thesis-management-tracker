@@ -11,3 +11,8 @@ export interface LecturerSignupDTO {
   department?: string;
   faculty?: string;
 }
+
+export interface ChangeLecturerPasswordDTO {
+  old_password: string;
+  new_password: string;
+}

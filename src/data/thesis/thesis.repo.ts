@@ -10,7 +10,7 @@ import { IThesis } from './thesis.model';
 /**
  * Repository class for executing student operations triggered by an admin
  */
-export class AdminRepository extends BaseRepository<IThesis> {
+export class ThesisRepository extends BaseRepository<IThesis> {
   constructor() {
     super('thesis', ThesisSchema);
   }
@@ -81,4 +81,4 @@ export class AdminRepository extends BaseRepository<IThesis> {
   }
 }
 
-export default new AdminRepository();
+export default new ThesisRepository();
