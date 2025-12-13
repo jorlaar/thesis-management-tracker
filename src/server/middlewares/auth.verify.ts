@@ -37,12 +37,12 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
     payload = jwt.verify(token, env.jwt_secret);
 
-    //check if token is flagged
+    // check if token is expired
     // const isTokenFlagged = await redis.get(payload?.jti);
     // if (isTokenFlagged) {
     //   return res.jSend.error(
     //     null,
-    //     'Missing authentication token',
+    //     'Token has expired, please login again',
     //     StatusCodes.UNAUTHORIZED
     //   );
     // }
@@ -53,17 +53,24 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     // });
   } catch (err) {
     logger.error(err, 'requireAuth middleware error');
+    if (err instanceof jwt.TokenExpiredError) {
+      return res.jSend.error(
+        null,
+        'Authentication token has expired',
+        StatusCodes.UNAUTHORIZED
+      );
+    }
     if (err instanceof jwt.JsonWebTokenError) {
       return res.jSend.error(
         null,
-        'Downstream Error: Missing or invalid authentication token',
+        'Missing or invalid authentication token',
         StatusCodes.UNAUTHORIZED
       );
     }
 
     return res.jSend.error(
       null,
-      'Downstream Error: Error authenticating',
+      'Error authenticating',
       StatusCodes.INTERNAL_SERVER_ERROR
     );
   }

@@ -19,3 +19,8 @@ export interface StudentLoginDTO {
   email?: string;
   password: string;
 }
+
+export interface ChangeStudentPasswordDTO {
+  old_password: string;
+  new_password: string;
+}

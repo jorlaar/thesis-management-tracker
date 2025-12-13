@@ -13,9 +13,9 @@ export const studentSignup = joi.object({
   password: joi
     .string()
     .trim()
-    .min(8)
+    .min(6)
     .max(30)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
     .required(),
   first_name: joi.string().trim().required(),
   gender: joi.string().valid('male', 'female').trim(),
@@ -40,8 +40,25 @@ export const studentLogin = joi.object({
   password: joi
     .string()
     .trim()
-    .min(8)
+    .min(6)
     .max(30)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .required()
+});
+
+export const changeStudentPassword = joi.object({
+  old_password: joi
+    .string()
+    .trim()
+    .min(6)
+    .max(30)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .required(),
+  new_password: joi
+    .string()
+    .trim()
+    .min(6)
+    .max(30)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
     .required()
 });

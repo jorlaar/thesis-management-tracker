@@ -9,3 +9,8 @@ export interface AdminSignupDTO {
   last_name?: string;
   first_name?: string;
 }
+
+export interface ChangeAdminPasswordDTO {
+  old_password: string;
+  new_password: string;
+}

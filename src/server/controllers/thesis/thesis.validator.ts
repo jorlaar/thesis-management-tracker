@@ -13,12 +13,52 @@ export const studentUploadThesisValidator = joi.object({
     .trim()
     .required(),
   thesis_level: joi.string().valid('pre_field', 'post_field').required(),
+  // thesis_chapter: joi
+  //   .alternatives()
+  //   .try(
+  //     joi.string().valid(...Object.values(THESIS_CHAPTER)),
+  //     joi.array().items(joi.string().valid(...Object.values(THESIS_CHAPTER))),
+  //     joi.string().custom((value, helpers) => {
+  //       // Split comma-separated string and trim each part
+  //       const items = value.split(',').map((item) => item.trim());
+
+  //       // Validate each item
+  //       for (const item of items) {
+  //         if (!Object.values(THESIS_CHAPTER).includes(item)) {
+  //           return helpers.error('any.invalid');
+  //         }
+  //       }
+
+  //       return items; // Returns array for further validation
+  //     }, 'CSV to array transformation')
+  //   )
+  //   .required()
+
   thesis_chapter: joi
-    .alternatives()
-    .try(
-      joi.string().valid(...Object.values(THESIS_CHAPTER)),
-      joi.array().items(joi.string().valid(...Object.values(THESIS_CHAPTER)))
-    )
+    .custom((value, helpers) => {
+      // Always convert to array for consistency
+      let chaptersArray = [];
+
+      if (typeof value === 'string') {
+        chaptersArray = value.split(',').map((item) => item.trim());
+      } else if (Array.isArray(value)) {
+        chaptersArray = value;
+      } else {
+        return helpers.error('any.invalid');
+      }
+      const validValues = Object.values(THESIS_CHAPTER);
+      const invalidChapters = chaptersArray.filter(
+        (chap) => !validValues.includes(chap)
+      );
+
+      if (invalidChapters.length > 0) {
+        return helpers.error('any.invalid', {
+          message: `Invalid chapters: ${invalidChapters.join(', ')}`
+        });
+      }
+
+      return chaptersArray; // Always returns array
+    })
     .required()
 });
 

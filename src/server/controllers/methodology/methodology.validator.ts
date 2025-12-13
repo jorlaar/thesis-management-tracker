@@ -10,9 +10,9 @@ export const methodologySignup = joi.object({
   password: joi
     .string()
     .trim()
-    .min(8)
+    .min(6)
     .max(30)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
     .required(),
   first_name: joi.string().trim().required(),
   department: joi.string().trim().required(), // to do preload it drop down
@@ -30,8 +30,25 @@ export const methodologyLogin = joi.object({
   password: joi
     .string()
     .trim()
-    .min(8)
+    .min(6)
     .max(30)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .required()
+});
+
+export const changeMethodologyPassword = joi.object({
+  old_password: joi
+    .string()
+    .trim()
+    .min(6)
+    .max(30)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .required(),
+  new_password: joi
+    .string()
+    .trim()
+    .min(6)
+    .max(30)
+    // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
     .required()
 });
