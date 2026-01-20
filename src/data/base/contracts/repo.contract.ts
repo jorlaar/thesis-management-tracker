@@ -22,6 +22,7 @@ export interface QueryResult<T> {
  * A repository query that specifies pagination options
  */
 export interface PaginationQuery {
+  populate?: string[];
   archived?: boolean | string;
   conditions: any;
   page?: number;

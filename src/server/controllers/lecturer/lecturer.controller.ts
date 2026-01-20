@@ -119,6 +119,7 @@ export default class lecturerController extends BaseController {
 
       const paginatedThesis = await thesisRepo.list({
         conditions: { lecturer_id: lecturer._id },
+        populate: ['student_id', 'lecturer_id', 'methodology_id'],
         return_total_pages: true,
         sort: { created_at: -1 },
         page: 1,

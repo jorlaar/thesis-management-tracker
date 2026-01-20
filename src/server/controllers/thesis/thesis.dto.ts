@@ -24,3 +24,10 @@ export type ThesisQuery = {
   methodology_id?: string;
   [key: string]: any; // For other dynamic properties
 };
+
+export interface PaginationQueryDTO {
+  page: number;
+  per_page: number;
+  archived?: boolean;
+  status?: string;
+}

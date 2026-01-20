@@ -29,6 +29,10 @@ const ThesisSchema = SchemaFactory({
   methodology_review_time_stamp: { type: SchemaTypes.Date }
 });
 
+// ThesisSchema.pre('find', function () {
+//   console.log('Pre-find hook called with populate:', this.getPopulatedPaths());
+// });
+
 // For fast student-specific queries (e.g., "find all theses by student X")
 ThesisSchema.index({ student_id: 1 });
 

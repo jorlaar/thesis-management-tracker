@@ -8,7 +8,8 @@ import {
   response,
   request,
   requestBody,
-  requestParam
+  requestParam,
+  queryParam
 } from 'inversify-express-utils';
 import {
   adminLogin,
@@ -32,6 +33,7 @@ import {
   ControllerError,
   NotFoundError
 } from '../base';
+import { PaginationQueryDTO } from '../thesis/thesis.dto';
 
 @controller('/admin')
 export default class adminController extends BaseController {
@@ -107,7 +109,11 @@ export default class adminController extends BaseController {
         { expiresIn: Number(env.expires_at) }
       );
 
-      this.handleSuccess(req, res, { ...signedData, token });
+      const adminPlainDetails = admin.toObject();
+      delete adminPlainDetails.password;
+      delete adminPlainDetails.__v;
+
+      this.handleSuccess(req, res, { ...adminPlainDetails, token });
     } catch (err) {
       this.handleError(req, res, err);
     }
@@ -237,8 +243,10 @@ export default class adminController extends BaseController {
   async adminGetAllStudentThesis(
     @request() req: Request,
     @response() res: Response,
-    @requestParam('studentEmail') studentEmail: string
+    @requestParam('studentEmail') studentEmail: string,
+    @queryParam() query: PaginationQueryDTO
   ) {
+    const { page, per_page } = query;
     try {
       if (req.user_data.type !== 'admin') {
         throw new ActionNotAllowedError("You can't perform this operation");
@@ -253,18 +261,54 @@ export default class adminController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      const viewThesis = await thesisRepo.model.find(
-        { student_id: student_details._id },
-        null, // Return all fields
-        { sort: { created_at: -1 } } // Sort by most recent first
+      const viewThesis = await thesisRepo.list({
+        conditions: { student_id: student_details._id },
+        sort: { created_at: -1 },
+        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        page,
+        per_page,
+        return_total_pages: true
+      });
+
+      this.handleSuccess(req, res, {
+        viewThesis
+      });
+    } catch (error) {
+      this.handleError(req, res, error);
+    }
+  }
+
+  @httpGet('/all', authVerify)
+  async adminGetAllThesis(
+    @request() req: Request,
+    @response() res: Response,
+    @requestParam('studentEmail') studentEmail: string,
+    @queryParam() query: PaginationQueryDTO
+  ) {
+    const { page, per_page } = query;
+    try {
+      if (req.user_data.type !== 'admin') {
+        throw new ActionNotAllowedError("You can't perform this operation");
+      }
+
+      const student_details = await studentRepo.model.findOne(
+        { email: studentEmail },
+        { _id: 1 } // Only fetch the _id field
       );
 
-      if (!viewThesis || viewThesis.length === 0) {
-        return this.handleSuccess(req, res, {
-          message: 'No thesis documents found for this student',
-          viewThesis: []
-        });
+      if (!student_details) {
+        throw new NotFoundError('Student not found');
       }
+
+      const viewThesis = await thesisRepo.list({
+        conditions: { student_id: student_details._id },
+        sort: { created_at: -1 },
+        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        page,
+        per_page,
+        return_total_pages: true
+      });
+
       this.handleSuccess(req, res, {
         viewThesis
       });

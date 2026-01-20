@@ -8,7 +8,8 @@ import {
   requestBody,
   httpPut,
   httpGet,
-  requestParam
+  requestParam,
+  queryParam
 } from 'inversify-express-utils';
 import {
   lecturerUploadCommentValidator,
@@ -18,6 +19,7 @@ import {
 import {
   lecturerCommentUpload,
   methodologyCommentUpload,
+  PaginationQueryDTO,
   ThesisDTO,
   ThesisQuery
 } from './thesis.dto';
@@ -142,8 +144,10 @@ export default class ThesisController extends BaseController {
   async lecturerGetAllStudentThesis(
     @request() req: Request,
     @response() res: Response,
-    @requestParam('studentEmail') studentEmail: string
+    @requestParam('studentEmail') studentEmail: string,
+    @queryParam() query: PaginationQueryDTO
   ) {
+    const { page, per_page } = query;
     try {
       if (req.user_data.type !== 'lecturer') {
         throw new ActionNotAllowedError("You can't perform this operation");
@@ -162,22 +166,36 @@ export default class ThesisController extends BaseController {
       //   student_details._id
       // );
 
-      const viewThesis = await thesisRepo.model.find(
-        { student_id: student_details._id },
-        null, // Return all fields
-        { sort: { created_at: -1 } } // Sort by most recent first
-      );
+      // const viewThesis = await thesisRepo.model.find(
+      //   { student_id: student_details._id },
+      //   null, // Return all fields
+      //   { sort: { created_at: -1 } } // Sort by most recent first
+      // );
 
-      if (!viewThesis || viewThesis.length === 0) {
-        return this.handleSuccess(req, res, {
-          message: 'No thesis documents found for this student',
-          viewThesis: []
-        });
-      }
+      // if (!viewThesis || viewThesis.length === 0) {
+      //   return this.handleSuccess(req, res, {
+      //     message: 'No thesis documents found for this student',
+      //     viewThesis: []
+      //   });
+      // }
+
+      const viewThesis = await thesisRepo.list({
+        conditions: { student_id: student_details._id },
+        sort: { created_at: -1 },
+        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        page,
+        per_page,
+        return_total_pages: true
+      });
+
+      console.log('viewThesis >>>>', viewThesis);
+
       this.handleSuccess(req, res, {
         viewThesis
       });
     } catch (error) {
+      console.log('error >>>>', error);
+
       this.handleError(req, res, error);
     }
   }
@@ -305,7 +323,7 @@ export default class ThesisController extends BaseController {
     }
   }
 
-  @httpGet('/methodology/:studentEmail')
+  @httpGet('/methodology/:studentEmail') // how do i handle getting all thesis
   async methodologyGetAllStudentThesis(
     @request() req: Request,
     @response() res: Response,
@@ -536,6 +554,39 @@ export default class ThesisController extends BaseController {
         ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
       });
       this.handleSuccess(req, res, { id: thesisId._id });
+    } catch (error) {
+      this.handleError(req, res, error);
+    }
+  }
+
+  @httpGet('/admin/lifecycle/:trackingId')
+  async getAThesisLifeCycle(
+    @request() req: Request,
+    @response() res: Response,
+    @requestParam('trackingId') trackingId: string,
+    @queryParam() query: PaginationQueryDTO
+  ) {
+    const { page, per_page } = query;
+    try {
+      if (req.user_data.type !== 'admin') {
+        throw new ActionNotAllowedError("You can't perform this operation");
+      }
+
+      // const query = {
+      //   thesis_tracking_id: trackingId
+      // };
+
+      const viewThesis = await thesisRepo.list({
+        conditions: { thesis_tracking_id: trackingId },
+        sort: { created_at: -1 },
+        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        page,
+        per_page,
+        return_total_pages: true
+      });
+
+      console.log('viewThesis >>>>', viewThesis);
+      this.handleSuccess(req, res, viewThesis);
     } catch (error) {
       this.handleError(req, res, error);
     }
