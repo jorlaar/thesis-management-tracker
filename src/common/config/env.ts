@@ -37,7 +37,7 @@ const env = {
   api_version: process.env.API_VERSION || '/api/v1',
   salt_rounds: Number(process.env.SALT_ROUNDS) || 10,
 
-  service_name: process.env.SERVICE_NAME || 'thesis-backend',
+  service_name: process.env.SERVICE_NAME || 'Thesis-Backend',
 
   doc_expiry_cloudinary: Number(process.env.DOC_EXPIRY_CLOUDINARY) || 3,
   cloudinary_name: process.env.CLOUDINARY_NAME,

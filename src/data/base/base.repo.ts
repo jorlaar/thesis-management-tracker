@@ -138,10 +138,12 @@ export class BaseRepository<T extends Document> implements Repository<T> {
 
     const data = await this.model
       .find(conditions)
-      .select(query.projections)
-      .skip(offset)
       .limit(per_page)
-      .sort(sort);
+      .select(query.projections)
+      .populate(query.populate)
+      .skip(offset)
+      .sort(sort)
+      .exec();
 
     const result = {
       page: page + 1,

@@ -7,7 +7,8 @@ import {
   response,
   request,
   requestBody,
-  httpGet
+  httpGet,
+  queryParam
 } from 'inversify-express-utils';
 import {
   changeStudentPassword,
@@ -30,6 +31,7 @@ import {
   ControllerError,
   NotFoundError
 } from '../base';
+import { PaginationQueryDTO } from '../thesis/thesis.dto';
 
 @controller('/student')
 export default class StudentController extends BaseController {
@@ -118,6 +120,7 @@ export default class StudentController extends BaseController {
 
       const paginatedThesis = await thesisRepo.list({
         conditions: { student_id: student._id },
+        populate: ['student_id', 'lecturer_id', 'methodology_id'],
         return_total_pages: true,
         sort: { created_at: -1 },
         page: 1,
@@ -158,8 +161,10 @@ export default class StudentController extends BaseController {
   @httpGet('/student/profile', authVerify)
   async getAllAStudentsProfileDetails(
     @request() req: Request,
-    @response() res: Response
+    @response() res: Response,
+    @queryParam() query: PaginationQueryDTO
   ) {
+    const { page, per_page } = query;
     try {
       if (!['student'].includes(req.user_data?.type)) {
         throw new ActionNotAllowedError("You can't perform this operation");
@@ -174,18 +179,14 @@ export default class StudentController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      const viewThesis = await thesisRepo.model.find(
-        { student_id: student_details._id },
-        null, // Return all fields
-        { sort: { created_at: -1 } } // Sort by most recent first
-      );
-
-      if (!viewThesis || viewThesis.length === 0) {
-        return this.handleSuccess(req, res, {
-          message: 'No thesis documents found for this student',
-          viewThesis: []
-        });
-      }
+      const viewThesis = await thesisRepo.list({
+        conditions: { student_id: student_details._id },
+        sort: { created_at: -1 },
+        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        page,
+        per_page,
+        return_total_pages: true
+      });
 
       this.handleSuccess(req, res, viewThesis);
     } catch (err) {
@@ -235,4 +236,6 @@ export default class StudentController extends BaseController {
       this.handleError(req, res, err);
     }
   }
+
+  // todo: forget-password
 }
