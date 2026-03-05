@@ -67,7 +67,7 @@ export default class adminController extends BaseController {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: Number(env.expires_at) }
+        { expiresIn: env.expires_at }
       );
 
       this.handleSuccess(req, res, { ...signedData, token });
@@ -106,7 +106,7 @@ export default class adminController extends BaseController {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: Number(env.expires_at) }
+        { expiresIn: env.expires_at }
       );
 
       const adminPlainDetails = admin.toObject();

@@ -71,7 +71,7 @@ export default class methodologyController extends BaseController {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: Number(env.expires_at) }
+        { expiresIn: env.expires_at }
       );
 
       this.handleSuccess(req, res, { ...signedData, token });
@@ -114,7 +114,7 @@ export default class methodologyController extends BaseController {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: Number(env.expires_at) }
+        { expiresIn: env.expires_at }
       );
 
       // gets all thesis tied to a methodology

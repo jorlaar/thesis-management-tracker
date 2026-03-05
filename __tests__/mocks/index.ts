@@ -2,10 +2,9 @@ import { faker } from '@faker-js/faker';
 import nock from 'nock';
 import { v4 as uuidV4 } from 'uuid';
 import crypto from 'crypto';
-import { Gateman } from '@random-guys/gateman';
-import redis from '../../src/common/services/redis';
-import { SignupDTO } from '../../src/server/controllersagentagent.dto';
-import { student } from '../../src/dataagent';
+import { redis } from '../../src/common/services/redis';
+import { StudentSignupDTO } from '../../src/server/controllers/student/student.dto';
+import { IStudentModel } from '../../src/data/student/student.model';
 import env from '../../src/common/config/env';
 import axios from 'axios';
 import { addMinutes } from 'date-fns';
@@ -50,7 +49,7 @@ export function generatePhoneNumber() {
   );
 }
 
-export function mockstudentRequest(): SignupDTO {
+export function mockstudentRequest(): StudentSignupDTO {
   let email = faker.internet.email();
   if (email.endsWith('gmail.com')) email = sanitiseGmailAddress(email);
 
@@ -60,19 +59,19 @@ export function mockstudentRequest(): SignupDTO {
     email,
     last_name: faker.name.lastName(),
     first_name: faker.name.firstName(),
-    password: randomDigits(4),
-    location: {
-      latitude: faker.address.latitude(),
-      longitude: faker.address.longitude()
-    },
-    phone_number: generatePhoneNumber(),
-    address_two: faker.address.secondaryAddress(),
-    city: faker.address.city(),
-    house_number: faker.address.streetAddress(),
-    postal_code: faker.address.zipCode(),
-    state: faker.address.state(),
-    profile_picture: faker.image.avatar(),
-    otp: randomDigits(6)
+    password: randomDigits(8)
+    // location: {
+    //   latitude: faker.address.latitude(),
+    //   longitude: faker.address.longitude()
+    // },
+    // phone_number: generatePhoneNumber(),
+    // address_two: faker.address.secondaryAddress(),
+    // city: faker.address.city(),
+    // house_number: faker.address.streetAddress(),
+    // postal_code: faker.address.zipCode(),
+    // state: faker.address.state(),
+    // profile_picture: faker.image.avatar(),
+    // otp: randomDigits(6)
   };
 }
 
@@ -89,42 +88,42 @@ export async function getResponseData<T = any>(promise: Promise<any>) {
  * Creates a mock headless token from a partcular `service`
  * @param service The name of the service
  */
-export const mockHeadlessToken = async (
-  service: string,
-  _uuid: string = uuidV4()
-) => {
-  const mockGateman = new Gateman({
-    service,
-    authScheme: 'jola',
-    redis,
-    secret: env.gateman_key
-  });
-  return `jola ${await mockGateman.createHeadlessToken(_uuid)}`;
-};
+// export const mockHeadlessToken = async (
+//   service: string,
+//   _uuid: string = uuidV4()
+// ) => {
+//   const mockGateman = new Gateman({
+//     service,
+//     authScheme: 'jola',
+//     redis,
+//     secret: env.gateman_key
+//   });
+//   return `jola ${await mockGateman.createHeadlessToken(_uuid)}`;
+// };
 
 /**
  * Mocks call to the BVN endpoint
  * @param bvn BVN string
  * @param student student data
  */
-export function BVNNock(bvn: string, student: student) {
+export function BVNNock(bvn: string, student: IStudentModel) {
   const response = {
     status: 'success',
     data: {
       Bvn: bvn,
       DateOfBirth: student.dob,
       LastName: student.last_name,
-      FirstName: student.first_name,
-      PhoneNumber: student.phone_number,
-      EnrollmentBankCode: randomDigits(3),
-      RegistrationDate: faker.date.past(2019),
-      MiddleName: faker.name.firstName().toUpperCase(),
-      EnrollmentBranch: faker.address.city().toUpperCase(),
-      EnrollmentBankName: faker.company.companyName().toUpperCase()
+      FirstName: student.first_name
+      // PhoneNumber: student.phone_number,
+      // EnrollmentBankCode: randomDigits(3),
+      // RegistrationDate: faker.date.past(2019),
+      // MiddleName: faker.name.firstName().toUpperCase(),
+      // EnrollmentBranch: faker.address.city().toUpperCase(),
+      // EnrollmentBankName: faker.company.companyName().toUpperCase()
     }
   };
 
-  nock(env.bvn_validation_endpoint).get(`?bvn=${bvn}`).reply(200, response);
+  // nock(env.bvn_validation_endpoint).get(`?bvn=${bvn}`).reply(200, response);
 }
 
 /**
@@ -144,12 +143,12 @@ export function BVNFailNock(bvn: string) {
       EnrollmentBankCode: randomDigits(3),
       RegistrationDate: faker.date.past(2019),
       MiddleName: faker.name.firstName().toUpperCase(),
-      EnrollmentBranch: faker.address.city().toUpperCase(),
-      EnrollmentBankName: faker.company.companyName().toUpperCase()
+      EnrollmentBranch: faker.address.city().toUpperCase()
+      // EnrollmentBankName: faker.company.companyName().toUpperCase()
     }
   };
 
-  nock(env.bvn_validation_endpoint).get(`?bvn=${bvn}`).reply(200, response);
+  // nock(env.bvn_validation_endpoint).get(`?bvn=${bvn}`).reply(200, response);
 }
 
 /**
@@ -168,7 +167,7 @@ export function watchlistNock(IsOnWatchList: boolean, IsPEP: boolean) {
     }
   };
 
-  nock(env.watchlist_endpoint).get('').query(true).reply(200, response);
+  // nock(env.watchlist_endpoint).get('').query(true).reply(200, response);
 }
 
 /**
@@ -235,3 +234,5 @@ export const timeTravel = (_date: Date | string, offset?: number) => {
   const date = offset ? addMinutes(_date, offset) : _date;
   timekeeper.travel(date);
 };
+
+
