@@ -32,6 +32,7 @@ import {
   NotFoundError
 } from '../base';
 import { PaginationQueryDTO } from '../thesis/thesis.dto';
+import nodeMailerEmailService from '@app/server/services/email/email.nodemailer.service';
 
 @controller('/student')
 export default class StudentController extends BaseController {
@@ -67,10 +68,13 @@ export default class StudentController extends BaseController {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: Number(env.expires_at) }
+        { expiresIn: env.expires_at }
       );
 
+      console.log('Student signed up successfully');
+      nodeMailerEmailService.sendWelcomeEmail(student.email, student.first_name);
       this.handleSuccess(req, res, { ...signedData, token });
+      console.log('Student signed up successfully after sending response');
     } catch (err) {
       this.handleError(req, res, err);
     }
@@ -238,4 +242,10 @@ export default class StudentController extends BaseController {
   }
 
   // todo: forget-password
+  // todo: email notification use a free email service like sendgrid or mailgun
+  // todo: sms notification
+  // todo: 2fa
+  // todo: activity log
+  // todo: account verification
+  // todo: profile update
 }

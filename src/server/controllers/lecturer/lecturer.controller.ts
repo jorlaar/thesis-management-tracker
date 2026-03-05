@@ -66,7 +66,7 @@ export default class lecturerController extends BaseController {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: Number(env.expires_at) }
+        { expiresIn: env.expires_at }
       );
 
       this.handleSuccess(req, res, { ...lecturer, token });
@@ -109,7 +109,7 @@ export default class lecturerController extends BaseController {
           data: signedData
         },
         env.jwt_secret,
-        { expiresIn: Number(env.expires_at) }
+        { expiresIn: env.expires_at }
       );
 
       // gets all thesis tied to a lecturer

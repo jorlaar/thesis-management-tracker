@@ -50,7 +50,11 @@ const env = {
   aws_region: process.env.AWS_REGION,
   aws_host_name: process.env.AWS_HOST_NAME,
   thesis_bucket: process.env.THESIS_BUCKET,
-  secret_key_recaptcha: process.env.SECRET_KEY_RECAPTCHA
+  secret_key_recaptcha: process.env.SECRET_KEY_RECAPTCHA,
+  resend_api_key: process.env.RESEND_API_KEY,
+  email_from: process.env.EMAIL_FROM,
+  email_user: process.env.EMAIL_USER,
+  email_password: process.env.EMAIL_PASSWORD
 };
 
 const missingVariables = requiredVariables.reduce((acc, variable) => {
