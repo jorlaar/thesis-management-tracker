@@ -30,6 +30,7 @@ import {
 } from '../base';
 import authVerify from '@app/server/middlewares/auth.verify';
 import thesisRepo from '@app/data/thesis/thesis.repo';
+import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
 
 @controller('/lecturer')
 export default class lecturerController extends BaseController {
@@ -67,6 +68,11 @@ export default class lecturerController extends BaseController {
         },
         env.jwt_secret,
         { expiresIn: env.expires_at }
+      );
+
+      emailNodemailerService.sendWelcomeEmail(
+        lecturer.email,
+        lecturer.first_name
       );
 
       this.handleSuccess(req, res, { ...lecturer, token });

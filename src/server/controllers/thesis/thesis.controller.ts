@@ -31,6 +31,7 @@ import { THESIS_STATUS } from '@app/data/thesis/thesis.model';
 import studentRepo from '@app/data/student/student.repo';
 // import methodologyRepo from '@app/data/methodology/methodology.repo';
 import { ActionNotAllowedError, BadRequestError, NotFoundError } from '../base';
+import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
 
 @controller('/thesis', authVerify)
 export default class ThesisController extends BaseController {
@@ -235,6 +236,13 @@ export default class ThesisController extends BaseController {
         lecturer_review_time_stamp: new Date(),
         ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
       });
+
+      emailNodemailerService.sendLecturerThesisReviewEmail(
+        student_details.email,
+        student_details.first_name,
+        `${req.user_data.first_name} ${req.user_data.last_name}`
+      );
+
       this.handleSuccess(req, res, { id: thesisId._id });
     } catch (error) {
       this.handleError(req, res, error);
@@ -276,6 +284,13 @@ export default class ThesisController extends BaseController {
         lecturer_review_time_stamp: new Date(),
         ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
       });
+
+      emailNodemailerService.sendLecturerThesisApprovalEmail(
+        student_details.email,
+        student_details.first_name,
+        `${req.user_data.first_name} ${req.user_data.last_name}`
+      );
+
       this.handleSuccess(req, res, { id: thesisId._id });
     } catch (error) {
       this.handleError(req, res, error);
@@ -317,6 +332,16 @@ export default class ThesisController extends BaseController {
         lecturer_review_time_stamp: new Date(),
         ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
       });
+
+      emailNodemailerService.sendThesisLecturerRejectionEmail(
+        student_details.email,
+        student_details.first_name,
+        req.user_data.email,
+        `${req.user_data.first_name} ${req.user_data.last_name}`,
+        body?.comment,
+        body?.file_url
+      );
+
       this.handleSuccess(req, res, { id: thesisId._id });
     } catch (error) {
       this.handleError(req, res, error);
@@ -471,6 +496,13 @@ export default class ThesisController extends BaseController {
         ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
         // ...(body?.tracker && { tracker: body.tracker }) // Only include if body.tracker exists
       });
+
+      emailNodemailerService.sendMethodologyThesisReviewEmail(
+        student_details.email,
+        student_details.first_name,
+        `${req.user_data.first_name} ${req.user_data.last_name}`
+      );
+
       this.handleSuccess(req, res, { id: thesisId._id });
     } catch (error) {
       this.handleError(req, res, error);
@@ -512,6 +544,13 @@ export default class ThesisController extends BaseController {
         methodology_review_time_stamp: new Date(),
         ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
       });
+
+      emailNodemailerService.sendMethodologyThesisApprovalEmail(
+        student_details.email,
+        student_details.first_name,
+        `${req.user_data.first_name} ${req.user_data.last_name}`
+      );
+
       this.handleSuccess(req, res, { id: thesisId._id });
     } catch (error) {
       this.handleError(req, res, error);
@@ -553,6 +592,16 @@ export default class ThesisController extends BaseController {
         methodology_review_time_stamp: new Date(),
         ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
       });
+
+      emailNodemailerService.sendThesisMethodologyRejectionEmail(
+        student_details.email,
+        student_details.first_name,
+        req.user_data.email,
+        `${req.user_data.first_name} ${req.user_data.last_name}`,
+        body?.comment,
+        body?.file_url
+      );
+
       this.handleSuccess(req, res, { id: thesisId._id });
     } catch (error) {
       this.handleError(req, res, error);

@@ -21,12 +21,18 @@ class nodeMailerEmailService {
     recipient: string | string[],
     subject: string,
     text?: string,
-    html?: string
+    html?: string,
+    sender_email?: string,
+    sender_name?: string,
+    file_url?: string,
+    usercomment?: string
   ) {
     const mailOptions: Mail = {
       from: env.email_user,
       to: recipient,
-      reply_to: env.email_user,
+      reply_to: sender_email || env.email_user,
+      ...(sender_email && { cc: sender_email }),
+      ...(sender_name && { sender_name }),
       subject,
       text,
       html
@@ -61,20 +67,148 @@ class nodeMailerEmailService {
     this.sendEmail(recipient, subject, text, html);
   }
 
-  sendThesisApprovalEmail(recipient: string, name: string) {
+  sendLecturerThesisApprovalEmail(
+    recipient: string,
+    name: string,
+    lecturer_name: string
+  ) {
     const subject = 'Thesis Approval Notification';
-    const text = `Hello ${name},\n\nCongratulations! Your thesis has been approved. \n\nBest regards,\nThe Thesis Management Team`;
-    const html = `<p>Hello ${name},</p><p>Congratulations! Your thesis has been approved. We will contact you with the next steps shortly.</p><p>Best regards,<br>The Thesis Management Team</p>`;
+
+    let sender_details = lecturer_name
+      ? `Prof/Dr/Mr ${lecturer_name}`
+      : 'The Thesis Management Team';
+
+    const text = `Hello ${name},\n\nCongratulations! Your thesis has been approved. \n\nBest regards,\n${sender_details}`;
+    const html = `<p>Hello ${name},</p><p>Congratulations! Your thesis has been approved.</p><p>Best regards,<br>${sender_details}</p>`;
 
     this.sendEmail(recipient, subject, text, html);
   }
 
-  sendThesisRejectionEmail(recipient: string, name: string) {
-    const subject = 'Thesis Rejection Notification';
-    const text = `Hello ${name},\n\nWe regret to inform you that your thesis has been rejected. Please review the feedback provided and consider resubmitting after making the necessary revisions.\n\nBest regards,\nThe Thesis Management Team`;
-    const html = `<p>Hello ${name},</p><p>We regret to inform you that your thesis has been rejected. Please review the feedback provided and consider resubmitting after making the necessary revisions.</p><p>Best regards,<br>The Thesis Management Team</p>`;
+  sendMethodologyThesisApprovalEmail(
+    recipient: string,
+    name: string,
+    methodology_name: string
+  ) {
+    const subject = 'Thesis Approval Notification';
+
+    let sender_details = methodology_name
+      ? `Prof/Dr/Mr ${methodology_name}`
+      : 'The Thesis Management Team';
+
+    const text = `Hello ${name},\n\nCongratulations! Your thesis has been approved. \n\nBest regards,\n${sender_details}`;
+    const html = `<p>Hello ${name},</p><p>Congratulations! Your thesis has been approved.</p><p>Best regards,<br>${sender_details}</p>`;
 
     this.sendEmail(recipient, subject, text, html);
+  }
+
+  sendLecturerThesisReviewEmail(
+    recipient: string,
+    name: string,
+    lecturer_name: string
+  ) {
+    const subject = 'Supervisor Thesis Review Notification';
+
+    let sender_details = lecturer_name
+      ? `Prof/Dr/Mr ${lecturer_name}`
+      : 'The Thesis Management Team';
+
+    const text = `Hello ${name},\n\nYour thesis has been reviewed. Please check the feedback and make the necessary revisions.\n\nBest regards,\n ${sender_details}`;
+    const html = `<p>Hello ${name},</p><p>Your thesis has been reviewed by your supervisor. Please check the feedback and make the necessary revisions.</p><p>Best regards,<br>${sender_details}</p>`;
+
+    this.sendEmail(recipient, subject, text, html);
+  }
+
+  sendMethodologyThesisReviewEmail(
+    recipient: string,
+    name: string,
+    methodology_name: string
+  ) {
+    const subject = 'Methodology Thesis Review Notification';
+
+    let sender_details = methodology_name
+      ? `Prof/Dr/Mr ${methodology_name}`
+      : 'The Thesis Management Team';
+
+    const text = `Hello ${name},\n\nYour thesis has been reviewed. Please check the feedback and make the necessary revisions.\n\nBest regards,\n ${sender_details}`;
+    const html = `<p>Hello ${name},</p><p>Your thesis has been reviewed. Please check the feedback and make the necessary revisions.</p><p>Best regards,<br>${sender_details}</p>`;
+
+    this.sendEmail(recipient, subject, text, html);
+  }
+
+  /**
+   * Sends an email to the student notifying them of their thesis rejection by the lecturer, including any comments and an optional file attachment.
+   * @param recipient
+   * @param name
+   * @param sender_name
+   * @param sender_email
+   * @param usercomment
+   * @param file_url
+   */
+  sendThesisLecturerRejectionEmail(
+    recipient: string,
+    name: string,
+    sender_name: string,
+    sender_email: string,
+    usercomment?: string,
+    file_url?: string
+  ) {
+    const subject = 'Thesis Rejection Notification';
+
+    let sender_details = sender_name
+      ? `Prof/Dr/Mr ${sender_name}`
+      : 'The Thesis Management Team';
+
+    const text = `Hello ${name},\n\n I will like to inform you that your thesis has been rejected. Please review the feedback provided and consider resubmitting after making the necessary revisions.\n\nBest regards,\n ${sender_details}`;
+    const html = `<p>Hello ${name},</p><p> We will like to inform you that your thesis has been rejected. Please review the feedback provided and consider resubmitting after making the necessary revisions.</p><p>Best regards,<br>${sender_details}</p>`;
+
+    this.sendEmail(
+      recipient,
+      subject,
+      text,
+      html,
+      sender_email,
+      sender_name,
+      usercomment,
+      file_url
+    );
+  }
+
+  /**
+   * Sends an email to the student notifying them of their thesis rejection by the methodology, including any comments and an optional file attachment.
+   * @param recipient
+   * @param name
+   * @param sender_name
+   * @param sender_email
+   * @param usercomment
+   * @param file_url
+   */
+  sendThesisMethodologyRejectionEmail(
+    recipient: string,
+    name: string,
+    sender_name: string,
+    sender_email: string,
+    usercomment?: string,
+    file_url?: string
+  ) {
+    const subject = 'Thesis Rejection Notification';
+
+    let sender_details = sender_name
+      ? `Prof/Dr/Mr ${sender_name}`
+      : 'The Thesis Management Team';
+
+    const text = `Hello ${name},\n\n I will like to inform you that your thesis has been rejected. Please review the feedback provided and consider resubmitting after making the necessary revisions.\n\nBest regards,\n ${sender_details}`;
+    const html = `<p>Hello ${name},</p><p> We will like to inform you that your thesis has been rejected. Please review the feedback provided and consider resubmitting after making the necessary revisions.</p><p>Best regards,<br>${sender_details}</p>`;
+
+    this.sendEmail(
+      recipient,
+      subject,
+      text,
+      html,
+      sender_email,
+      sender_name,
+      usercomment,
+      file_url
+    );
   }
 }
 
