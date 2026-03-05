@@ -35,6 +35,7 @@ import thesisRepo from '@app/data/thesis/thesis.repo';
 import { PaginationQueryDTO } from '../thesis/thesis.dto';
 import studentRepo from '@app/data/student/student.repo';
 import { THESIS_STATUS } from '@app/data/thesis/thesis.model';
+import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
 
 @controller('/methodology')
 export default class methodologyController extends BaseController {
@@ -74,6 +75,10 @@ export default class methodologyController extends BaseController {
         { expiresIn: env.expires_at }
       );
 
+      emailNodemailerService.sendWelcomeEmail(
+        methodology.email,
+        methodology.first_name
+      );
       this.handleSuccess(req, res, { ...signedData, token });
     } catch (err) {
       this.handleError(req, res, err);
