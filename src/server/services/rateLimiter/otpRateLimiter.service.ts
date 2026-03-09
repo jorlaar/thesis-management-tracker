@@ -13,36 +13,40 @@ const OTP_TRIES_KEY = 'otp:reg';
 export class OTPRateLimiterService {
   /**
    * Build the redis key
-   * @param phone_number student mobile_number number
+   * @param id can be a phone number or email or id depending on the use case
    */
 
-  private attemptsKey(phone_number: string) {
-    return `${OTP_TRIES_KEY}:${phone_number}`;
+  private attemptsKey(id: string) {
+    return `${OTP_TRIES_KEY}:${id}`;
   }
 
   /**
-   * Gets the `otp tries` within a min for a phone_number from redis
-   * @param phone_number  phone number
+   * Gets the `otp tries` within a min for a id from redis
+   * @param id  phone number
    */
-  async getTries(phone_number: string) {
-    return Number(await redis.get(this.attemptsKey(phone_number)));
+  async getTries(id: string) {
+    return Number(await redis.get(this.attemptsKey(id)));
   }
 
-  private async setTries(phone_number: string, tries: number) {
-    await redis.set(this.attemptsKey(phone_number), tries, {
+  private async setTries(id: string, tries: number) {
+    await redis.set(this.attemptsKey(id), tries, {
       EX: WINDOW_DURATION
     });
   }
 
   /**
    * Increments a student's `otp code attempts` limit and locks the student out if they exceed the allowed daily limit
-   * @param phone_number phone number
+   * @param id phone number
    */
-  async limit(phone_number: string) {
-    const tries = await this.getTries(phone_number);
+  async limit(id: string) {
+    const tries = await this.getTries(id);
     if (tries === MAX_TRIES) throw new TooManyRequestError();
 
-    await this.setTries(phone_number, tries + 1);
+    await this.setTries(id, tries + 1);
+  }
+
+  async reset(id: string) {
+    if (this.getTries(id)) await redis.del(this.attemptsKey(id));
   }
 }
 

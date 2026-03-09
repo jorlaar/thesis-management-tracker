@@ -72,3 +72,34 @@ export const FlaggedWordsForNames = [
 export const RegexBuilderForFlaggedWords = () => {
   return new RegExp(`^((?!${FlaggedWordsForNames.join('|')}).)*$`, 'i');
 };
+
+
+// export function encryptString(str: string, secretKey: string): string {
+//   const cipher = crypto.createCipher('aes-256-cbc', secretKey);
+//   let encrypted = cipher.update(str, 'utf8', 'hex');
+//   encrypted += cipher.final('hex');
+//   return encrypted;
+// }
+
+export function emailRateLimiter (maxEmails: number, timeWindow: number) {
+  const emailTimestamps: Record<string, number[]> = {};
+
+  return function canSendEmail(email: string): boolean {
+    const now = Date.now();
+    if (!emailTimestamps[email]) {
+      emailTimestamps[email] = [];
+    }
+
+    // Remove timestamps that are outside the time window
+    emailTimestamps[email] = emailTimestamps[email].filter(
+      timestamp => now - timestamp < timeWindow
+    );
+
+    if (emailTimestamps[email].length < maxEmails) {
+      emailTimestamps[email].push(now);
+      return true; // Allow sending email
+    } else {
+      return false; // Rate limit exceeded
+    }
+  };
+}

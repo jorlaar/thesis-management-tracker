@@ -4,8 +4,8 @@
   "description": "jola Service",
   "main": "index.js",
   "engines": {
-    "node": "20.x",
-    "yarn": "1.x"
+    "node": ">=20.x",
+    "yarn": ">=1.x"
   },
   "scripts": {
     "start": "node ./dist/server",

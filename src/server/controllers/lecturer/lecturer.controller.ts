@@ -7,7 +7,8 @@ import {
   response,
   request,
   requestBody,
-  httpGet
+  httpGet,
+  queryParam
 } from 'inversify-express-utils';
 import {
   changeLecturerPassword,
@@ -31,6 +32,20 @@ import {
 import authVerify from '@app/server/middlewares/auth.verify';
 import thesisRepo from '@app/data/thesis/thesis.repo';
 import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
+import {
+  forgotStudentPassword,
+  ResetPasswordValidator
+} from '../student/student.validator';
+import {
+  ForgotStudentPasswordDTO,
+  ResetPasswordDTO
+} from '../student/student.dto';
+import { redis } from '@app/common/services/redis';
+import {
+  OTPRateLimiterService,
+  PasswordRateLimiterService
+} from '@app/server/services';
+import { HashingService } from '@app/server/utils/hashing';
 
 @controller('/lecturer')
 export default class lecturerController extends BaseController {
@@ -99,7 +114,8 @@ export default class lecturerController extends BaseController {
       const isPasswordValid = await lecturer.isPasswordValid(body.password);
 
       if (!isPasswordValid) {
-        throw new ControllerError('Invalid password');
+        await PasswordRateLimiterService.limit(lecturer.id);
+        throw new ControllerError('Invalid email or password');
       }
 
       let signedData: object = {
@@ -122,6 +138,8 @@ export default class lecturerController extends BaseController {
       const lecturerPlainDetails = lecturer.toObject();
       delete lecturerPlainDetails.password;
       delete lecturerPlainDetails.__v;
+
+      await PasswordRateLimiterService.reset(lecturer.id);
 
       const paginatedThesis = await thesisRepo.list({
         conditions: { lecturer_id: lecturer._id },
@@ -189,16 +207,118 @@ export default class lecturerController extends BaseController {
       const isPasswordValid = await lecturer.isPasswordValid(body.old_password);
 
       if (!isPasswordValid) {
-        throw new ControllerError('Invalid password');
+        await PasswordRateLimiterService.limit(lecturer.id);
+        throw new ControllerError('Invalid email or password');
       }
 
-      const updatedLecturer = await lecturer.updatePassword(body.new_password);
-      await updatedLecturer.save();
+      await lecturer.updatePassword(body.new_password);
 
+      await PasswordRateLimiterService.reset(lecturer.id);
       this.handleSuccess(req, res, {
         message: 'Password changed successfully'
       });
     } catch (err) {
+      this.handleError(req, res, err);
+    }
+  }
+
+  /**
+   * Handles the forgot password request for a Lecturer
+   * @param req
+   * @param res
+   * @param body
+   */
+  @httpPost('/forgot-password', validator(forgotStudentPassword))
+  async forgotLecturerPassword(
+    @request() req: Request,
+    @response() res: Response,
+    @requestBody() body: ForgotStudentPasswordDTO
+  ) {
+    try {
+      const lecturer = await lecturerRepo.model.findOne({
+        email: body.email
+      });
+
+      if (!lecturer) {
+        await OTPRateLimiterService.limit(lecturer.id);
+        throw new NotFoundError('lecturer not found');
+      }
+
+      // do not use jwt to generate reset token generate random alphanumeric string strongly encrypt it and save in redis with an expirty time of 30 minutes and use the token to verify the reset password request
+      const resetToken = HashingService.generateKey();
+      const hashToken = await HashingService.toHash(resetToken);
+
+      // save the hashed token in redis with an expiry time of 30 minutes
+      await redis.set(`password_reset_token:${lecturer.id}`, resetToken, {
+        EX: 1800
+      });
+
+      // Send the reset token to the lecturer's email
+      emailNodemailerService.sendPasswordResetEmail(
+        lecturer.email,
+        lecturer.first_name,
+        `${env.api_url}/lecturer/reset-password?token=${hashToken}`
+      );
+      // for use in cases where you want to limit after certain api calls as it's a public api
+      await OTPRateLimiterService.limit(lecturer.id);
+      await OTPRateLimiterService.limit(req.ip);
+
+      this.handleSuccess(req, res, {
+        message: 'Password reset email sent successfully'
+      });
+    } catch (err) {
+      console.log('lecturer found for password reset err:', err);
+      this.handleError(req, res, err);
+    }
+  }
+
+  @httpPost('/reset-password', validator(ResetPasswordValidator))
+  async resetLecturerPassword(
+    @request() req: Request,
+    @response() res: Response,
+    @requestBody() body: ResetPasswordDTO,
+    @queryParam('token') token: string
+  ) {
+    try {
+      const lecturer = await lecturerRepo.model.findOne({
+        email: body.email
+      });
+
+      if (!lecturer) {
+        await OTPRateLimiterService.limit(lecturer.id);
+        throw new NotFoundError('lecturer not found');
+      }
+
+      let cachedToken = await redis.get(`password_reset_token:${lecturer.id}`);
+
+      if (!cachedToken) {
+        await OTPRateLimiterService.limit(lecturer.id);
+        throw new ControllerError('Invalid or Expired password reset value');
+      }
+
+      const isResetTokenValid = await HashingService.compare(
+        token, // hashed token
+        cachedToken // token key
+      );
+
+      if (!isResetTokenValid) {
+        await OTPRateLimiterService.limit(lecturer.id);
+        throw new ControllerError('Invalid password reset token');
+      }
+
+      // Update the lecturer's password
+      await lecturer.updatePassword(body.password);
+
+      // still limit it as this is a public endpoint and it help to reduce malicous users
+      await OTPRateLimiterService.limit(req.ip);
+      await OTPRateLimiterService.limit(lecturer.id);
+      await redis.del(`password_reset_token:${lecturer.id}`);
+
+      this.handleSuccess(req, res, {
+        message: 'Password reset successfully'
+      });
+    } catch (err) {
+      console.error('>>>> password reset error', err);
       this.handleError(req, res, err);
     }
   }
