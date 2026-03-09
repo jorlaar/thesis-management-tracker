@@ -34,6 +34,21 @@ import {
   NotFoundError
 } from '../base';
 import { PaginationQueryDTO } from '../thesis/thesis.dto';
+import {
+  forgotStudentPassword,
+  ResetPasswordValidator
+} from '../student/student.validator';
+import {
+  ForgotStudentPasswordDTO,
+  ResetPasswordDTO
+} from '../student/student.dto';
+import { redis } from '@app/common/services/redis';
+import {
+  OTPRateLimiterService,
+  PasswordRateLimiterService
+} from '@app/server/services';
+import { HashingService } from '@app/server/utils/hashing';
+import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
 
 @controller('/admin')
 export default class adminController extends BaseController {
@@ -93,7 +108,8 @@ export default class adminController extends BaseController {
       const isPasswordValid = await admin.isPasswordValid(body.password);
 
       if (!isPasswordValid) {
-        throw new ControllerError('Invalid password');
+        await PasswordRateLimiterService.limit(admin.id);
+        throw new ControllerError('Invalid email or password');
       }
       let signedData: object = {
         id: admin._id,
@@ -112,6 +128,8 @@ export default class adminController extends BaseController {
       const adminPlainDetails = admin.toObject();
       delete adminPlainDetails.password;
       delete adminPlainDetails.__v;
+
+      await PasswordRateLimiterService.reset(admin.id);
 
       this.handleSuccess(req, res, { ...adminPlainDetails, token });
     } catch (err) {
@@ -152,12 +170,12 @@ export default class adminController extends BaseController {
       const isPasswordValid = await admin.isPasswordValid(body.old_password);
 
       if (!isPasswordValid) {
-        throw new ControllerError('Invalid password');
+        await PasswordRateLimiterService.limit(admin.id);
+        throw new ControllerError('Invalid email or password');
       }
 
-      const updatedAdmin = await admin.updatePassword(body.new_password);
-
-      await updatedAdmin.save();
+      await admin.updatePassword(body.new_password);
+      await PasswordRateLimiterService.reset(admin.id);
 
       this.handleSuccess(req, res, {
         message: 'Password changed successfully'
@@ -325,14 +343,12 @@ export default class adminController extends BaseController {
     @requestParam('studentEmail') studentEmail: string
   ) {
     try {
-      // 1. Authorization check
       if (req.user_data.type !== 'admin') {
         throw new ActionNotAllowedError(
           'Unauthorized: Only admin can perform this operation'
         );
       }
 
-      // 2. Find student by email
       const student_details = await studentRepo.model.findOne({
         email: studentEmail
       });
@@ -340,13 +356,13 @@ export default class adminController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      // 3. Get the most recent thesis for reference (optional)
+      // Get the most recent thesis for reference (optional)
       const latestThesis = await thesisRepo.model
         .findOne({ student_id: student_details.id })
         .sort({ created_at: -1 })
         .lean();
 
-      // 4. Aggregate submission time trends FOR THIS SPECIFIC STUDENT
+      // Aggregate submission time trends FOR THIS SPECIFIC STUDENT
       const submissionTrends = await thesisRepo.model.aggregate([
         {
           $match: {
@@ -370,7 +386,7 @@ export default class adminController extends BaseController {
         { $sort: { _id: 1 } } // Sort chronologically
       ]);
 
-      // 5. Handle response
+      //  Handle response
       if (!submissionTrends || submissionTrends.length === 0) {
         return this.handleSuccess(req, res, {
           message: 'No thesis submissions found for this student',
@@ -393,6 +409,106 @@ export default class adminController extends BaseController {
       });
     } catch (error) {
       this.handleError(req, res, error);
+    }
+  }
+
+  /**
+   * Handles the forgot password request for a Admin
+   * @param req
+   * @param res
+   * @param body
+   */
+  @httpPost('/forgot-password', validator(forgotStudentPassword))
+  async forgotAdminPassword(
+    @request() req: Request,
+    @response() res: Response,
+    @requestBody() body: ForgotStudentPasswordDTO
+  ) {
+    try {
+      const admin = await adminRepo.model.findOne({
+        email: body.email
+      });
+
+      if (!admin) {
+        await OTPRateLimiterService.limit(admin.id);
+        throw new NotFoundError('admin not found');
+      }
+
+      // do not use jwt to generate reset token generate random alphanumeric string strongly encrypt it and save in redis with an expirty time of 30 minutes and use the token to verify the reset password request
+      const resetToken = HashingService.generateKey();
+      const hashToken = await HashingService.toHash(resetToken);
+
+      // save the hashed token in redis with an expiry time of 30 minutes
+      await redis.set(`password_reset_token:${admin.id}`, resetToken, {
+        EX: 1800
+      });
+
+      // Send the reset token to the admin's email
+      emailNodemailerService.sendPasswordResetEmail(
+        admin.email,
+        admin.first_name,
+        `${env.api_url}/admin/reset-password?token=${hashToken}`
+      );
+
+      // for use in cases where you want to limit after certain api calls as it's a public api
+      await OTPRateLimiterService.limit(admin.id);
+      await OTPRateLimiterService.limit(req.ip);
+
+      this.handleSuccess(req, res, {
+        message: 'Password reset email sent successfully'
+      });
+    } catch (err) {
+      this.handleError(req, res, err);
+    }
+  }
+
+  @httpPost('/reset-password', validator(ResetPasswordValidator))
+  async resetAdminPassword(
+    @request() req: Request,
+    @response() res: Response,
+    @requestBody() body: ResetPasswordDTO,
+    @queryParam('token') token: string
+  ) {
+    try {
+      const admin = await adminRepo.model.findOne({
+        email: body.email
+      });
+
+      if (!admin) {
+        await OTPRateLimiterService.limit(admin.id);
+        throw new NotFoundError('admin not found');
+      }
+
+      let cachedToken = await redis.get(`password_reset_token:${admin.id}`);
+
+      if (!cachedToken) {
+        await OTPRateLimiterService.limit(admin.id);
+        throw new ControllerError('Invalid or Expired password reset value');
+      }
+
+      const isResetTokenValid = await HashingService.compare(
+        token, // hashed token
+        cachedToken // token key
+      );
+
+      if (!isResetTokenValid) {
+        await OTPRateLimiterService.limit(admin.id);
+        throw new ControllerError('Invalid password reset token');
+      }
+
+      // Update the admin's password
+      await admin.updatePassword(body.password);
+
+      // still limit it as this is a public endpoint and it help to reduce malicous users
+      await OTPRateLimiterService.limit(req.ip);
+      await OTPRateLimiterService.limit(admin.id);
+      await redis.del(`password_reset_token:${admin.id}`);
+
+      this.handleSuccess(req, res, {
+        message: 'Password reset successfully'
+      });
+    } catch (err) {
+      this.handleError(req, res, err);
     }
   }
 }

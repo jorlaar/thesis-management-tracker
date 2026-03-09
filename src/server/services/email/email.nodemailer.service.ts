@@ -2,6 +2,7 @@ import nodeMailer from 'nodemailer';
 import { Mail } from '@anjorlar/email';
 import env from '@app/common/config/env';
 import logger from '@app/common/services/logger';
+import { URL } from 'url';
 
 class nodeMailerEmailService {
   private transporter: nodeMailer.Transporter;
@@ -209,6 +210,50 @@ class nodeMailerEmailService {
       usercomment,
       file_url
     );
+  }
+
+  sendPasswordResetEmail(recipient: string, name: string, reset_link: string) {
+    console.log(
+      'Password reset token generated successfully email',
+      reset_link,
+      recipient,
+      name
+    );
+
+    // Extract token from reset_link (assuming format like: https://yourapp.com/reset?token=123456)
+    const token =
+      new URL(reset_link).searchParams.get('token') ||
+      reset_link.split('/').pop() ||
+      reset_link;
+
+    const subject = 'Password Reset Request';
+    const text = `Hello ${name},\n\nWe received a request to reset your password.\n\nYour reset token is: ${token}\n\nYou can also use this link: ${reset_link}\n\nIf you did not request a password reset, please ignore this email.\n\nBest regards,\nThe Thesis Management Team`;
+
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Password Reset Request</h2>
+      <p>Hello ${name},</p>
+      <p>We received a request to reset your password.</p>
+      
+      <div style="background-color: #f5f5f5; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0 0 10px 0;"><strong>Your reset token:</strong></p>
+        <div style="background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between;">
+          <code style="font-size: 18px; font-weight: bold; color: #333;">${token}</code>
+          <button onclick="navigator.clipboard.writeText('${token}')" 
+                  style="background-color: #4CAF50; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">
+            Copy
+          </button>
+        </div>
+      </div>
+      
+      <p>Or click the link below to reset your password:</p>
+      <p><a href="${reset_link}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a></p>
+      <p style="color: #666; font-size: 14px;">If you did not request a password reset, please ignore this email.</p>
+      <p style="margin-top: 30px;">Best regards,<br>The Thesis Management Team</p>
+    </div>
+  `;
+
+    this.sendEmail(recipient, subject, text, html);
   }
 }
 

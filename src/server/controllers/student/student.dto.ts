@@ -16,11 +16,20 @@ export interface StudentSignupDTO {
 }
 
 export interface StudentLoginDTO {
-  email?: string;
+  email: string;
   password: string;
 }
 
 export interface ChangeStudentPasswordDTO {
   old_password: string;
   new_password: string;
+}
+
+export interface ForgotStudentPasswordDTO {
+  email: string;
+}
+
+export interface ResetPasswordDTO {
+  email: string;
+  password: string;
 }

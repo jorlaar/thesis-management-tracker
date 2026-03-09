@@ -8,7 +8,7 @@ class EmailService {
   constructor() {
     this.resend = new Resend(env.resend_api_key);
     logger.message('Email service initialized');
-    console.log('Email service initialized:', this.resend);
+    // console.log('Email service initialized:', this.resend);
   }
 
   /**

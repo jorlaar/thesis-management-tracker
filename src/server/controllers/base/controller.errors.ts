@@ -258,7 +258,7 @@ export class InvalidPasswordError extends ControllerError {
 export class LockedOutError extends ControllerError {
   constructor() {
     const errorMessage =
-      'Your mobile_number has been restricted. Kindly contact support';
+      'Due to multiple failed login attempts, your account has been temporarily locked for 24 hours. Please try again later or contact support if you need immediate assistance.';
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;

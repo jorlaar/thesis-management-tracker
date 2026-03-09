@@ -21,6 +21,7 @@ if (['production', 'staging'].includes(process.env.NODE_ENV))
 
 const env = {
   amqp_url: process.env.AMQP_URL,
+  api_url: process.env.API_URL,
   port: Number(process.env.PORT),
   redis_url: process.env.REDIS_URL,
   jwt_secret: process.env.JWT_SECRET,
@@ -54,7 +55,10 @@ const env = {
   resend_api_key: process.env.RESEND_API_KEY,
   email_from: process.env.EMAIL_FROM,
   email_user: process.env.EMAIL_USER,
-  email_password: process.env.EMAIL_PASSWORD
+  email_password: process.env.EMAIL_PASSWORD,
+  window_size_in_hours: Number(process.env.WINDOW_SIZE_IN_HOURS),
+  max_window_request_count: Number(process.env.MAX_WINDOW_REQUEST_COUNT) || 10,
+  window_log_interval_in_hours: Number(process.env.WINDOW_LOG_INTERVAL_IN_HOURS)
 };
 
 const missingVariables = requiredVariables.reduce((acc, variable) => {
