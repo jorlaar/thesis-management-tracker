@@ -25,12 +25,12 @@ export const studentSignup = joi.object({
   email: joi
     .string()
     .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
-    .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
+    // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
     .trim()
     .required()
     .messages({
-      'string.pattern.base':
-        'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
+      // 'string.pattern.base':
+      //   'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
       'string.empty': 'Email is required',
       'any.required': 'Email is required'
     }),
@@ -58,12 +58,12 @@ export const studentLogin = joi.object({
   email: joi
     .string()
     .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
-    .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
+    // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
     .trim()
     .required()
     .messages({
-      'string.pattern.base':
-        'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
+      // 'string.pattern.base':
+      //   'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
       'string.empty': 'Email is required',
       'any.required': 'Email is required'
     }),
@@ -93,7 +93,7 @@ export const changeStudentPassword = joi.object({
     .required()
 });
 
-export const forgotStudentPassword = joi.object({
+export const forgotPasswordValidator = joi.object({
   email: joi
     .string()
     .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
@@ -101,14 +101,20 @@ export const forgotStudentPassword = joi.object({
     .trim()
     .required()
     .messages({
-      'string.pattern.base':
-        'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
+    //   'string.pattern.base':
+    //     'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
       'string.empty': 'Email is required',
       'any.required': 'Email is required'
     })
 });
 
 export const ResetPasswordValidator = joi.object({
+  email: joi.string().email().trim().lowercase().required(),
+  password: passwordSchema
+});
+
+export const ResetPasswordValidatorV2 = joi.object({
+  otp: joi.string().length(6).pattern(/^[0-9]+$/).required(),
   email: joi.string().email().trim().lowercase().required(),
   password: passwordSchema
 });

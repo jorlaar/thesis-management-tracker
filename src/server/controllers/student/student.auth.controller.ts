@@ -6,20 +6,22 @@ import {
   httpPost,
   response,
   request,
-  requestBody,
-  queryParam
+  requestBody
+  // queryParam
 } from 'inversify-express-utils';
 import {
   changeStudentPassword,
-  forgotStudentPassword,
-  ResetPasswordValidator,
+  forgotPasswordValidator,
+  // ResetPasswordValidator,
+  ResetPasswordValidatorV2,
   studentLogin,
   studentSignup
 } from './student.validator';
 import {
   ChangeStudentPasswordDTO,
-  ForgotStudentPasswordDTO,
-  ResetPasswordDTO,
+  ForgotPasswordDTO,
+  // ResetPasswordDTO,
+  ResetPasswordDTOV2,
   StudentLoginDTO,
   StudentSignupDTO
 } from './student.dto';
@@ -35,7 +37,7 @@ import {
   NotFoundError
 } from '../base';
 import nodeMailerEmailService from '@app/server/services/email/email.nodemailer.service';
-import { HashingService } from '@app/server/utils/hashing';
+// import { HashingService } from '@app/server/utils/hashing';
 import { redis } from '@app/common/services/redis';
 import {
   OTPRateLimiterService,
@@ -198,17 +200,115 @@ export default class StudentAuthController extends BaseController {
     }
   }
 
+  // /**
+  //  * Handles the forgot password request for a student
+  //  * @param req
+  //  * @param res
+  //  * @param body
+  //  */
+  // @httpPost('/forgot-password', validator(forgotPasswordValidator))
+  // async forgotStudentPassword(
+  //   @request() req: Request,
+  //   @response() res: Response,
+  //   @requestBody() body: ForgotPasswordDTO
+  // ) {
+  //   try {
+  //     const student = await studentRepo.model.findOne({ email: body.email });
+
+  //     if (!student) {
+  //       await OTPRateLimiterService.limit(student.id);
+  //       throw new NotFoundError('Student not found');
+  //     }
+
+  //     // do not use jwt to generate reset token generate random alphanumeric string strongly encrypt it and save in redis with an expirty time of 30 minutes and use the token to verify the reset password request
+  //     const resetToken = HashingService.generateKey();
+  //     const hashToken = await HashingService.toHash(resetToken);
+
+  //     // save the hashed token in redis with an expiry time of 30 minutes
+  //     await redis.set(`password_reset_token:${student.id}`, resetToken, {
+  //       EX: 1800
+  //     });
+
+  //     // console.log(
+  //     //   'Password reset hash generated successfully hashToken',
+  //     //   `http://localhost:${env.port}/api/v1/student/reset-password?token=${hashToken}`
+  //     // );
+
+  //     // Send the reset token to the student's email
+  //     nodeMailerEmailService.sendPasswordResetEmail(
+  //       student.email,
+  //       student.first_name,
+  //       `${env.api_url}/student/reset-password?token=${hashToken}`
+  //     );
+  //     // for use in cases where you want to limit after certain api calls as it's a public api
+  //     await OTPRateLimiterService.limit(student.id);
+  //     await OTPRateLimiterService.limit(req.ip);
+
+  //     this.handleSuccess(req, res, {
+  //       message: 'Password reset email sent successfully'
+  //     });
+  //   } catch (err) {
+  //     this.handleError(req, res, err);
+  //   }
+  // }
+
+  // @httpPost('/reset-password', validator(ResetPasswordValidator))
+  // async resetStudentPassword(
+  //   @request() req: Request,
+  //   @response() res: Response,
+  //   @requestBody() body: ResetPasswordDTO,
+  //   @queryParam('token') token: string
+  // ) {
+  //   try {
+  //     const student = await studentRepo.model.findOne({ email: body.email });
+  //     if (!student) {
+  //       await OTPRateLimiterService.limit(student.id);
+  //       throw new NotFoundError('Student not found');
+  //     }
+
+  //     let cachedToken = await redis.get(`password_reset_token:${student.id}`);
+  //     if (!cachedToken) {
+  //       await OTPRateLimiterService.limit(student.id);
+  //       throw new ControllerError('Invalid or Expired password reset value');
+  //     }
+
+  //     const isResetTokenValid = await HashingService.compare(
+  //       token, // hashed token
+  //       cachedToken // token key
+  //     );
+
+  //     if (!isResetTokenValid) {
+  //       await OTPRateLimiterService.limit(student.id);
+  //       throw new ControllerError('Invalid password reset token');
+  //     }
+
+  //     // Update the student's password
+  //     await student.updatePassword(body.password);
+
+  //     // still limit it as this is a public endpoint and it help to reduce malicous users
+  //     await OTPRateLimiterService.limit(req.ip);
+  //     await OTPRateLimiterService.limit(student.id);
+  //     await redis.del(`password_reset_token:${student.id}`);
+
+  //     this.handleSuccess(req, res, {
+  //       message: 'Password reset successfully'
+  //     });
+  //   } catch (err) {
+  //     this.handleError(req, res, err);
+  //   }
+  // }
+
   /**
    * Handles the forgot password request for a student
    * @param req
    * @param res
    * @param body
    */
-  @httpPost('/forgot-password', validator(forgotStudentPassword))
-  async forgotStudentPassword(
+  @httpPost('/forgot-password', validator(forgotPasswordValidator))
+  async forgotStudentPasswordV2(
     @request() req: Request,
     @response() res: Response,
-    @requestBody() body: ForgotStudentPasswordDTO
+    @requestBody() body: ForgotPasswordDTO
   ) {
     try {
       const student = await studentRepo.model.findOne({ email: body.email });
@@ -218,44 +318,39 @@ export default class StudentAuthController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      // do not use jwt to generate reset token generate random alphanumeric string strongly encrypt it and save in redis with an expirty time of 30 minutes and use the token to verify the reset password request
-      const resetToken = HashingService.generateKey();
-      const hashToken = await HashingService.toHash(resetToken);
+      // generate random otp and send to email and save the otp in redis with an expiry time of 5 minutes and use the otp to verify the reset password request
+      const forgetPasswordOTP = Math.floor(
+        100000 + Math.random() * 900000
+      ).toString();
 
       // save the hashed token in redis with an expiry time of 30 minutes
-      await redis.set(`password_reset_token:${student.id}`, resetToken, {
+      await redis.set(`password_reset_otp:${student.id}`, forgetPasswordOTP, {
         EX: 1800
       });
 
-      // console.log(
-      //   'Password reset hash generated successfully hashToken',
-      //   `http://localhost:${env.port}/api/v1/student/reset-password?token=${hashToken}`
-      // );
-
       // Send the reset token to the student's email
-      nodeMailerEmailService.sendPasswordResetEmail(
+      nodeMailerEmailService.sendDForgotPasswordResetEmailV2(
         student.email,
         student.first_name,
-        `${env.api_url}/student/reset-password?token=${hashToken}`
+        forgetPasswordOTP
       );
       // for use in cases where you want to limit after certain api calls as it's a public api
       await OTPRateLimiterService.limit(student.id);
       await OTPRateLimiterService.limit(req.ip);
 
       this.handleSuccess(req, res, {
-        message: 'Password reset email sent successfully'
+        message: 'Forgot Password OTP sent to your email successfully'
       });
     } catch (err) {
       this.handleError(req, res, err);
     }
   }
 
-  @httpPost('/reset-password', validator(ResetPasswordValidator))
-  async resetStudentPassword(
+  @httpPost('/otp/reset-password', validator(ResetPasswordValidatorV2))
+  async resetStudentPasswordV2(
     @request() req: Request,
     @response() res: Response,
-    @requestBody() body: ResetPasswordDTO,
-    @queryParam('token') token: string
+    @requestBody() body: ResetPasswordDTOV2
   ) {
     try {
       const student = await studentRepo.model.findOne({ email: body.email });
@@ -264,20 +359,15 @@ export default class StudentAuthController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      let cachedToken = await redis.get(`password_reset_token:${student.id}`);
-      if (!cachedToken) {
+      let cachedOTP = await redis.get(`password_reset_otp:${student.id}`);
+      if (!cachedOTP) {
         await OTPRateLimiterService.limit(student.id);
-        throw new ControllerError('Invalid or Expired password reset value');
+        throw new ControllerError('Invalid or Expired OTP');
       }
 
-      const isResetTokenValid = await HashingService.compare(
-        token, // hashed token
-        cachedToken // token key
-      );
-
-      if (!isResetTokenValid) {
+      if (body.otp !== cachedOTP) {
         await OTPRateLimiterService.limit(student.id);
-        throw new ControllerError('Invalid password reset token');
+        throw new ControllerError('Invalid or expired password reset otp');
       }
 
       // Update the student's password
@@ -286,7 +376,7 @@ export default class StudentAuthController extends BaseController {
       // still limit it as this is a public endpoint and it help to reduce malicous users
       await OTPRateLimiterService.limit(req.ip);
       await OTPRateLimiterService.limit(student.id);
-      await redis.del(`password_reset_token:${student.id}`);
+      await redis.del(`password_reset_otp:${student.id}`);
 
       this.handleSuccess(req, res, {
         message: 'Password reset successfully'

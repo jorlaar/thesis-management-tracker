@@ -25,11 +25,17 @@ export interface ChangeStudentPasswordDTO {
   new_password: string;
 }
 
-export interface ForgotStudentPasswordDTO {
+export interface ForgotPasswordDTO {
   email: string;
 }
 
 export interface ResetPasswordDTO {
   email: string;
+  password: string;
+}
+
+export interface ResetPasswordDTOV2 {
+  email: string;
+  otp: string;
   password: string;
 }

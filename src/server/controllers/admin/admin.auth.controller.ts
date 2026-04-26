@@ -7,7 +7,7 @@ import {
   response,
   request,
   requestBody,
-  queryParam
+  // queryParam
 } from 'inversify-express-utils';
 import {
   adminLogin,
@@ -30,19 +30,21 @@ import {
   NotFoundError
 } from '../base';
 import {
-  forgotStudentPassword,
-  ResetPasswordValidator
+  forgotPasswordValidator,
+  // ResetPasswordValidator,
+  ResetPasswordValidatorV2
 } from '../student/student.validator';
 import {
-  ForgotStudentPasswordDTO,
-  ResetPasswordDTO
+  ForgotPasswordDTO,
+  // ResetPasswordDTO,
+  ResetPasswordDTOV2
 } from '../student/student.dto';
 import { redis } from '@app/common/services/redis';
 import {
   OTPRateLimiterService,
   PasswordRateLimiterService
 } from '@app/server/services';
-import { HashingService } from '@app/server/utils/hashing';
+// import { HashingService } from '@app/server/utils/hashing';
 import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
 
 @controller('/auth/admin')
@@ -180,42 +182,141 @@ export default class AdminAuthController extends BaseController {
     }
   }
 
+  // /**
+  //  * Handles the forgot password request for a Admin
+  //  * @param req
+  //  * @param res
+  //  * @param body
+  //  */
+  // @httpPost('/forgot-password', validator(forgotPasswordValidator))
+  // async forgotAdminPassword(
+  //   @request() req: Request,
+  //   @response() res: Response,
+  //   @requestBody() body: ForgotPasswordDTO
+  // ) {
+  //   try {
+  //     const admin = await adminRepo.model.findOne({
+  //       email: body.email
+  //     });
+
+  //     if (!admin) {
+  //       await OTPRateLimiterService.limit(admin.id);
+  //       throw new NotFoundError('admin not found');
+  //     }
+
+  //     // do not use jwt to generate reset token generate random alphanumeric string strongly encrypt it and save in redis with an expirty time of 30 minutes and use the token to verify the reset password request
+  //     const resetToken = HashingService.generateKey();
+  //     const hashToken = await HashingService.toHash(resetToken);
+
+  //     // save the hashed token in redis with an expiry time of 30 minutes
+  //     await redis.set(`password_reset_token:${admin.id}`, resetToken, {
+  //       EX: 1800
+  //     });
+
+  //     // Send the reset token to the admin's email
+  //     emailNodemailerService.sendPasswordResetEmail(
+  //       admin.email,
+  //       admin.first_name,
+  //       `${env.api_url}/admin/reset-password?token=${hashToken}`
+  //     );
+
+  //     // for use in cases where you want to limit after certain api calls as it's a public api
+  //     await OTPRateLimiterService.limit(admin.id);
+  //     await OTPRateLimiterService.limit(req.ip);
+
+  //     this.handleSuccess(req, res, {
+  //       message: 'Password reset email sent successfully'
+  //     });
+  //   } catch (err) {
+  //     this.handleError(req, res, err);
+  //   }
+  // }
+
+  // @httpPost('/reset-password', validator(ResetPasswordValidator))
+  // async resetAdminPassword(
+  //   @request() req: Request,
+  //   @response() res: Response,
+  //   @requestBody() body: ResetPasswordDTO,
+  //   @queryParam('token') token: string
+  // ) {
+  //   try {
+  //     const admin = await adminRepo.model.findOne({
+  //       email: body.email
+  //     });
+
+  //     if (!admin) {
+  //       await OTPRateLimiterService.limit(admin.id);
+  //       throw new NotFoundError('admin not found');
+  //     }
+
+  //     let cachedToken = await redis.get(`password_reset_token:${admin.id}`);
+
+  //     if (!cachedToken) {
+  //       await OTPRateLimiterService.limit(admin.id);
+  //       throw new ControllerError('Invalid or Expired password reset value');
+  //     }
+
+  //     const isResetTokenValid = await HashingService.compare(
+  //       token, // hashed token
+  //       cachedToken // token key
+  //     );
+
+  //     if (!isResetTokenValid) {
+  //       await OTPRateLimiterService.limit(admin.id);
+  //       throw new ControllerError('Invalid password reset token');
+  //     }
+
+  //     // Update the admin's password
+  //     await admin.updatePassword(body.password);
+
+  //     // still limit it as this is a public endpoint and it help to reduce malicous users
+  //     await OTPRateLimiterService.limit(req.ip);
+  //     await OTPRateLimiterService.limit(admin.id);
+  //     await redis.del(`password_reset_token:${admin.id}`);
+
+  //     this.handleSuccess(req, res, {
+  //       message: 'Password reset successfully'
+  //     });
+  //   } catch (err) {
+  //     this.handleError(req, res, err);
+  //   }
+  // }
+
   /**
-   * Handles the forgot password request for a Admin
+   * Handles the forgot password request for a admin
    * @param req
    * @param res
    * @param body
    */
-  @httpPost('/forgot-password', validator(forgotStudentPassword))
-  async forgotAdminPassword(
+  @httpPost('/forgot-password', validator(forgotPasswordValidator))
+  async forgotAdminPasswordV2(
     @request() req: Request,
     @response() res: Response,
-    @requestBody() body: ForgotStudentPasswordDTO
+    @requestBody() body: ForgotPasswordDTO
   ) {
     try {
-      const admin = await adminRepo.model.findOne({
-        email: body.email
-      });
+      const admin = await adminRepo.model.findOne({ email: body.email });
 
       if (!admin) {
         await OTPRateLimiterService.limit(admin.id);
-        throw new NotFoundError('admin not found');
+        throw new NotFoundError('Admin not found');
       }
 
-      // do not use jwt to generate reset token generate random alphanumeric string strongly encrypt it and save in redis with an expirty time of 30 minutes and use the token to verify the reset password request
-      const resetToken = HashingService.generateKey();
-      const hashToken = await HashingService.toHash(resetToken);
+      // generate random otp and send to email and save the otp in redis with an expiry time of 5 minutes and use the otp to verify the reset password request
+      const forgetPasswordOTP = Math.floor(
+        100000 + Math.random() * 900000
+      ).toString();
 
       // save the hashed token in redis with an expiry time of 30 minutes
-      await redis.set(`password_reset_token:${admin.id}`, resetToken, {
+      await redis.set(`password_reset_otp:${admin.id}`, forgetPasswordOTP, {
         EX: 1800
       });
 
       // Send the reset token to the admin's email
-      emailNodemailerService.sendPasswordResetEmail(
+      emailNodemailerService.sendDForgotPasswordResetEmailV2(
         admin.email,
         admin.first_name,
-        `${env.api_url}/admin/reset-password?token=${hashToken}`
+        forgetPasswordOTP
       );
 
       // for use in cases where you want to limit after certain api calls as it's a public api
@@ -223,45 +324,35 @@ export default class AdminAuthController extends BaseController {
       await OTPRateLimiterService.limit(req.ip);
 
       this.handleSuccess(req, res, {
-        message: 'Password reset email sent successfully'
+        message: 'Forgot Password OTP sent to your email successfully'
       });
     } catch (err) {
       this.handleError(req, res, err);
     }
   }
 
-  @httpPost('/reset-password', validator(ResetPasswordValidator))
-  async resetAdminPassword(
+  @httpPost('/otp/reset-password', validator(ResetPasswordValidatorV2))
+  async resetAdminPasswordV2(
     @request() req: Request,
     @response() res: Response,
-    @requestBody() body: ResetPasswordDTO,
-    @queryParam('token') token: string
+    @requestBody() body: ResetPasswordDTOV2
   ) {
     try {
-      const admin = await adminRepo.model.findOne({
-        email: body.email
-      });
-
+      const admin = await adminRepo.model.findOne({ email: body.email });
       if (!admin) {
         await OTPRateLimiterService.limit(admin.id);
-        throw new NotFoundError('admin not found');
+        throw new NotFoundError('Admin not found');
       }
 
-      let cachedToken = await redis.get(`password_reset_token:${admin.id}`);
-
-      if (!cachedToken) {
+      let cachedOTP = await redis.get(`password_reset_otp:${admin.id}`);
+      if (!cachedOTP) {
         await OTPRateLimiterService.limit(admin.id);
-        throw new ControllerError('Invalid or Expired password reset value');
+        throw new ControllerError('Invalid or Expired OTP');
       }
 
-      const isResetTokenValid = await HashingService.compare(
-        token, // hashed token
-        cachedToken // token key
-      );
-
-      if (!isResetTokenValid) {
+      if (body.otp !== cachedOTP) {
         await OTPRateLimiterService.limit(admin.id);
-        throw new ControllerError('Invalid password reset token');
+        throw new ControllerError('Invalid or expired password reset otp');
       }
 
       // Update the admin's password
@@ -270,7 +361,7 @@ export default class AdminAuthController extends BaseController {
       // still limit it as this is a public endpoint and it help to reduce malicous users
       await OTPRateLimiterService.limit(req.ip);
       await OTPRateLimiterService.limit(admin.id);
-      await redis.del(`password_reset_token:${admin.id}`);
+      await redis.del(`password_reset_otp:${admin.id}`);
 
       this.handleSuccess(req, res, {
         message: 'Password reset successfully'
