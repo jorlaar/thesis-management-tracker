@@ -245,9 +245,9 @@ export class NINExistsError extends ControllerError {
 
 export class InvalidPasswordError extends ControllerError {
   constructor(remainingTries: number) {
-    const errorMessage = `You may have entered a wrong passcode. You can try ${remainingTries} more time ${
+    const errorMessage = `You may have entered a wrong password. You can try ${remainingTries} more time ${
       remainingTries > 1 ? 's' : ''
-    } or reset your passcode.`;
+    } or reset your password.`;
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;
@@ -323,9 +323,9 @@ export class TransactionPinBlockedError extends ControllerError {
 
 export class InvalidPinError extends ControllerError {
   constructor(remainingTries: number) {
-    const errorMessage = `You may have entered a wrong passcode. You can try ${remainingTries} more time ${
+    const errorMessage = `You may have entered a wrong password. You can try ${remainingTries} more time ${
       remainingTries > 1 ? 's' : ''
-    } or reset your passcode.`;
+    } or reset your password.`;
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;

@@ -52,6 +52,15 @@ class nodeMailerEmailService {
     }
   }
 
+  // private escapeHtml(unsafe: string): string {
+  //   return unsafe
+  //     .replace(/&/g, '&amp;')
+  //     .replace(/</g, '&lt;')
+  //     .replace(/>/g, '&gt;')
+  //     .replace(/"/g, '&quot;')
+  //     .replace(/'/g, '&#039;');
+  // }
+
   sendWelcomeEmail(recipient: string, name: string) {
     const subject = 'Welcome to Thesis Management!';
     const text = `Hello ${name},\n\nWelcome to Thesis Management Portal! We're excited to have you on board. \n\nBest regards,\nThe Thesis Management Team`;
@@ -254,6 +263,53 @@ class nodeMailerEmailService {
   `;
 
     this.sendEmail(recipient, subject, text, html);
+  }
+
+  sendDForgotPasswordResetEmailV2(
+    recipient: string,
+    name: string,
+    otp: string
+  ) {
+    console.log(
+      'Password otp generated successfully email',
+      otp,
+      recipient,
+      name
+    );
+
+    const subject = 'Your Password Reset Code';
+    const text =
+      `Hello ${name},\n\n` +
+      `We received a request to reset your password.\n\n` +
+      `Your reset code is: ${otp}\n\n` +
+      `Please enter this code on the password reset page to continue.\n\n` +
+      `If you didn't request this, you can safely ignore this email.\n\n` +
+      `Best regards,\nThe Thesis Management Team`;
+
+    // const html = `
+    // <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    //   <h2>Password Reset Request</h2>
+    //   <p>Hello ${this.escapeHtml(name)},</p>
+    //   <p>We received a request to reset your password.</p>
+
+    //   <div style="background-color: #f5f5f5; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
+    //     <p style="margin: 0 0 10px 0;"><strong>Your reset code:</strong></p>
+    //     <div style="background-color: #fff; padding: 12px; border-radius: 4px; border: 1px solid #ddd;">
+    //       <code style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #333;">${this.escapeHtml(otp)}</code>
+    //     </div>
+    //     <p style="margin-top: 10px; color: #666; font-size: 14px;">
+    //       Enter this code on the password reset page to proceed.
+    //     </p>
+    //   </div>
+
+    //   <p style="color: #666; font-size: 14px;">
+    //     This code will expire soon. If you didn't request a password reset, please ignore this email.
+    //   </p>
+    //   <p style="margin-top: 30px;">Best regards,<br>The Thesis Management Team</p>
+    // </div>
+    // `;
+
+    this.sendEmail(recipient, subject, text);
   }
 }
 
