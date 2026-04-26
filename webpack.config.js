@@ -25,10 +25,16 @@ module.exports = {
     rules: [
       {
         test: /\.ts?$/,
-        loader: 'ts-loader'
+        loader: 'ts-loader',
+        options: {
+          transpileOnly: true,
+        }
       }
     ]
   },
+   ignoreWarnings: [
+    (warning) => warning.message.includes('export ') && warning.message.includes(' was not found in ')
+  ],
   plugins: [
     new NodemonPlugin({
       stdin: false
@@ -44,7 +50,7 @@ module.exports = {
       new TerserPlugin({
         include: /\.ts($|\?)/i,
         exclude: /\.controller\.ts/i,
-        minify: TerserPlugin.uglifyJsMinify,
+        minify: TerserPlugin.terserMinify,
         parallel: 4
       })
     ]
