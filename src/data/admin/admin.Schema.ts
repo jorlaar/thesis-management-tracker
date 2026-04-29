@@ -2,12 +2,23 @@ import { SchemaFactory, trimmedString } from '../base';
 import bcrypt from 'bcrypt';
 import { IAdmin } from './admin.model';
 import env from '@app/common/config/env';
+import { SchemaTypes } from 'mongoose';
 
 export const AdminSchema = SchemaFactory({
   password: { ...trimmedString, required: true, select: false },
   email: { ...trimmedString, unique: true, required: true },
   first_name: { ...trimmedString, index: true, required: true },
-  last_name: { ...trimmedString }
+  last_name: { ...trimmedString },
+  password_changed_at: { type: SchemaTypes.Date },
+  role: {
+    type: String,
+    enum: ['root', 'admin', 'super_admin'],
+    required: true,
+    default: 'admin'
+  },
+  is_approved: { type: Boolean, default: false },
+  approved_at: { type: SchemaTypes.Date, default: null },
+  approved_by: { ref: 'Admin', type: SchemaTypes.String, default: null }
 });
 
 /**

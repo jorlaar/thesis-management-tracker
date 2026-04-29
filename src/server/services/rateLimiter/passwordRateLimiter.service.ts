@@ -1,9 +1,10 @@
 import { redis } from '@app/common/services/redis';
 import { LockedOutError, InvalidPasswordError } from '../../controllers/base';
 
-const DURATION_ONE_DAY = 60 * 60 * 24; // 1d
+// const DURATION_ONE_DAY = 60 * 60 * 24; // 1d
+const DURATION_ONE_HOUR = 60 * 60; // 1H
 
-export const DAILY_FAILED_LOGIN_TRIES = 6; // 6 tries per day
+export const DAILY_FAILED_LOGIN_TRIES = 7; // 7 tries per day
 
 const LOGIN_TRIES_KEY = 'login:tries';
 
@@ -20,16 +21,16 @@ class PasswordRateLimiterService {
    */
   private async setLoginTries(id: string, tries = 1) {
     const key = `${LOGIN_TRIES_KEY}:${id}`;
-    await redis.set(key, tries, { EX: DURATION_ONE_DAY });
+    await redis.set(key, tries, { EX: DURATION_ONE_HOUR });
   }
 
   /**
    * Sets the `locked out` status of a user to true and persists it for a day
    * @param id user id
    */
-   async setLockedOutStatus(id: string) {
+  async setLockedOutStatus(id: string) {
     const key = `${LOCKED_OUT_KEY}:${id}`;
-    await redis.set(key, Number(true), { EX: DURATION_ONE_DAY });
+    await redis.set(key, Number(true), { EX: DURATION_ONE_HOUR });
   }
 
   /**
@@ -56,8 +57,9 @@ class PasswordRateLimiterService {
   /**
    * Increments a user's `login tries` limit and locks the user out if they exceed the allowed daily limit
    * @param id user id
+   * @param err_message Optional error message
    */
-  async limit(id: string) {
+  async limit(id: string, err_message?: string) {
     const loginTries = await this.getLoginTries(id);
     const updatedLoginTries = loginTries + 1;
     const remainingTries = DAILY_FAILED_LOGIN_TRIES - updatedLoginTries;
@@ -69,7 +71,7 @@ class PasswordRateLimiterService {
 
     await this.setLoginTries(id, updatedLoginTries);
 
-    throw new InvalidPasswordError(remainingTries);
+    throw new InvalidPasswordError(remainingTries, err_message);
   }
 
   /**

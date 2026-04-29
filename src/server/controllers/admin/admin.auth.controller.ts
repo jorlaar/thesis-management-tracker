@@ -6,23 +6,25 @@ import {
   httpPost,
   response,
   request,
-  requestBody,
+  requestBody
   // queryParam
 } from 'inversify-express-utils';
 import {
   adminLogin,
   adminSignup,
+  approveAdminValidator,
   changeAdminPassword
 } from './admin.validator';
 import {
   AdminLoginDTO,
   AdminSignupDTO,
+  ApproveAdminDTO,
   ChangeAdminPasswordDTO
 } from './admin.dto';
 import adminRepo from '@app/data/admin/admin.repo';
 import jwt from 'jsonwebtoken';
 import env from '@app/common/config/env';
-import authVerify from '@app/server/middlewares/auth.verify';
+import adminAuthVerify from '@app/server/middlewares/admin.auth.verify';
 import {
   ActionNotAllowedError,
   BadRequestError,
@@ -46,11 +48,105 @@ import {
 } from '@app/server/services';
 // import { HashingService } from '@app/server/utils/hashing';
 import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
+import rootOrSuperAdminAuthVerify from '@app/server/middlewares/admin-root-super.auth.verify';
+import rootAdminAuthVerify from '@app/server/middlewares/root.admin.auth.verify';
+import { AdminRole, IAdmin } from '@app/data/admin/admin.model';
 
 @controller('/auth/admin')
 export default class AdminAuthController extends BaseController {
   /**
-   * signup admin
+   * signup root admin api only accessible for root admin signup
+   * disabled only enabled for the first time when there is no root admin in the system after that it should be disabled
+   * and only used for per usecase
+   */
+  // @httpPost('/root', validator(adminSignup))
+  async rootAdminSignUp(
+    @request() req: Request,
+    @response() res: Response,
+    @requestBody() body: AdminSignupDTO
+  ) {
+    try {
+      const findAdmin = await adminRepo.model.findOne({
+        email: body.email
+      });
+
+      if (findAdmin) {
+        throw new ControllerError('Admin with email already exists');
+      }
+
+      let data = {
+        ...body,
+        role: AdminRole.ROOT,
+        is_approved: true,
+        approved_at: new Date()
+      };
+
+      const admin = await adminRepo.create(data);
+
+      let signedData: object = {
+        id: admin._id,
+        email: admin.email,
+        type: 'admin',
+        role: AdminRole.ROOT
+      };
+
+      const token = jwt.sign(
+        {
+          data: signedData
+        },
+        env.jwt_secret,
+        { expiresIn: env.expires_at }
+      );
+
+      // admin.role = AdminRole.ROOT;
+      // admin.is_approved = true;
+      // admin.approved_at = new Date();
+      // admin.save();
+
+      this.handleSuccess(req, res, { ...signedData, token });
+    } catch (err) {
+      this.handleError(req, res, err);
+    }
+  }
+
+  /**
+   * signup super admin api only will have to wait for
+   * approval from root admin before they can login and access protected routes
+   */
+  @httpPost('/super', validator(adminSignup))
+  async superAdminSignUp(
+    @request() req: Request,
+    @response() res: Response,
+    @requestBody() body: AdminSignupDTO
+  ) {
+    try {
+      const findAdmin = await adminRepo.model.findOne({
+        email: body.email
+      });
+
+      if (findAdmin) {
+        throw new ControllerError('Admin with email already exists');
+      }
+
+      let data = {
+        ...body,
+        role: AdminRole.SUPER_ADMIN
+      };
+      // const admin =
+      await adminRepo.create(data);
+
+      // todo send webhook notification to root admin for approval
+
+      this.handleSuccess(req, res, {
+        message: 'Super admin registration successful, waiting for approval'
+      });
+    } catch (err) {
+      this.handleError(req, res, err);
+    }
+  }
+
+  /**
+   * signup normal admin
    */
   @httpPost('/', validator(adminSignup))
   async adminSignUp(
@@ -66,23 +162,16 @@ export default class AdminAuthController extends BaseController {
       if (findAdmin) {
         throw new ControllerError('Admin with email already exists');
       }
-      const admin = await adminRepo.create(body);
 
-      let signedData: object = {
-        id: admin._id,
-        email: admin.email,
-        type: 'admin'
-      };
+      // creates the default role as admin in the db already set
+      // const admin =
+      await adminRepo.create(body);
 
-      const token = jwt.sign(
-        {
-          data: signedData
-        },
-        env.jwt_secret,
-        { expiresIn: env.expires_at }
-      );
+      // todo send webhook notification to super_admin for approval
 
-      this.handleSuccess(req, res, { ...signedData, token });
+      this.handleSuccess(req, res, {
+        message: 'Admin registration successful, waiting for approval'
+      });
     } catch (err) {
       this.handleError(req, res, err);
     }
@@ -95,7 +184,7 @@ export default class AdminAuthController extends BaseController {
     @requestBody() body: AdminLoginDTO
   ) {
     try {
-      const admin = await adminRepo.model
+      const admin: IAdmin = await adminRepo.model
         .findOne({ email: body.email })
         .select('+password');
 
@@ -108,10 +197,42 @@ export default class AdminAuthController extends BaseController {
         await PasswordRateLimiterService.limit(admin.id);
         throw new ControllerError('Invalid email or password');
       }
+
+      if (!Object.values(AdminRole).includes(admin.role)) {
+        await PasswordRateLimiterService.limit(
+          admin.id,
+          'You do not have permission to perform this operation'
+        );
+        await PasswordRateLimiterService.limit(
+          req.ip,
+          `You don't have permission to perform this operation`
+        );
+        throw new ActionNotAllowedError(
+          'You do not have permission to perform this operation'
+        );
+      }
+
+      const restrictedAccessRoles = [AdminRole.SUPER_ADMIN, AdminRole.ADMIN];
+
+      if (restrictedAccessRoles.includes(admin.role) && !admin.is_approved) {
+        await PasswordRateLimiterService.limit(
+          admin.id,
+          'Your account is pending approval'
+        );
+        await PasswordRateLimiterService.limit(
+          req.ip,
+          'Your account is pending approval'
+        );
+        throw new ActionNotAllowedError(
+          'Account is pending approval, you will be notified once your account is approved'
+        );
+      }
+
       let signedData: object = {
         id: admin._id,
         email: admin.email,
-        type: 'admin'
+        type: 'admin',
+        role: admin.role
       };
 
       const token = jwt.sign(
@@ -134,7 +255,143 @@ export default class AdminAuthController extends BaseController {
     }
   }
 
-  @httpPost('/change-password', authVerify, validator(changeAdminPassword))
+  @httpPost(
+    '/approve/super-admin',
+    rootAdminAuthVerify,
+    validator(approveAdminValidator)
+  )
+  async approveSuperAdmin(
+    @request() req: Request,
+    @response() res: Response,
+    @requestBody() body: ApproveAdminDTO
+  ) {
+    try {
+      const [approvingAdminDetails, approveeAdminDetails] = await Promise.all([
+        adminRepo.model.findOne({
+          email: body.approver_email
+        }),
+        adminRepo.model.findOne({
+          email: body.approvee_email
+        })
+      ]);
+
+      if (!approvingAdminDetails || !approveeAdminDetails) {
+        throw new ActionNotAllowedError(
+          'One or both email account not found.!'
+        );
+      }
+
+      if (approveeAdminDetails.id === approvingAdminDetails.id) {
+        throw new ActionNotAllowedError('You cannot approve yourself');
+      }
+
+      if (approvingAdminDetails.role !== AdminRole.ROOT) {
+        throw new ActionNotAllowedError(
+          'only root admins can approve a super admin'
+        );
+      }
+
+      if (!approvingAdminDetails.is_approved) {
+        throw new ActionNotAllowedError(
+          'Root Admin must be approved first contact support for more details'
+        );
+      }
+
+      if (approveeAdminDetails.role !== AdminRole.SUPER_ADMIN) {
+        throw new ActionNotAllowedError(
+          'You can only approve super admins with this endpoint'
+        );
+      }
+
+      if (approveeAdminDetails.is_approved) {
+        throw new ActionNotAllowedError(
+          'Admin is already approved, you cannot perform this operation'
+        );
+      }
+
+      approveeAdminDetails.is_approved = true;
+      approveeAdminDetails.approved_at = new Date();
+      approveeAdminDetails.approved_by = approvingAdminDetails.id;
+      await approveeAdminDetails.save();
+      // send webhook for successful approval notification to the approvee admin
+
+      this.handleSuccess(req, res, {
+        message: `${approveeAdminDetails.first_name} ${approveeAdminDetails.last_name} has been approved successfully`
+      });
+    } catch (err) {
+      this.handleError(req, res, err);
+    }
+  }
+
+  @httpPost(
+    '/approve/admin',
+    rootOrSuperAdminAuthVerify,
+    validator(approveAdminValidator)
+  )
+  async approveAdmin(
+    @request() req: Request,
+    @response() res: Response,
+    @requestBody() body: ApproveAdminDTO
+  ) {
+    try {
+      const [approvingAdminDetails, approveeAdminDetails] = await Promise.all([
+        await adminRepo.model.findOne({
+          email: body.approver_email
+        }),
+        await adminRepo.model.findOne({
+          email: body.approvee_email
+        })
+      ]);
+
+      if (!approvingAdminDetails || !approveeAdminDetails) {
+        throw new ActionNotAllowedError('One or both email account not found!');
+      }
+
+      if (approveeAdminDetails.id === approvingAdminDetails.id) {
+        throw new ActionNotAllowedError('You cannot approve yourself');
+      }
+
+      const allowedApproverRoles = [AdminRole.ROOT, AdminRole.SUPER_ADMIN];
+
+      if (!allowedApproverRoles.includes(approvingAdminDetails.role)) {
+        throw new ActionNotAllowedError(
+          'only root admins and super admins can approve a admin'
+        );
+      }
+
+      if (!approvingAdminDetails.is_approved) {
+        throw new ActionNotAllowedError(
+          'Approving Admin must first be approved, please contact support for more details'
+        );
+      }
+
+      if (approveeAdminDetails.role !== AdminRole.ADMIN) {
+        throw new ActionNotAllowedError(
+          'You can only approve regular admins with this api'
+        );
+      }
+
+      if (approveeAdminDetails.is_approved) {
+        throw new ActionNotAllowedError(
+          'Admin is already approved, you cannot perform this operation'
+        );
+      }
+
+      approveeAdminDetails.is_approved = true;
+      approveeAdminDetails.approved_at = new Date();
+      approveeAdminDetails.approved_by = approvingAdminDetails.id;
+      await approveeAdminDetails.save();
+      // send webhook for successful approval notification to the approvee admin
+
+      this.handleSuccess(req, res, {
+        message: `${approveeAdminDetails.first_name} ${approveeAdminDetails.last_name} has been approved successfully`
+      });
+    } catch (err) {
+      this.handleError(req, res, err);
+    }
+  }
+
+  @httpPost('/change-password', adminAuthVerify, validator(changeAdminPassword))
   async changeAdminPassword(
     @request() req: Request,
     @response() res: Response,

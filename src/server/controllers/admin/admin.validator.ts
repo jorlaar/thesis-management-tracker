@@ -7,9 +7,10 @@ export const adminSignup = joi.object({
     // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
     .trim()
     .required()
+    .lowercase()
     .messages({
       // 'string.pattern.base':
-        // 'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
+      // 'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
       'string.empty': 'Email is required',
       'any.required': 'Email is required'
     }),
@@ -20,8 +21,8 @@ export const adminSignup = joi.object({
     .max(30)
     // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
     .required(),
-  first_name: joi.string().trim().required(),
-  last_name: joi.string().trim().required()
+  first_name: joi.string().lowercase().trim().required(),
+  last_name: joi.string().lowercase().trim().required()
 });
 
 export const adminLogin = joi.object({
@@ -31,9 +32,10 @@ export const adminLogin = joi.object({
     // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
     .trim()
     .required()
+    .lowercase()
     .messages({
       // 'string.pattern.base':
-        // 'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
+      // 'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
       'string.empty': 'Email is required',
       'any.required': 'Email is required'
     }),
@@ -61,4 +63,33 @@ export const changeAdminPassword = joi.object({
     .max(30)
     // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
     .required()
+});
+
+export const approveAdminValidator = joi.object({
+  approvee_email: joi
+    .string()
+    .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
+    // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
+    .trim()
+    .required()
+    .lowercase()
+    .messages({
+      // 'string.pattern.base':
+      // 'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
+      'string.empty': 'Email is required',
+      'any.required': 'Email is required'
+    }),
+  approver_email: joi
+    .string()
+    .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
+    // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
+    .trim()
+    .required()
+    .lowercase()
+    .messages({
+      // 'string.pattern.base':
+      // 'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
+      'string.empty': 'Email is required',
+      'any.required': 'Email is required'
+    })
 });

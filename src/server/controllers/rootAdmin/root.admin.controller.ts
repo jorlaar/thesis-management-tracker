@@ -7,18 +7,18 @@ import {
   request,
   response
 } from 'inversify-express-utils';
-import authVerify from '@app/server/middlewares/auth.verify';
+import rootAdminAuthVerify from '@app/server/middlewares/root.admin.auth.verify';
 import { ActionNotAllowedError } from '../base';
 import { PasswordRateLimiterService } from '@app/server/services';
 
-@controller('/root-admin')
+@controller('/root-admin', rootAdminAuthVerify)
 export default class RootAdminController extends BaseController {
   // must be authenticated as admin to access any route in this controller
   constructor() {
     super();
   }
 
-  @httpGet('/get-user/:id/one', authVerify)
+  @httpGet('/get-user/:id/one')
   async getAUserDetailsFromRedis(
     @request() req: Request,
     @response() res: Response
@@ -48,7 +48,7 @@ export default class RootAdminController extends BaseController {
     }
   }
 
-  @httpGet('/get/all/users', authVerify)
+  @httpGet('/get/all/users')
   async getAAllLoginTriesUserDetailsFromRedis(
     @request() req: Request,
     @response() res: Response
@@ -72,7 +72,7 @@ export default class RootAdminController extends BaseController {
     }
   }
 
-  @httpPatch('/reset-user/:id', authVerify)
+  @httpPatch('/reset-user/:id')
   async resetAUserLockedOutStatusFromRedis(
     @request() req: Request,
     @response() res: Response

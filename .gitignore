@@ -8,6 +8,7 @@ settings.json
 .DS_Store
 /data
 /coverage
+gc-logs.txt
 
 infra/
 Dockerfile.local

@@ -21,12 +21,13 @@ export const passwordSchema = joi
 
 export const studentSignup = joi.object({
   dob: joi.date(),
-  matric_no: joi.string().required(),
+  matric_no: joi.string().trim().lowercase().required(),
   email: joi
     .string()
     .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
     // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
     .trim()
+    .lowercase()
     .required()
     .messages({
       // 'string.pattern.base':
@@ -41,12 +42,12 @@ export const studentSignup = joi.object({
     .max(30)
     // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
     .required(),
-  first_name: joi.string().trim().required(),
+  first_name: joi.string().trim().lowercase().required(),
   gender: joi.string().valid('male', 'female').trim(),
-  last_name: joi.string().trim().required(),
-  department: joi.string().trim().required(), // to do preload it drop down
-  faculty: joi.string().trim().required(), // to do preload it drop down
-  course: joi.string().trim().required(), // to do preload it as drop down
+  last_name: joi.string().trim().lowercase().required(),
+  department: joi.string().trim().lowercase().required(), // to do preload it drop down
+  faculty: joi.string().trim().lowercase().required(), // to do preload it drop down
+  course: joi.string().trim().lowercase().required(), // to do preload it as drop down
   level: joi
     .string()
     .valid(...Object.values(StudentLevel))
@@ -60,6 +61,7 @@ export const studentLogin = joi.object({
     .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
     // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
     .trim()
+    .lowercase()
     .required()
     .messages({
       // 'string.pattern.base':
@@ -99,10 +101,11 @@ export const forgotPasswordValidator = joi.object({
     .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
     // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
     .trim()
+    .lowercase()
     .required()
     .messages({
-    //   'string.pattern.base':
-    //     'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
+      //   'string.pattern.base':
+      //     'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
       'string.empty': 'Email is required',
       'any.required': 'Email is required'
     })
@@ -114,7 +117,11 @@ export const ResetPasswordValidator = joi.object({
 });
 
 export const ResetPasswordValidatorV2 = joi.object({
-  otp: joi.string().length(6).pattern(/^[0-9]+$/).required(),
+  otp: joi
+    .string()
+    .length(6)
+    .pattern(/^[0-9]+$/)
+    .required(),
   email: joi.string().email().trim().lowercase().required(),
   password: passwordSchema
 });

@@ -29,7 +29,13 @@ const StudentSchema = SchemaFactory({
   gender: { ...trimmedString, enum: ['male', 'female'] },
   // dob: { type: SchemaTypes.Date, default: null },
   dob: { type: SchemaTypes.Date },
-  level: { type: String, enum: Object.values(StudentLevel), required: true }
+  level: {
+    type: String,
+    enum: Object.values(StudentLevel),
+    required: true,
+    default: StudentLevel.MASTERS
+  },
+  password_changed_at: { type: SchemaTypes.Date }
 });
 
 /**

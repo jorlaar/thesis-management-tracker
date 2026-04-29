@@ -2,14 +2,16 @@ import { SchemaFactory, trimmedString } from '../base';
 import { ILecturerModel } from './lecturer.model';
 import bcrypt from 'bcrypt';
 import env from '@app/common/config/env';
+import { SchemaTypes } from 'mongoose';
 
 export const LecturerSchema = SchemaFactory({
-   password: { ...trimmedString, required: true, select: false },
+  password: { ...trimmedString, required: true, select: false },
   email: { ...trimmedString, unique: true, required: true },
   first_name: { ...trimmedString, index: true, required: true },
   last_name: { ...trimmedString },
   department: { ...trimmedString },
-  faculty: { ...trimmedString }
+  faculty: { ...trimmedString },
+  password_changed_at: { type: SchemaTypes.Date }
 });
 
 /**

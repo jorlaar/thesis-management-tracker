@@ -11,13 +11,13 @@ import {
 import adminRepo from '@app/data/admin/admin.repo';
 import studentRepo from '@app/data/student/student.repo';
 import thesisRepo from '@app/data/thesis/thesis.repo';
-import authVerify from '@app/server/middlewares/auth.verify';
+import adminAuthVerify from '@app/server/middlewares/admin.auth.verify';
 import { ActionNotAllowedError, NotFoundError } from '../base';
 import { PaginationQueryDTO } from '../thesis/thesis.dto';
 
-@controller('/admin')
+@controller('/admin', adminAuthVerify)
 export default class AdminController extends BaseController {
-  @httpGet('/profile', authVerify)
+  @httpGet('/profile')
   async getAdminProfile(@request() req: Request, @response() res: Response) {
     try {
       if (req.user_data.type !== 'admin') {
@@ -36,7 +36,7 @@ export default class AdminController extends BaseController {
     }
   }
 
-  @httpGet('/:studentEmail/one', authVerify)
+  @httpGet('/:studentEmail/one')
   async adminGetMostRecentThesis(
     @request() req: Request,
     @response() res: Response,
@@ -65,7 +65,7 @@ export default class AdminController extends BaseController {
     }
   }
 
-  @httpGet('/:thesisId/view', authVerify)
+  @httpGet('/:thesisId/view')
   async adminGetOneThesis(
     @request() req: Request,
     @response() res: Response,
@@ -89,7 +89,7 @@ export default class AdminController extends BaseController {
     }
   }
 
-  @httpGet('/:studentEmail/all', authVerify)
+  @httpGet('/:studentEmail/all')
   async adminGetAllStudentThesis(
     @request() req: Request,
     @response() res: Response,
@@ -128,7 +128,7 @@ export default class AdminController extends BaseController {
     }
   }
 
-  @httpGet('/all', authVerify)
+  @httpGet('/all')
   async adminGetAllThesis(
     @request() req: Request,
     @response() res: Response,
@@ -168,7 +168,7 @@ export default class AdminController extends BaseController {
   }
 
   // add tracker endpoint for analysis
-  @httpGet('/:studentEmail/submission/timetrend', authVerify)
+  @httpGet('/:studentEmail/submission/timetrend')
   async adminGetAllStudentThesisSubmissionTimeTrend(
     @request() req: Request,
     @response() res: Response,

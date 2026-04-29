@@ -25,6 +25,7 @@ export type Gender = 'male' | 'female';
 
 // Enums
 export enum StudentLevel {
+  PGD = 'pgd',
   MASTERS = 'masters',
   DOCTORATE = 'doctorate',
   MPHIL = 'mphil'

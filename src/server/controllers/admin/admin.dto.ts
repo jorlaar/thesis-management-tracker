@@ -1,3 +1,4 @@
+export const __dummy = {};
 export interface AdminLoginDTO {
   email?: string;
   password: string;
@@ -13,4 +14,9 @@ export interface AdminSignupDTO {
 export interface ChangeAdminPasswordDTO {
   old_password: string;
   new_password: string;
+}
+
+export interface ApproveAdminDTO {
+  approvee_email: string;
+  approver_email: string;
 }
