@@ -6,6 +6,7 @@ export const lecturerSignup = joi.object({
     .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
     // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
     .trim()
+    .lowercase()
     .required()
     .messages({
       // 'string.pattern.base':
@@ -20,10 +21,10 @@ export const lecturerSignup = joi.object({
     .max(30)
     // .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
     .required(),
-  first_name: joi.string().trim().required(),
-  department: joi.string().trim().required(), // to do preload it drop down
-  faculty: joi.string().trim().required(), // to do preload it drop down
-  last_name: joi.string().trim().required()
+  first_name: joi.string().trim().lowercase().required(),
+  department: joi.string().trim().lowercase().required(), // to do preload it drop down
+  faculty: joi.string().trim().lowercase().required(), // to do preload it drop down
+  last_name: joi.string().trim().lowercase().required()
 });
 
 export const lecturerLogin = joi.object({
@@ -32,6 +33,7 @@ export const lecturerLogin = joi.object({
     .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
     // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
     .trim()
+    .lowercase()
     .required()
     .messages({
       // 'string.pattern.base':

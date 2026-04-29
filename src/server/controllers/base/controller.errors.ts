@@ -244,10 +244,12 @@ export class NINExistsError extends ControllerError {
 }
 
 export class InvalidPasswordError extends ControllerError {
-  constructor(remainingTries: number) {
-    const errorMessage = `You may have entered a wrong password. You can try ${remainingTries} more time ${
-      remainingTries > 1 ? 's' : ''
-    } or reset your password.`;
+  constructor(remainingTries: number, err_message?: string) {
+    const errorMessage =
+      err_message ||
+      `You may have entered a wrong password. You can try ${remainingTries} more time${
+        remainingTries > 1 ? 's' : ''
+      } or reset your password.`;
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;

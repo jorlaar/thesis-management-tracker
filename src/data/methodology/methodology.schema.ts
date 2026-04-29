@@ -2,6 +2,7 @@ import { trimmedString, SchemaFactory } from '../base';
 import bcrypt from 'bcrypt';
 import env from '@app/common/config/env';
 import { IMethodology } from './methodology.model';
+import { SchemaTypes } from 'mongoose';
 
 const MethodologySchema = SchemaFactory({
   password: { ...trimmedString, required: true, select: false },
@@ -9,7 +10,8 @@ const MethodologySchema = SchemaFactory({
   first_name: { ...trimmedString, index: true, required: true },
   last_name: { ...trimmedString },
   department: { ...trimmedString },
-  faculty: { ...trimmedString }
+  faculty: { ...trimmedString },
+    password_changed_at: { type: SchemaTypes.Date }
 });
 
 /**
