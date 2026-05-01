@@ -1,6 +1,7 @@
 import { random, times } from 'lodash';
 // import jwt from 'jsonwebtoken';
 // import { v4 as uuidv4 } from 'uuid';
+import { v7 as uuidV7 } from 'uuid';
 import { ulid } from 'ulid';
 
 /**
@@ -11,7 +12,9 @@ export const randomDigits = (length: number) => {
   return times(length, () => random(0, 9).toString()).join('');
 };
 
-export const generateId = (): string => ulid();
+export const generateUlid = (): string => ulid();
+
+export const generateUuidv7 = (): string => uuidV7();
 
 export interface JwtOptions {
   secret: string;
@@ -73,7 +76,6 @@ export const RegexBuilderForFlaggedWords = () => {
   return new RegExp(`^((?!${FlaggedWordsForNames.join('|')}).)*$`, 'i');
 };
 
-
 // export function encryptString(str: string, secretKey: string): string {
 //   const cipher = crypto.createCipher('aes-256-cbc', secretKey);
 //   let encrypted = cipher.update(str, 'utf8', 'hex');
@@ -81,7 +83,7 @@ export const RegexBuilderForFlaggedWords = () => {
 //   return encrypted;
 // }
 
-export function emailRateLimiter (maxEmails: number, timeWindow: number) {
+export function emailRateLimiter(maxEmails: number, timeWindow: number) {
   const emailTimestamps: Record<string, number[]> = {};
 
   return function canSendEmail(email: string): boolean {
@@ -92,7 +94,7 @@ export function emailRateLimiter (maxEmails: number, timeWindow: number) {
 
     // Remove timestamps that are outside the time window
     emailTimestamps[email] = emailTimestamps[email].filter(
-      timestamp => now - timestamp < timeWindow
+      (timestamp) => now - timestamp < timeWindow
     );
 
     if (emailTimestamps[email].length < maxEmails) {
