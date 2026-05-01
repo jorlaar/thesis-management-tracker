@@ -6,7 +6,9 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 module.exports = {
   mode: process.env.NODE_ENV,
-  externals: nodeExternals(),
+  externals: nodeExternals({
+      allowlist: ['uuid']
+  }),
   target: 'node',
   context: path.resolve(__dirname, 'src'),
   entry: {
