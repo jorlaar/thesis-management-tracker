@@ -4,13 +4,22 @@ import {
   controller,
   httpPut,
   response,
-  request
+  request,
+  httpGet,
+  queryParam
+  // requestParam
 } from 'inversify-express-utils';
 import upload from '../../middlewares/multerConfig';
 import cloudinaryService from '@app/server/services/cloudinary/cloudinary.service';
-import { generateId } from '@app/server/utils';
+import { generateUlid } from '@app/server/utils';
 import authVerify from '@app/server/middlewares/auth.verify';
-import { ControllerError } from '../base';
+import { ActionNotAllowedError, ControllerError } from '../base';
+import S3Storage from '@app/server/services/s3/s3.service';
+import {
+  // SignedUrlOperation,
+  SupportedContentType,
+  SupportedContentTypes
+} from '@app/server/services/s3/s3.type';
 
 @controller('/upload', authVerify) // i can either sepearate to student, lecturers and methodology upload api later
 export default class UploadController extends BaseController {
@@ -18,18 +27,28 @@ export default class UploadController extends BaseController {
   async uploadFile(@request() req: Request, @response() res: Response) {
     try {
       // Access the uploaded file
+      // console.log('>>>>>>>>> req', req);
+      // console.log('>>>>>>>>> req', req.body);
+      // console.log('>>>>>>>>> file', req.file);
 
-      const file_url = req.file;
+      const { fieldname, mimetype } = req.file;
 
-      if (!file_url) {
+      if (
+        ![...SupportedContentTypes].includes(mimetype as SupportedContentType)
+      ) {
+        throw new ActionNotAllowedError('Unsupported content type');
+      }
+
+      if (!fieldname) {
         throw new ControllerError('No file uploaded');
       }
-      const thesis_tracking_id = generateId();
+      const thesis_tracking_id = generateUlid();
+      // console.log('>>>>>>>>> fieldname', fieldname);
 
       // Access other form fields
       req.body.otherField;
       const fileUpload = await cloudinaryService.uploadFile(
-        file_url as unknown as string,
+        fieldname as string,
         `babcock-thesis`,
         'raw',
         `${thesis_tracking_id}`
@@ -57,4 +76,39 @@ export default class UploadController extends BaseController {
   //     this.handleError(req, res, err);
   //   }
   // }
+
+  @httpGet('/signed-url/get/:operation?')
+  async getASignedURL(
+    @request() req: Request,
+    @response() res: Response,
+    @queryParam('mime_type') mimeType: SupportedContentType
+    // @requestParam('operation') operation: SignedUrlOperation
+  ) {
+    try {
+      // console.log('>>>>>>>>> req.params.operation', req.params.operation);
+      // console.log('>>>>>>>>> llioperation', operation);
+      // console.log('>>>>>>>>> bbn mimeType', mimeType);
+      // if (!req.params.operation) operation = 'putObject';
+
+      if (![...SupportedContentTypes].includes(mimeType)) {
+        throw new ActionNotAllowedError('Unsupported content type');
+      }
+      // console.log('>>>>>>>>> operation', operation);
+      console.log('>>>>>>>>> mimeType', mimeType);
+
+      const signedUrl = await S3Storage.getSignedUrl(
+        // operation,
+        'putObject',
+        process.env.THESIS_BUCKET!,
+        `thesis_uploads/${generateUlid()}`,
+        mimeType,
+        300
+      );
+
+      this.handleSuccess(req, res, { signedUrl });
+    } catch (err) {
+      console.log(err, 'error in getting signed url');
+      this.handleError(req, res, err);
+    }
+  }
 }
