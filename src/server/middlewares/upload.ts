@@ -46,7 +46,7 @@ export const uploadMultipleFiles = (
 // import multer from 'multer';
 // import Busboy from 'busboy';
 // import { Request, Response, NextFunction } from 'express';
-// // import { generateId } from '@app/server/utils/miscellaneous';
+// // import { generateUlid } from '@app/server/utils/miscellaneous';
 
 // // Multer configuration
 // const multerUpload = multer({

@@ -9,7 +9,8 @@ import {
   httpPut,
   httpGet,
   requestParam,
-  queryParam
+  queryParam,
+  httpPost
 } from 'inversify-express-utils';
 import {
   lecturerUploadCommentValidator,
@@ -25,7 +26,7 @@ import {
 } from './thesis.dto';
 import authVerify from '@app/server/middlewares/auth.verify';
 import lecturerRepo from '@app/data/lecturer/lecturer.repo';
-import { generateId } from '@app/server/utils';
+import { generateUlid } from '@app/server/utils';
 import thesisRepo from '@app/data/thesis/thesis.repo';
 import { THESIS_STATUS } from '@app/data/thesis/thesis.model';
 import studentRepo from '@app/data/student/student.repo';
@@ -55,7 +56,7 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Supervisor not found');
       }
 
-      const thesis_tracking_id = generateId();
+      const thesis_tracking_id = generateUlid();
 
       // const isMultiSave = Array.isArray(body.thesis_chapter);
 
@@ -608,34 +609,10 @@ export default class ThesisController extends BaseController {
     }
   }
 
-  @httpGet('/admin/lifecycle/:trackingId')
-  async getAThesisLifeCycle(
-    @request() req: Request,
-    @response() res: Response,
-    @requestParam('trackingId') trackingId: string,
-    @queryParam() query: PaginationQueryDTO
-  ) {
-    const { page, per_page } = query;
+  @httpPost('/export')
+  async exportDocs(@request() req: Request, @response() res: Response) {
     try {
-      if (req.user_data.type !== 'admin') {
-        throw new ActionNotAllowedError("You can't perform this operation");
-      }
 
-      // const query = {
-      //   thesis_tracking_id: trackingId
-      // };
-
-      const viewThesis = await thesisRepo.list({
-        conditions: { thesis_tracking_id: trackingId },
-        sort: { created_at: -1 },
-        populate: ['student_id', 'lecturer_id', 'methodology_id'],
-        page,
-        per_page,
-        return_total_pages: true
-      });
-
-      console.log('viewThesis >>>>', viewThesis);
-      this.handleSuccess(req, res, viewThesis);
     } catch (error) {
       this.handleError(req, res, error);
     }

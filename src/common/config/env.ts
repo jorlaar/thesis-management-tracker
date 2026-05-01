@@ -36,6 +36,8 @@ const env = {
   mongodb_name: process.env.MONGODB_NAME,
   mongodb_password: process.env.MONGODB_PASSWORD,
   api_version: process.env.API_VERSION || '/api/v1',
+  api_version_v2: process.env.API_VERSIONV2 || '/api/v2',
+
   salt_rounds: Number(process.env.SALT_ROUNDS) || 10,
 
   service_name: process.env.SERVICE_NAME || 'Thesis-Backend',

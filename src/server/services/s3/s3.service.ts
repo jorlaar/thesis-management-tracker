@@ -1,38 +1,25 @@
 import env from '@app/common/config/env';
 import logger from '@app/common/services/logger/logger';
+import { InternalServerError } from '@app/server/controllers/base/controller.errors';
 import S3, {
   ManagedUpload,
   HeadObjectOutput,
   HeadObjectRequest,
   DeleteObjectRequest,
-  Body
+  Body,
+  CopyObjectOutput
 } from 'aws-sdk/clients/s3';
 import { faker } from '@faker-js/faker';
+import {
+  SignedUrlOperation,
+  GetDownloadSignedURLRequest,
+  SupportedContentType,
+  PutObjectRequest
+} from './s3.type';
+// import { injectable } from 'inversify';
 
-type SignedUrlOperation = 'putObject' | 'getObject';
-
-export enum SupportedContentTypes {
-  IMAGE_JPEG = 'image/jpeg',
-  IMAGE_JPG = 'image/jpg',
-  IMAGE_PNG = 'image/png',
-  VIDEO_MP4 = 'video/mp4',
-  TEXT_CSV = 'text/csv'
-}
-
-interface PutObjectRequest {
-  Bucket: string;
-  Key: string;
-  ContentType: SupportedContentTypes;
-  Expires: number;
-}
-
-interface GetDownloadSignedURLRequest {
-  Bucket: string;
-  Key: string;
-  Expires: number;
-}
-
-export default class S3Storage {
+// @injectable()
+class S3Storage {
   private s3: S3;
   private isMockEnabled: boolean;
 
@@ -58,12 +45,13 @@ export default class S3Storage {
     filePath: string
   ): Promise<ManagedUpload.SendData> {
     try {
-      if(this.isMockEnabled) return {
-        Location: faker.internet.url(),
-        ETag: faker.internet.mac(),
-        Bucket: bucketName,
-        Key: filePath
-      }
+      if (this.isMockEnabled)
+        return {
+          Location: faker.internet.url(),
+          ETag: faker.internet.mac(),
+          Bucket: bucketName,
+          Key: filePath
+        };
 
       const data = await this.s3
         .upload({
@@ -80,9 +68,12 @@ export default class S3Storage {
 
       return data;
     } catch (err) {
+      const errorMessage = `An error occurred while uploading file ${filePath} to s3`;
       logger.error(err, {
-        info: `An error occurred while uploading file ${filePath} to s3`
+        info: errorMessage,
+        bucketName
       });
+      throw new InternalServerError(errorMessage);
     }
   }
 
@@ -101,20 +92,33 @@ export default class S3Storage {
 
       return base64Image;
     } catch (err) {
+      const errorMessage = `An error occurred while downloading file ${filePath} from s3`;
       logger.error(err, {
-        info: `An error occurred while downloading file ${filePath} from s3`
+        info: errorMessage,
+        bucketName
       });
+      throw new InternalServerError(errorMessage);
     }
   }
 
   async getSignedUrl(
     operation: SignedUrlOperation,
-    bucketName: string,
+    bucketName: string, //     validator(GetUploadSignedURLRequestValidator, 'query')
     filePath: string,
-    contentType: SupportedContentTypes,
+    contentType: SupportedContentType,
     expirationInSeconds: number
   ) {
     try {
+         console.log(
+        'generating signed url for file ${filePath} from s3`',
+        {
+   operation,
+    bucketName, 
+    filePath,
+    contentType,
+    expirationInSeconds
+        }
+      );
       const params: PutObjectRequest = {
         Bucket: bucketName,
         Key: filePath,
@@ -126,9 +130,17 @@ export default class S3Storage {
 
       return signedUrl;
     } catch (err) {
+      console.log(
+        'An error occurred while generating signed url for file ${filePath} from s3`',
+        err
+      );
+
+      const errorMessage = `An error occurred while generating signed url for file ${filePath} from s3`;
       logger.error(err, {
-        info: `An error occurred while generating signed url for file ${filePath} from s3`
+        info: errorMessage,
+        bucketName
       });
+      throw new InternalServerError(errorMessage);
     }
   }
 
@@ -148,9 +160,12 @@ export default class S3Storage {
 
       return signedUrl;
     } catch (err) {
+      const errorMessage = `An error occurred while generating signed url for file ${filePath} from s3`;
       logger.error(err, {
-        info: `An error occurred while generating signed url for file ${filePath} from s3`
+        info: errorMessage,
+        bucketName
       });
+      throw new InternalServerError(errorMessage);
     }
   }
 
@@ -190,9 +205,12 @@ export default class S3Storage {
 
       return metadata;
     } catch (err) {
+      const errorMessage = `An error occurred while fetching metadata for file ${filePath} from s3`;
       logger.error(err, {
-        info: `An error occurred while fetching metadata for file ${filePath} from s3`
+        info: errorMessage,
+        bucketName
       });
+      throw new InternalServerError(errorMessage);
     }
   }
 
@@ -205,9 +223,73 @@ export default class S3Storage {
 
       await this.s3.deleteObject(params).promise();
     } catch (err) {
+      const errorMessage = `An error occurred while fetching metadata for file ${filePath} from s3`;
       logger.error(err, {
-        info: `An error occurred while fetching metadata for file ${filePath} from s3`
+        info: errorMessage,
+        bucketName
+      });
+      throw new InternalServerError(errorMessage);
+    }
+  }
+
+  async getFileBytes(
+    bucketName: string,
+    filePath: string
+  ): Promise<Uint8Array> {
+    try {
+      const data = await this.s3
+        .getObject({
+          Bucket: bucketName,
+          Key: filePath
+        })
+        .promise();
+
+      return data.Body as Uint8Array;
+    } catch (err) {
+      logger.error(err, {
+        info: `An error occurred while getting file bytes for ${filePath} from s3`
+      });
+    }
+  }
+
+  async copyFile(
+    destination: { bucket: string; path: string },
+    source: { bucket: string; path: string }
+  ): Promise<CopyObjectOutput> {
+    try {
+      if (this.isMockEnabled) {
+        return {
+          CopyObjectResult: {
+            ETag: faker.internet.mac(),
+            LastModified: new Date(),
+            ChecksumCRC32: faker.string.alphanumeric(100),
+            ChecksumCRC32C: faker.string.alphanumeric(100),
+            ChecksumSHA1: faker.string.alphanumeric(100),
+            ChecksumSHA256: faker.string.alphanumeric(100)
+          }
+        };
+      }
+
+      const data = await this.s3
+        .copyObject({
+          Bucket: destination.bucket,
+          Key: destination.path,
+          CopySource: `${source.bucket}/${source.path}`
+        })
+        .promise();
+
+      logger.message({
+        info: `file copy from ${source.bucket}/${source.path} to ${destination.bucket}/${destination.path} done!`,
+        data
+      });
+
+      return data;
+    } catch (err) {
+      logger.error(err, {
+        info: `An error occurred while copying file ${source.bucket}/${source.path} to ${destination.bucket}/${destination.path}`
       });
     }
   }
 }
+
+export default new S3Storage();

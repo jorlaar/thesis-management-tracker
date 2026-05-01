@@ -20,9 +20,9 @@ export default class AdminController extends BaseController {
   @httpGet('/profile')
   async getAdminProfile(@request() req: Request, @response() res: Response) {
     try {
-      if (req.user_data.type !== 'admin') {
-        throw new ActionNotAllowedError("You can't perform this operation");
-      }
+      // if (req.user_data.type !== 'admin') {
+      //   throw new ActionNotAllowedError("You can't perform this operation");
+      // }
 
       const admin = await adminRepo.model.findById(req.user_data.id);
 
@@ -72,9 +72,9 @@ export default class AdminController extends BaseController {
     @requestParam('thesisId') thesisId: string
   ) {
     try {
-      if (!['admin'].includes(req.user_data.type)) {
-        throw new ActionNotAllowedError("You can't perform this operation");
-      }
+      // if (!['admin'].includes(req.user_data.type)) {
+      //   throw new ActionNotAllowedError("You can't perform this operation");
+      // }
 
       const thesis_details = await thesisRepo.model.findById(thesisId);
       if (!thesis_details) {
@@ -98,9 +98,9 @@ export default class AdminController extends BaseController {
   ) {
     const { page, per_page } = query;
     try {
-      if (req.user_data.type !== 'admin') {
-        throw new ActionNotAllowedError("You can't perform this operation");
-      }
+      // if (req.user_data.type !== 'admin') {
+      //   throw new ActionNotAllowedError("You can't perform this operation");
+      // }
 
       const student_details = await studentRepo.model.findOne(
         { email: studentEmail },
@@ -137,9 +137,9 @@ export default class AdminController extends BaseController {
   ) {
     const { page, per_page } = query;
     try {
-      if (req.user_data.type !== 'admin') {
-        throw new ActionNotAllowedError("You can't perform this operation");
-      }
+      // if (req.user_data.type !== 'admin') {
+      //   throw new ActionNotAllowedError("You can't perform this operation");
+      // }
 
       const student_details = await studentRepo.model.findOne(
         { email: studentEmail },
@@ -175,11 +175,11 @@ export default class AdminController extends BaseController {
     @requestParam('studentEmail') studentEmail: string
   ) {
     try {
-      if (req.user_data.type !== 'admin') {
-        throw new ActionNotAllowedError(
-          'Unauthorized: Only admin can perform this operation'
-        );
-      }
+      // if (req.user_data.type !== 'admin') {
+      //   throw new ActionNotAllowedError(
+      //     'Unauthorized: Only admin can perform this operation'
+      //   );
+      // }
 
       const student_details = await studentRepo.model.findOne({
         email: studentEmail
@@ -239,6 +239,39 @@ export default class AdminController extends BaseController {
           }
         }
       });
+    } catch (error) {
+      this.handleError(req, res, error);
+    }
+  }
+
+  @httpGet('/admin/lifecycle/:trackingId')
+  async getAThesisLifeCycle(
+    @request() req: Request,
+    @response() res: Response,
+    @requestParam('trackingId') trackingId: string,
+    @queryParam() query: PaginationQueryDTO
+  ) {
+    const { page, per_page } = query;
+    try {
+      // if (req.user_data.type !== 'admin') {
+      //   throw new ActionNotAllowedError("You can't perform this operation");
+      // }
+
+      // const query = {
+      //   thesis_tracking_id: trackingId
+      // };
+
+      const viewThesis = await thesisRepo.list({
+        conditions: { thesis_tracking_id: trackingId },
+        sort: { created_at: -1 },
+        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        page,
+        per_page,
+        return_total_pages: true
+      });
+
+      console.log('viewThesis >>>>', viewThesis);
+      this.handleSuccess(req, res, viewThesis);
     } catch (error) {
       this.handleError(req, res, error);
     }
