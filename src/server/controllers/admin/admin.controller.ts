@@ -132,7 +132,7 @@ export default class AdminController extends BaseController {
   async adminGetAllThesis(
     @request() req: Request,
     @response() res: Response,
-    @requestParam('studentEmail') studentEmail: string,
+    // @requestParam('studentEmail') studentEmail: string,
     @queryParam() query: PaginationQueryDTO
   ) {
     const { page, per_page } = query;
@@ -141,17 +141,18 @@ export default class AdminController extends BaseController {
       //   throw new ActionNotAllowedError("You can't perform this operation");
       // }
 
-      const student_details = await studentRepo.model.findOne(
-        { email: studentEmail },
-        { _id: 1 } // Only fetch the _id field
-      );
+      // const student_details = await studentRepo.model.findOne(
+      //   { email: studentEmail },
+      //   { _id: 1 } // Only fetch the _id field
+      // );
 
-      if (!student_details) {
-        throw new NotFoundError('Student not found');
-      }
+      // if (!student_details) {
+      //   throw new NotFoundError('Student not found');
+      // }
 
       const viewThesis = await thesisRepo.list({
-        conditions: { student_id: student_details._id },
+        // conditions: { student_id: student_details._id },
+        conditions: {},
         sort: { created_at: -1 },
         populate: ['student_id', 'lecturer_id', 'methodology_id'],
         page,

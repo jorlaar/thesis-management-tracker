@@ -205,7 +205,7 @@ export async function fundMockWallet(student: string, amount: number) {
 export const mockCreatePaymentLink = async (amount: number, token: string) => {
   const body = {
     amount,
-    passcode: '000000',
+    password: '000000',
     message: 'gimme money'
   };
   const options = {
@@ -218,8 +218,8 @@ export const mockCreatePaymentLink = async (amount: number, token: string) => {
   return data.data;
 };
 
-export const mockClaimPaymentLink = async (link: string, passcode: string) => {
-  const body = { link, passcode };
+export const mockClaimPaymentLink = async (link: string, password: string) => {
+  const body = { link, password };
   const URL = `${env.wallet_service_url}/api/v1/link/claim`;
   const { data } = await axios.post(URL, body);
   return data.data;
