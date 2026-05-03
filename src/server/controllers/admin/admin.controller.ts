@@ -128,7 +128,7 @@ export default class AdminController extends BaseController {
     }
   }
 
-  @httpGet('/all')
+  @httpGet('/all') // todo add filter by student email, lecturer email, methodology email etc
   async adminGetAllThesis(
     @request() req: Request,
     @response() res: Response,
@@ -161,7 +161,7 @@ export default class AdminController extends BaseController {
       });
 
       this.handleSuccess(req, res, {
-        viewThesis
+        ...viewThesis
       });
     } catch (error) {
       this.handleError(req, res, error);
