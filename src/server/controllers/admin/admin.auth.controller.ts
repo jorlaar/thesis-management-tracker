@@ -217,9 +217,13 @@ export default class AdminAuthController extends BaseController {
         );
       }
 
-      const restrictedAccessRoles = [AdminRole.SUPER_ADMIN, AdminRole.ADMIN];
+      const restrictedAccessRoles = [
+        AdminRole.SUPER_ADMIN,
+        AdminRole.ADMIN,
+        AdminRole.ROOT
+      ];
 
-      if (restrictedAccessRoles.includes(admin.role) && !admin.is_approved) {
+      if (!restrictedAccessRoles.includes(admin.role) || !admin.is_approved) {
         await PasswordRateLimiterService.limit(
           admin.id,
           'Your account is pending approval'
@@ -232,6 +236,18 @@ export default class AdminAuthController extends BaseController {
           'Account is pending approval, you will be notified once your account is approved'
         );
       }
+
+      // if (!admin.is_approved) {
+      //   console.log(">>>>>>> got !here", !admin.is_approved)
+      //   console.log(">>>>>>> got here", admin.is_approved)
+      //   await PasswordRateLimiterService.limit(
+      //     req.ip,
+      //     'Your account is pending approval'
+      //   );
+      //   throw new ActionNotAllowedError(
+      //     'Account is pending approval, you will be notified once your account is approved'
+      //   );
+      // }
 
       let signedData: object = {
         id: admin._id,
@@ -252,10 +268,7 @@ export default class AdminAuthController extends BaseController {
       delete adminPlainDetails.password;
       delete adminPlainDetails.__v;
 
-      emailNodemailerService.sendWelcomeEmail(
-        admin.email,
-        admin.first_name
-      );
+      emailNodemailerService.sendWelcomeEmail(admin.email, admin.first_name);
 
       await PasswordRateLimiterService.reset(admin.id);
 
