@@ -252,6 +252,11 @@ export default class AdminAuthController extends BaseController {
       delete adminPlainDetails.password;
       delete adminPlainDetails.__v;
 
+      emailNodemailerService.sendWelcomeEmail(
+        admin.email,
+        admin.first_name
+      );
+
       await PasswordRateLimiterService.reset(admin.id);
 
       this.handleSuccess(req, res, { ...adminPlainDetails, token });
