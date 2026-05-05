@@ -47,6 +47,31 @@ export class BaseController {
   }
 
   /**
+   * Handles operation to download a file
+   * @param req Express request
+   * @param res Express response
+   * @param writeStream Stream data
+   */
+  async handleFileResponse(
+    req: Request,
+    res: Response,
+    writeStream: (res: Response) => Promise<void>
+  ) {
+    try {
+      await writeStream(res);
+      // Response is streaming, wait for finish to log metrics
+      res.on('finish', () => {
+        logger.logAPIResponse(req, res);
+        if (res.getHeader('X-Response-Time')) {
+          MetricsService.record(req, res);
+        }
+      });
+    } catch (error) {
+      this.handleError(req, res, error);
+    }
+  }
+
+  /**
    * Handles operation error, sends a HTTP response and logs the error.
    * @param req Express request
    * @param res Express response

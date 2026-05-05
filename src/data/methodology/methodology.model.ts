@@ -1,4 +1,5 @@
 import { Model } from '../base';
+import { IAdmin } from '../admin/admin.model';
 
 export interface IMethodology extends Model {
   id: string;
@@ -8,6 +9,9 @@ export interface IMethodology extends Model {
   email: string;
   department: string;
   faculty: string;
+  is_approved: boolean;
+  approved_at: Date;
+  approved_by: IAdmin['id'] | null;
 
   // add auth_password change timestamp
   password_changed_at?: Date;

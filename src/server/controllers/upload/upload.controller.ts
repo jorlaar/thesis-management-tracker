@@ -2,14 +2,14 @@ import { Request, Response } from 'express';
 import { BaseController } from '@app/server/controllers/base/base.controller';
 import {
   controller,
-  httpPut,
+  // httpPut,
   response,
   request,
   httpGet,
   queryParam
   // requestParam
 } from 'inversify-express-utils';
-import upload from '../../middlewares/multerConfig';
+// import upload from '../../middlewares/multerConfig';
 import cloudinaryService from '@app/server/services/cloudinary/cloudinary.service';
 import { generateUlid } from '@app/server/utils';
 import authVerify from '@app/server/middlewares/auth.verify';
@@ -20,10 +20,11 @@ import {
   SupportedContentType,
   SupportedContentTypes
 } from '@app/server/services/s3/s3.type';
+import env from '@app/common/config/env';
 
 @controller('/upload', authVerify) // i can either sepearate to student, lecturers and methodology upload api later
 export default class UploadController extends BaseController {
-  @httpPut('/', upload.single('file_url')) // 'file' is the field name in the form
+  // @httpPut('/', upload.single('file_url')) // 'file' is the field name in the form
   async uploadFile(@request() req: Request, @response() res: Response) {
     try {
       // Access the uploaded file
@@ -49,8 +50,8 @@ export default class UploadController extends BaseController {
       req.body.otherField;
       const fileUpload = await cloudinaryService.uploadFile(
         fieldname as string,
-        `babcock-thesis`,
-        'raw',
+        env.cloudinary_bucket,
+        env.cloudinary_datatype,
         `${thesis_tracking_id}`
       );
 

@@ -54,12 +54,10 @@ export default class AdminController extends BaseController {
         throw new NotFoundError('Student not found');
       }
       const viewThesis = await thesisRepo.model
-        .findOne({ student_id: student_details.id })
+        .findOne({ student: student_details.id })
         .sort({ created_at: -1 });
 
-      this.handleSuccess(req, res, {
-        viewThesis
-      });
+      this.handleSuccess(req, res, viewThesis);
     } catch (error) {
       this.handleError(req, res, error);
     }
@@ -81,9 +79,7 @@ export default class AdminController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      this.handleSuccess(req, res, {
-        thesis_details
-      });
+      this.handleSuccess(req, res, thesis_details);
     } catch (error) {
       this.handleError(req, res, error);
     }
@@ -112,17 +108,15 @@ export default class AdminController extends BaseController {
       }
 
       const viewThesis = await thesisRepo.list({
-        conditions: { student_id: student_details._id },
+        conditions: { student: student_details._id },
         sort: { created_at: -1 },
-        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        populate: ['student', 'lecturer', 'methodology'],
         page,
         per_page,
         return_total_pages: true
       });
 
-      this.handleSuccess(req, res, {
-        viewThesis
-      });
+      this.handleSuccess(req, res, viewThesis);
     } catch (error) {
       this.handleError(req, res, error);
     }
@@ -151,18 +145,16 @@ export default class AdminController extends BaseController {
       // }
 
       const viewThesis = await thesisRepo.list({
-        // conditions: { student_id: student_details._id },
+        // conditions: { student: student_details._id },
         conditions: {},
         sort: { created_at: -1 },
-        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        populate: ['student', 'lecturer', 'methodology'],
         page,
         per_page,
         return_total_pages: true
       });
 
-      this.handleSuccess(req, res, {
-        ...viewThesis
-      });
+      this.handleSuccess(req, res, viewThesis);
     } catch (error) {
       this.handleError(req, res, error);
     }
@@ -191,7 +183,7 @@ export default class AdminController extends BaseController {
 
       // Get the most recent thesis for reference (optional)
       const latestThesis = await thesisRepo.model
-        .findOne({ student_id: student_details.id })
+        .findOne({ student: student_details.id })
         .sort({ created_at: -1 })
         .lean();
 
@@ -199,7 +191,7 @@ export default class AdminController extends BaseController {
       const submissionTrends = await thesisRepo.model.aggregate([
         {
           $match: {
-            student_id: student_details.id,
+            student: student_details.id,
             student_upload_time_stamp: { $exists: true }
           }
         },
@@ -245,7 +237,7 @@ export default class AdminController extends BaseController {
     }
   }
 
-  @httpGet('/admin/lifecycle/:trackingId')
+  @httpGet('/lifecycle/:trackingId')
   async getAThesisLifeCycle(
     @request() req: Request,
     @response() res: Response,
@@ -265,7 +257,7 @@ export default class AdminController extends BaseController {
       const viewThesis = await thesisRepo.list({
         conditions: { thesis_tracking_id: trackingId },
         sort: { created_at: -1 },
-        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        populate: ['student_id', 'lecturer_id', 'methodology_id'], // (if i can manipulate this to student, lecturer, methoddology without changing it)
         page,
         per_page,
         return_total_pages: true

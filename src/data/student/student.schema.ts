@@ -21,21 +21,24 @@ const StudentSchema = SchemaFactory({
   department: { ...trimmedString },
   faculty: { ...trimmedString },
 
-  course: { ...trimmedString },
-  matric_no: { ...trimmedString, index: true, required: true },
+  // course: { ...trimmedString },
+  matric_no: { ...trimmedString },
   // thesis: {
   //   ...trimmedString
   // }, // generate signed url for this (if it only contains a filepath)
   gender: { ...trimmedString, enum: ['male', 'female'] },
   // dob: { type: SchemaTypes.Date, default: null },
-  dob: { type: SchemaTypes.Date },
+  // dob: { type: SchemaTypes.Date },
   level: {
     type: String,
     enum: Object.values(StudentLevel),
     required: true,
     default: StudentLevel.MASTERS
   },
-  password_changed_at: { type: SchemaTypes.Date }
+  password_changed_at: { type: SchemaTypes.Date },
+  is_approved: { type: Boolean, default: false },
+  approved_at: { type: SchemaTypes.Date, default: null },
+  approved_by: { ref: 'Admin', type: SchemaTypes.String, default: null }
 });
 
 /**

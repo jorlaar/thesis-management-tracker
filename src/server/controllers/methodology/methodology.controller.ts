@@ -68,7 +68,7 @@ export default class MethodologyController extends BaseController {
 
       const getMethodologyDetails = await thesisRepo.list({
         conditions: {
-          student_id: { $in: studentIds },
+          student: { $in: studentIds },
           thesis_status: {
             $in: [
               THESIS_STATUS.approved_by_supervisor,
@@ -79,7 +79,7 @@ export default class MethodologyController extends BaseController {
           }
         },
         sort: { created_at: -1 },
-        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        populate: ['student', 'lecturer', 'methodology'],
         page,
         per_page,
         return_total_pages: true

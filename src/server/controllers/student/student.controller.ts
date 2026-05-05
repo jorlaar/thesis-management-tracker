@@ -30,7 +30,7 @@ export default class StudentController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      this.handleSuccess(req, res, { student_details });
+      this.handleSuccess(req, res, student_details);
     } catch (err) {
       this.handleError(req, res, err);
     }
@@ -58,9 +58,9 @@ export default class StudentController extends BaseController {
       }
 
       const viewThesis = await thesisRepo.list({
-        conditions: { student_id: student_details._id },
+        conditions: { student: student_details._id },
         sort: { created_at: -1 },
-        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        populate: ['student', 'lecturer', 'methodology'],
         page,
         per_page,
         return_total_pages: true

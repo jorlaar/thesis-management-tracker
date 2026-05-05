@@ -1,8 +1,9 @@
 import { Model } from '../base';
+import { IAdmin } from '../admin/admin.model';
 
 export interface IStudentModel extends Model {
   id: string;
-  dob: Date;
+  // dob?: Date;
   matric_no: string;
   gender: Gender;
   password: string;
@@ -10,9 +11,12 @@ export interface IStudentModel extends Model {
   last_name: string;
   email: string;
   department: string;
-  course: string;
+  // course?: string;
   level: StudentLevel;
   faculty: string;
+  is_approved: boolean;
+  approved_at: Date;
+  approved_by: IAdmin['id'] | null;
 
   // add auth_password change timestamp
   password_changed_at?: Date;

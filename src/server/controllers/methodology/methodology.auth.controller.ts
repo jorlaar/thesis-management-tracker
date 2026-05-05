@@ -69,29 +69,12 @@ export default class MethodologyAuthController extends BaseController {
         throw new ControllerError('Methodology with email already exists');
       }
 
-      const methodology = await methodologyRepo.create(body);
+      // const methodology =
+      await methodologyRepo.create(body);
 
-      let signedData: object = {
-        id: methodology._id,
-        email: methodology.email,
-        department: methodology.department,
-        faculty: methodology.faculty,
-        type: 'methodology'
-      };
-
-      const token = jwt.sign(
-        {
-          data: signedData
-        },
-        env.jwt_secret,
-        { expiresIn: env.expires_at }
-      );
-
-      emailNodemailerService.sendWelcomeEmail(
-        methodology.email,
-        methodology.first_name
-      );
-      this.handleSuccess(req, res, { ...signedData, token });
+      this.handleSuccess(req, res, {
+        message: 'Methodology registration successful, waiting for approval'
+      });
     } catch (err) {
       this.handleError(req, res, err);
     }
@@ -127,6 +110,16 @@ export default class MethodologyAuthController extends BaseController {
         type: 'methodology'
       };
 
+      if (!methodology.is_approved) {
+        await PasswordRateLimiterService.limit(
+          req.ip,
+          'Your account is pending approval'
+        );
+        throw new ActionNotAllowedError(
+          'Account is pending approval, you will be notified once your account is approved'
+        );
+      }
+
       const token = jwt.sign(
         {
           data: signedData
@@ -141,8 +134,8 @@ export default class MethodologyAuthController extends BaseController {
       delete methodologyPlainDetails.__v;
 
       const paginatedThesis = await thesisRepo.list({
-        conditions: { methodology_id: methodology._id },
-        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        conditions: { methodology: methodology._id },
+        populate: ['student', 'lecturer', 'methodology'],
         return_total_pages: true,
         sort: { created_at: -1 },
         page: 1,

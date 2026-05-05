@@ -1,12 +1,15 @@
 import { Model } from '../base';
+import { ILecturerModel } from '../lecturer';
+import { IMethodology } from '../methodology';
+import { IStudentModel } from '../student';
 
 export interface IThesis extends Model {
-  // comment?: string;
-  comment_id?: string;
-  lecturer_id?: string;
-  methodology_id?: string;
+  comment?: string;
+  lecturer?: string | ILecturerModel;
+  methodology?: string | IMethodology;
   file_url?: string;
-  student_id: string;
+  student: string | IStudentModel;
+  thesis_title: string;
   id?: string;
   thesis_tracking_id: string;
   student_upload_time_stamp?: Date;

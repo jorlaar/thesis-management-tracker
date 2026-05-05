@@ -20,7 +20,7 @@ export const passwordSchema = joi
 // });
 
 export const studentSignup = joi.object({
-  dob: joi.date(),
+  // dob: joi.date(),
   matric_no: joi.string().trim().lowercase().required(),
   email: joi
     .string()
@@ -47,7 +47,7 @@ export const studentSignup = joi.object({
   last_name: joi.string().trim().lowercase().required(),
   department: joi.string().trim().lowercase().required(), // to do preload it drop down
   faculty: joi.string().trim().lowercase().required(), // to do preload it drop down
-  course: joi.string().trim().lowercase().required(), // to do preload it as drop down
+  // course: joi.string().trim().lowercase().required(), // to do preload it as drop down
   level: joi
     .string()
     .valid(...Object.values(StudentLevel))

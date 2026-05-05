@@ -1,3 +1,4 @@
+import { IAdmin } from '../admin/admin.model';
 import { Model } from '../base';
 
 export interface ILecturerModel extends Model {
@@ -8,6 +9,9 @@ export interface ILecturerModel extends Model {
   email: string;
   department: string;
   faculty: string;
+  is_approved: boolean;
+  approved_at: Date;
+  approved_by: IAdmin['id'] | null;
 
   // add auth_password change timestamp
   password_changed_at?: Date;

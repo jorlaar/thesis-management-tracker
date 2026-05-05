@@ -68,30 +68,35 @@ export default class LecturerAuthController extends BaseController {
         throw new ControllerError('Lecturer with email already exists');
       }
 
-      const lecturer = await lecturerRepo.create(body);
+      // const lecturer =
+      await lecturerRepo.create(body);
 
-      let signedData: object = {
-        id: lecturer._id,
-        email: lecturer.email,
-        department: lecturer.department,
-        faculty: lecturer.faculty,
-        type: 'lecturer'
-      };
+      // let signedData: object = {
+      //   id: lecturer._id,
+      //   email: lecturer.email,
+      //   department: lecturer.department,
+      //   faculty: lecturer.faculty,
+      //   type: 'lecturer'
+      // };
 
-      const token = jwt.sign(
-        {
-          data: signedData
-        },
-        env.jwt_secret,
-        { expiresIn: env.expires_at }
-      );
+      // const token = jwt.sign(
+      //   {
+      //     data: signedData
+      //   },
+      //   env.jwt_secret,
+      //   { expiresIn: env.expires_at }
+      // );
 
-      emailNodemailerService.sendWelcomeEmail(
-        lecturer.email,
-        lecturer.first_name
-      );
+      // emailNodemailerService.sendWelcomeEmail(
+      //   lecturer.email,
+      //   lecturer.first_name
+      // );
 
-      this.handleSuccess(req, res, { ...lecturer, token });
+      // this.handleSuccess(req, res, { ...lecturer, token });
+
+      this.handleSuccess(req, res, {
+        message: 'Lecturer registration successful, waiting for approval'
+      });
     } catch (err) {
       this.handleError(req, res, err);
     }
@@ -119,6 +124,16 @@ export default class LecturerAuthController extends BaseController {
         throw new ControllerError('Invalid email or password');
       }
 
+      if (!lecturer.is_approved) {
+        await PasswordRateLimiterService.limit(
+          req.ip,
+          'Your account is pending approval'
+        );
+        throw new ActionNotAllowedError(
+          'Account is pending approval, you will be notified once your account is approved'
+        );
+      }
+
       let signedData: object = {
         id: lecturer._id,
         email: lecturer.email,
@@ -143,8 +158,8 @@ export default class LecturerAuthController extends BaseController {
       await PasswordRateLimiterService.reset(lecturer.id);
 
       const paginatedThesis = await thesisRepo.list({
-        conditions: { lecturer_id: lecturer._id },
-        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        conditions: { lecturer: lecturer._id },
+        populate: ['student', 'lecturer', 'methodology'],
         return_total_pages: true,
         sort: { created_at: -1 },
         page: 1,

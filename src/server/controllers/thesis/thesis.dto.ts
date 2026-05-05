@@ -1,27 +1,30 @@
 export interface ThesisDTO {
   lecturer_email: string;
-  file_url: string;
+  file: string;
   thesis_chapter?: string | string[];
   comment?: string;
+  thesis_title: string;
   thesis_level: string;
 }
 
 export interface lecturerCommentUpload {
-  file_url?: string;
+  // file_url?: string;
+  file?: string;
   comment: string;
   student_email: string;
 }
 
 export interface methodologyCommentUpload {
-  file_url?: string;
+  // file_url?: string;
+  file?: string;
   comment: string;
   student_email: string;
 }
 
 export type ThesisQuery = {
-  student_id: string;
-  lecturer_id?: string;
-  methodology_id?: string;
+  student: string;
+  lecturer?: string;
+  methodology?: string;
   [key: string]: any; // For other dynamic properties
 };
 

@@ -1,7 +1,7 @@
 import { Gender, StudentLevel } from '@app/data/student';
 
 export interface StudentSignupDTO {
-  dob?: Date;
+  // dob?: Date;
   email?: string;
   // state?: string;
   gender?: Gender;
@@ -10,7 +10,7 @@ export interface StudentSignupDTO {
   first_name?: string;
   matric_no?: string;
   department?: string;
-  course?: string;
+  // course?: string;
   level?: StudentLevel;
   faculty?: string;
 }

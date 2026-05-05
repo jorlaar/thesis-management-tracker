@@ -65,20 +65,20 @@ export class StudentRepository extends BaseRepository<IStudentModel> {
    */
   async getstudentsFromPhonebook(
     data: Array<string>,
-    student_id: string
+    student: string
   ): Promise<Array<object>> {
     const result = await this.model
       .aggregate()
       .match({
-        $and: [{ phone_number: { $in: data } }, { _id: { $ne: student_id } }]
+        $and: [{ phone_number: { $in: data } }, { _id: { $ne: student } }]
       })
       .project({
         _id: 1,
         first_name: 1,
         last_name: 1,
-        phone_number: 1,
-        profile_picture: 1,
-        mobile_number_number: 1
+        email: 1,
+        department: 1,
+        faculty: 1
       })
       .sort({ first_name: 1 })
       .exec();

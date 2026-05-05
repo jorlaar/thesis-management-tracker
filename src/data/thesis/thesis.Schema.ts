@@ -3,12 +3,16 @@ import { SchemaTypes } from 'mongoose';
 import { THESIS_STATUS, THESIS_CHAPTER } from './thesis.model';
 
 const ThesisSchema = SchemaFactory({
-  student_id: { ...trimmedString, ref: 'student', required: true },
+  student: { ...trimmedString, ref: 'student', required: true },
   thesis_tracking_id: { ...trimmedString, required: true },
   thesis_level: {
     ...trimmedString,
-    enum: ['pre_field', 'post_field', "full_thesis"],
+    enum: ['pre_field', 'post_field', 'full_thesis'],
     required: false
+  },
+  thesis_title: {
+    ...trimmedString,
+    required: true
   },
   thesis_status: {
     ...trimmedString,
@@ -21,8 +25,8 @@ const ThesisSchema = SchemaFactory({
     required: false
   },
   comment: { ...trimmedString },
-  lecturer_id: { ...trimmedString, ref: 'lecturer' },
-  methodology_id: { ...trimmedString, ref: 'methodology' },
+  lecturer: { ...trimmedString, ref: 'lecturer' },
+  methodology: { ...trimmedString, ref: 'methodology' },
   file_url: { ...trimmedString },
   student_upload_time_stamp: { type: SchemaTypes.Date },
   lecturer_review_time_stamp: { type: SchemaTypes.Date },
@@ -34,16 +38,16 @@ const ThesisSchema = SchemaFactory({
 // });
 
 // For fast student-specific queries (e.g., "find all theses by student X")
-ThesisSchema.index({ student_id: 1 });
+ThesisSchema.index({ student: 1 });
 
 // Already unique, but ensure index exists for tracking ID lookups
 ThesisSchema.index({ thesis_tracking_id: 1 }, { sparse: true });
 
 // For lecturer-specific reviews (e.g., "find theses assigned to lecturer Y")
-ThesisSchema.index({ lecturer_id: 1 });
+ThesisSchema.index({ lecturer: 1 });
 
 // For methodology-specific queries (note: fix typo in ref: 'methodology')
-ThesisSchema.index({ methodology_id: 1 });
+ThesisSchema.index({ methodology: 1 });
 
 // For recent student uploads (e.g., "theses submitted in last 30 days")
 ThesisSchema.index({ student_upload_time_stamp: -1 }); // -1 = descending

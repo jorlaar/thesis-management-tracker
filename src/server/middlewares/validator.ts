@@ -34,10 +34,7 @@ const validate = (dataValue: any, schema: joi.AnySchema) => {
 
 type ValidatorContext = 'body' | 'query';
 
-export default (
-  schema: AnySchema,
-  context: ValidatorContext = 'body'
-) => {
+export default (schema: AnySchema, context: ValidatorContext = 'body') => {
   return (req: Request, res: Response, next: NextFunction) => {
     const { err, value } = validate(req[context], schema);
     if (!err) {
@@ -51,6 +48,29 @@ export default (
     res.jSend.error(err, errMessage, HttpStatus.UNPROCESSABLE_ENTITY);
 
     logger.logAPIError(req, res, err);
-    res.getHeader("X-Response-Time") && MetricsService.record(req, res);
+    res.getHeader('X-Response-Time') && MetricsService.record(req, res);
+  };
+};
+
+export const fileAndBodyValidator = (schema: joi.AnySchema) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const combined = {
+      ...req.body,
+      file: req.file // multer adds this
+    };
+
+    const { err, value } = validate(combined, schema);
+
+    if (!err) {
+      const { file, ...bodyFields } = value;
+      req.body = bodyFields;
+      return next();
+    }
+
+    const errMessage =
+      err[Object.keys(err)[0]] || 'One or more validation errors occurred';
+    res.jSend.error(err, errMessage, HttpStatus.UNPROCESSABLE_ENTITY);
+    logger.logAPIError(req, res, err);
+    res.getHeader('X-Response-Time') && MetricsService.record(req, res);
   };
 };

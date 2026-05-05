@@ -63,29 +63,33 @@ export default class StudentAuthController extends BaseController {
       if (findStudent) {
         throw new ControllerError('Student with email already exists');
       }
-      const student = await studentRepo.create(body);
+      // const student =
+      await studentRepo.create(body);
 
-      let signedData: object = {
-        id: student._id,
-        email: student.email,
-        department: student.department,
-        faculty: student.faculty,
-        type: 'student'
-      };
+      // let signedData: object = {
+      //   id: student._id,
+      //   email: student.email,
+      //   department: student.department,
+      //   faculty: student.faculty,
+      //   type: 'student'
+      // };
 
-      const token = jwt.sign(
-        {
-          data: signedData
-        },
-        env.jwt_secret,
-        { expiresIn: env.expires_at }
-      );
+      // const token = jwt.sign(
+      //   {
+      //     data: signedData
+      //   },
+      //   env.jwt_secret,
+      //   { expiresIn: env.expires_at }
+      // );
 
-      nodeMailerEmailService.sendWelcomeEmail(
-        student.email,
-        student.first_name
-      );
-      this.handleSuccess(req, res, { ...signedData, token });
+      // nodeMailerEmailService.sendWelcomeEmail(
+      //   student.email,
+      //   student.first_name
+      // );
+      // this.handleSuccess(req, res, { ...signedData, token });
+      this.handleSuccess(req, res, {
+        message: 'Student registration successful, waiting for approval'
+      });
       console.log('Student signed up successfully after sending response');
     } catch (err) {
       this.handleError(req, res, err);
@@ -114,6 +118,16 @@ export default class StudentAuthController extends BaseController {
         throw new ControllerError('Invalid email or password');
       }
 
+      if (!student.is_approved) {
+        await PasswordRateLimiterService.limit(
+          req.ip,
+          'Your account is pending approval'
+        );
+        throw new ActionNotAllowedError(
+          'Account is pending approval, you will be notified once your account is approved'
+        );
+      }
+
       let signedData: object = {
         id: student._id,
         email: student.email,
@@ -136,8 +150,8 @@ export default class StudentAuthController extends BaseController {
       delete studentPlainDetails.__v;
 
       const paginatedThesis = await thesisRepo.list({
-        conditions: { student_id: student._id },
-        populate: ['student_id', 'lecturer_id', 'methodology_id'],
+        conditions: { student: student._id },
+        populate: ['student', 'lecturer', 'methodology'],
         return_total_pages: true,
         sort: { created_at: -1 },
         page: 1,

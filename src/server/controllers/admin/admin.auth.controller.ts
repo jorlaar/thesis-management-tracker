@@ -51,6 +51,11 @@ import emailNodemailerService from '@app/server/services/email/email.nodemailer.
 import rootOrSuperAdminAuthVerify from '@app/server/middlewares/admin-root-super.auth.verify';
 import rootAdminAuthVerify from '@app/server/middlewares/root.admin.auth.verify';
 import { AdminRole, IAdmin } from '@app/data/admin/admin.model';
+import { approveValidator } from '../lecturer/lecturer.validator';
+import { ApproveDTO } from '../lecturer/lecturer.dto';
+import lecturerRepo from '@app/data/lecturer/lecturer.repo';
+import methodologyRepo from '@app/data/methodology/methodology.repo';
+import studentRepo from '@app/data/student/student.repo';
 
 @controller('/auth/admin')
 export default class AdminAuthController extends BaseController {
@@ -622,6 +627,202 @@ export default class AdminAuthController extends BaseController {
 
       this.handleSuccess(req, res, {
         message: 'Password reset successfully'
+      });
+    } catch (err) {
+      this.handleError(req, res, err);
+    }
+  }
+
+  @httpPost(
+    '/approve/lecturer',
+    rootOrSuperAdminAuthVerify,
+    validator(approveValidator)
+  )
+  async approveLecturer(
+    @request() req: Request,
+    @response() res: Response,
+    @requestBody() body: ApproveDTO
+  ) {
+    try {
+      const [approvingAdminDetails, approveeLecturerDetails] =
+        await Promise.all([
+          adminRepo.model.findOne({
+            email: body.approving_admin_email
+          }),
+          lecturerRepo.model.findOne({
+            email: body.approvee_email
+          })
+        ]);
+
+      if (!approvingAdminDetails || !approveeLecturerDetails) {
+        throw new ActionNotAllowedError(
+          'One or both email account not found.!'
+        );
+      }
+
+      if (approveeLecturerDetails.id === approvingAdminDetails.id) {
+        throw new ActionNotAllowedError('You cannot approve yourself');
+      }
+
+      const allowedApproverRoles = [AdminRole.ROOT, AdminRole.SUPER_ADMIN];
+
+      if (!allowedApproverRoles.includes(approvingAdminDetails.role)) {
+        throw new ActionNotAllowedError(
+          'only root admins and super admins can approve a lecturer'
+        );
+      }
+
+      if (!approvingAdminDetails.is_approved) {
+        throw new ActionNotAllowedError(
+          'Approving Admin must first be approved, please contact support for more details'
+        );
+      }
+
+      if (approveeLecturerDetails.is_approved) {
+        throw new ActionNotAllowedError(
+          'Lecturer is already approved, you cannot perform this operation'
+        );
+      }
+
+      approveeLecturerDetails.is_approved = true;
+      approveeLecturerDetails.approved_at = new Date();
+      approveeLecturerDetails.approved_by = approvingAdminDetails.id;
+      await approveeLecturerDetails.save();
+      // send webhook for successful approval notification to the approvee lecturer
+
+      this.handleSuccess(req, res, {
+        message: `${approveeLecturerDetails.first_name} ${approveeLecturerDetails.last_name} has been approved successfully`
+      });
+    } catch (err) {
+      this.handleError(req, res, err);
+    }
+  }
+
+  @httpPost(
+    '/approve/methodology',
+    rootOrSuperAdminAuthVerify,
+    validator(approveValidator)
+  )
+  async approveMethodology(
+    @request() req: Request,
+    @response() res: Response,
+    @requestBody() body: ApproveDTO
+  ) {
+    try {
+      const [approvingAdminDetails, approveeMethodologyDetails] =
+        await Promise.all([
+          adminRepo.model.findOne({
+            email: body.approving_admin_email
+          }),
+          methodologyRepo.model.findOne({
+            email: body.approvee_email
+          })
+        ]);
+
+      if (!approvingAdminDetails || !approveeMethodologyDetails) {
+        throw new ActionNotAllowedError(
+          'One or both email account not found.!'
+        );
+      }
+
+      if (approveeMethodologyDetails.id === approvingAdminDetails.id) {
+        throw new ActionNotAllowedError('You cannot approve yourself');
+      }
+
+      const allowedApproverRoles = [AdminRole.ROOT, AdminRole.SUPER_ADMIN];
+
+      if (!allowedApproverRoles.includes(approvingAdminDetails.role)) {
+        throw new ActionNotAllowedError(
+          'only root admins and super admins can approve a methodology'
+        );
+      }
+
+      if (!approvingAdminDetails.is_approved) {
+        throw new ActionNotAllowedError(
+          'Approving Admin must first be approved, please contact support for more details'
+        );
+      }
+
+      if (approveeMethodologyDetails.is_approved) {
+        throw new ActionNotAllowedError(
+          'Methodology is already approved, you cannot perform this operation'
+        );
+      }
+
+      approveeMethodologyDetails.is_approved = true;
+      approveeMethodologyDetails.approved_at = new Date();
+      approveeMethodologyDetails.approved_by = approvingAdminDetails.id;
+      await approveeMethodologyDetails.save();
+      // send webhook for successful approval notification to the approvee Methodology
+
+      this.handleSuccess(req, res, {
+        message: `${approveeMethodologyDetails.first_name} ${approveeMethodologyDetails.last_name} has been approved successfully`
+      });
+    } catch (err) {
+      this.handleError(req, res, err);
+    }
+  }
+
+  @httpPost(
+    '/approve/student',
+    rootOrSuperAdminAuthVerify,
+    validator(approveValidator)
+  )
+  async approveStudent(
+    @request() req: Request,
+    @response() res: Response,
+    @requestBody() body: ApproveDTO
+  ) {
+    try {
+      const [approvingAdminDetails, approveeStudentDetails] = await Promise.all(
+        [
+          adminRepo.model.findOne({
+            email: body.approving_admin_email
+          }),
+          studentRepo.model.findOne({
+            email: body.approvee_email
+          })
+        ]
+      );
+
+      if (!approvingAdminDetails || !approveeStudentDetails) {
+        throw new ActionNotAllowedError(
+          'One or both email account not found.!'
+        );
+      }
+
+      if (approveeStudentDetails.id === approvingAdminDetails.id) {
+        throw new ActionNotAllowedError('You cannot approve yourself');
+      }
+
+      const allowedApproverRoles = [AdminRole.ROOT, AdminRole.SUPER_ADMIN];
+
+      if (!allowedApproverRoles.includes(approvingAdminDetails.role)) {
+        throw new ActionNotAllowedError(
+          'only root admins and super admins can approve a student'
+        );
+      }
+
+      if (!approvingAdminDetails.is_approved) {
+        throw new ActionNotAllowedError(
+          'Approving Admin must first be approved, please contact support for more details'
+        );
+      }
+
+      if (approveeStudentDetails.is_approved) {
+        throw new ActionNotAllowedError(
+          'Student is already approved, you cannot perform this operation'
+        );
+      }
+
+      approveeStudentDetails.is_approved = true;
+      approveeStudentDetails.approved_at = new Date();
+      approveeStudentDetails.approved_by = approvingAdminDetails.id;
+      await approveeStudentDetails.save();
+      // send webhook for successful approval notification to the approvee Student
+
+      this.handleSuccess(req, res, {
+        message: `${approveeStudentDetails.first_name} ${approveeStudentDetails.last_name} has been approved successfully`
       });
     } catch (err) {
       this.handleError(req, res, err);

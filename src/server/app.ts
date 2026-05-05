@@ -73,15 +73,15 @@ export default class App {
     });
   }
 
-  async createDefaultKeys() {
-    try {
-      const data = { sample1: 'channel1', sample2: 'channel2' };
-      redis.set('KEY_BLOCKS', JSON.stringify(data));
-      logger.message('😎  default channels created');
-    } catch (error) {
-      logger.error(error, 'error creating keys');
-    }
-  }
+  // async createDefaultKeys() {
+  //   try {
+  //     const data = { sample1: 'channel1', sample2: 'channel2' };
+  //     redis.set('KEY_BLOCKS', JSON.stringify(data));
+  //     logger.message('😎  default channels created');
+  //   } catch (error) {
+  //     logger.error(error, 'error creating keys');
+  //   }
+  // }
 
   /**
    * Applies all routes and configuration to the server, returning the express application server.

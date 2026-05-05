@@ -23,6 +23,13 @@ export const SupportedContentTypes = [
 ] as const;
 export type SupportedContentType = (typeof SupportedContentTypes)[number];
 
+export const ThesisSupportedContentTypes = [
+  'application/pdf',
+  'text/csv'
+] as const;
+export type ThesisSupportedContentType =
+  (typeof ThesisSupportedContentTypes)[number];
+
 export interface GetDownloadSignedURLRequest {
   Bucket: string;
   Key: string;

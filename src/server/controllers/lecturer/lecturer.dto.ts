@@ -16,3 +16,8 @@ export interface ChangeLecturerPasswordDTO {
   old_password: string;
   new_password: string;
 }
+
+export interface ApproveDTO {
+  approvee_email: string;
+  approving_admin_email: string;
+}

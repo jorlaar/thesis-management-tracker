@@ -48,6 +48,8 @@ const env = {
   cloudinary_key: process.env.CLOUDINARY_KEY,
   cloudinary_url: process.env.CLOUDINARY_URL,
   cloudinary_secret: process.env.CLOUDINARY_SECRET,
+  cloudinary_bucket: process.env.CLOUDINARY_BUCKET,
+  cloudinary_datatype: process.env.CLOUDINARY_DATATYPE,
   aws_access_key_id: process.env.AWS_ACCESS_KEY_ID,
   aws_secret_key_access: process.env.AWS_SECRET_KEY_ACCESS,
   aws_region: process.env.AWS_REGION,
