@@ -27,7 +27,7 @@ import authVerify from '@app/server/middlewares/auth.verify';
 import lecturerRepo from '@app/data/lecturer/lecturer.repo';
 import { generateUlid } from '@app/server/utils';
 import thesisRepo from '@app/data/thesis/thesis.repo';
-import { THESIS_STATUS } from '@app/data/thesis/thesis.model';
+import { THESIS_CHAPTER, THESIS_STATUS } from '@app/data/thesis/thesis.model';
 import studentRepo from '@app/data/student/student.repo';
 // import methodologyRepo from '@app/data/methodology/methodology.repo';
 import { ActionNotAllowedError, BadRequestError, NotFoundError } from '../base';
@@ -98,12 +98,12 @@ export default class ThesisController extends BaseController {
         file_url: fileUpload.secure_url,
         thesis_tracking_id,
         lecturer: supervisor_details._id,
-        thesis_level: body.thesis_level,
+        thesis_level: body?.thesis_level || 'partial_thesis',
         thesis_title: body.thesis_title,
         // thesis_chapter: isMultiSave
         //   ? [...body.thesis_chapter]
         //   : body.thesis_chapter,
-        thesis_chapter: body.thesis_chapter,
+        thesis_chapter: body?.thesis_chapter || THESIS_CHAPTER.ONE,
         thesis_status: THESIS_STATUS.awaiting_supervisor_review,
         student_upload_time_stamp: new Date(),
         ...(body?.comment && { comment: body.comment }) // Only include if usercomment exists

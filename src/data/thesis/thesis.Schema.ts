@@ -7,7 +7,7 @@ const ThesisSchema = SchemaFactory({
   thesis_tracking_id: { ...trimmedString, required: true },
   thesis_level: {
     ...trimmedString,
-    enum: ['pre_field', 'post_field', 'full_thesis'],
+    enum: ['pre_field', 'post_field', 'full_thesis', 'partial_thesis'],
     required: false
   },
   thesis_title: {

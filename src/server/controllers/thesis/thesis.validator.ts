@@ -165,8 +165,8 @@ export const studentUploadThesisValidator = joi.object({
   thesis_level: joi
     .string()
     .valid('pre_field', 'post_field', 'full_thesis', 'partial_thesis')
-    .default('partial_thesis')
-    .required(),
+    .default('partial_thesis'),
+    // .required(),
 
   thesis_chapter: joi
     .custom((value, helpers) => {

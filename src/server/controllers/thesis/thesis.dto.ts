@@ -4,7 +4,7 @@ export interface ThesisDTO {
   thesis_chapter?: string | string[];
   comment?: string;
   thesis_title: string;
-  thesis_level: string;
+  thesis_level?: string;
 }
 
 export interface lecturerCommentUpload {
