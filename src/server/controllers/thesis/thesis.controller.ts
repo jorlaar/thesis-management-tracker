@@ -54,6 +54,8 @@ export default class ThesisController extends BaseController {
     @requestBody() body: ThesisDTO
   ) {
     try {
+      console.log(">>>>>>>> file_url", req.file);
+      console.log(">>>>>>>> body", body);
       const { fieldname, mimetype } = req.file;
 
       if (
@@ -71,7 +73,7 @@ export default class ThesisController extends BaseController {
       }
 
       const supervisor_details = await lecturerRepo.model.findOne({
-        email: body.lecturer_email
+        id: body.lecturer
       });
 
       if (!supervisor_details) {

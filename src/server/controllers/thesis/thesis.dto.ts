@@ -1,5 +1,5 @@
 export interface ThesisDTO {
-  lecturer_email: string;
+  lecturer: string;
   file: string;
   thesis_chapter?: string | string[];
   comment?: string;

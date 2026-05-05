@@ -158,15 +158,10 @@ export const studentUploadThesisValidator = joi.object({
     .messages({ 'any.required': 'No file uploaded' }),
   comment: joi.string().trim(),
   thesis_title: joi.string().trim().required(),
-  lecturer_email: joi
-    .string()
-    .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
-    .trim()
-    .required()
-    .messages({
-      'string.empty': 'Email is required',
-      'any.required': 'Email is required'
-    }),
+  lecturer: joi.string().trim().required().messages({
+    'string.empty': 'lecturer details is required',
+    'any.required': 'lecturer details is required'
+  }),
   thesis_level: joi
     .string()
     .valid('pre_field', 'post_field', 'full_thesis', 'partial_thesis')
