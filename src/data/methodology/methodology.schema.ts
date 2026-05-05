@@ -50,4 +50,8 @@ MethodologySchema.method('updatePassword', async function (plainText: string) {
   return await lecturer.save();
 });
 
+MethodologySchema.virtual('full_name').get(function () {
+  return `${this.first_name} ${this.last_name}`;
+});
+
 export default MethodologySchema;

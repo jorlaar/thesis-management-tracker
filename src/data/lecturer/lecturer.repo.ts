@@ -1,6 +1,6 @@
 import { BaseRepository } from '../base';
-import { ILecturerModel} from './lecturer.model';
-import { LecturerSchema} from './lecturer.schema';
+import { ILecturerModel } from './lecturer.model';
+import { LecturerSchema } from './lecturer.schema';
 import { Model } from '../base';
 
 export interface LecturerSchema extends Model {

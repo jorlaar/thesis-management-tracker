@@ -29,4 +29,15 @@ export default class LecturerController extends BaseController {
       this.handleError(req, res, err);
     }
   }
+
+  @httpGet('/get-all', authVerify) // add rate limit
+  async getAllLecturer(@request() req: Request, @response() res: Response) {
+    const lecturer = await lecturerRepo.model
+      .find({})
+      .select('first_name last_name full_name') // include the source fields
+      .exec();
+
+    console.log('>>>>>>>. lecturer', lecturer);
+    this.handleSuccess(req, res, lecturer);
+  }
 }

@@ -92,4 +92,15 @@ export default class MethodologyController extends BaseController {
       this.handleError(req, res, error);
     }
   }
+
+  @httpGet('/get-all', authVerify) // add rate limit
+  async getAllLecturer(@request() req: Request, @response() res: Response) {
+    const methodology = await methodologyRepo.model
+      .find({})
+      .select('first_name last_name full_name') // include the source fields
+      .exec();
+
+    console.log('>>>>>>>. lecturer', methodology);
+    this.handleSuccess(req, res, methodology);
+  }
 }
