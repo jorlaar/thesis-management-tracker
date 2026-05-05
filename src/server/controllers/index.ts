@@ -9,3 +9,4 @@ export * from './methodology/methodology.auth.controller';
 export * from './thesis/thesis.controller';
 export * from './upload/upload.controller';
 export * from './rootAdmin/root.admin.controller';
+export * from './misc/misc.controller';

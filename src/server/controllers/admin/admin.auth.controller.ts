@@ -264,6 +264,13 @@ export default class AdminAuthController extends BaseController {
         { expiresIn: env.expires_at }
       );
 
+      const refreshToken = jwt.sign(
+        {
+          id: admin._id
+        },
+        env.jwt_refresh_secret,
+        { expiresIn: env.refresh_token_expires_at }
+      );
       const adminPlainDetails = admin.toObject();
       delete adminPlainDetails.password;
       delete adminPlainDetails.__v;
@@ -272,11 +279,35 @@ export default class AdminAuthController extends BaseController {
 
       await PasswordRateLimiterService.reset(admin.id);
 
-      this.handleSuccess(req, res, { ...adminPlainDetails, token });
+      this.handleSuccess(req, res, {
+        ...adminPlainDetails,
+        token,
+        refreshToken
+      });
     } catch (err) {
       this.handleError(req, res, err);
     }
   }
+
+  // @httpPost('/refresh-token')
+  // async generateAdminRefreshToken(
+  //   @request() req: Request,
+  //   @response() res: Response
+  // ) {
+  //   try {
+  //     const { refreshToken } = req.body;
+  //     const decoded = jwt.verify(refreshToken, env.jwt_refresh_secret);
+  //     // optional: check if token exists in DB (if you store them)
+  //     const user = await adminRepo.model.findById(decoded.id);
+  //     // Issue a new access token (and optionally rotate the refresh token)
+  //     const newAccessToken = jwt.sign({ data: user }, env.jwt_secret, {
+  //       expiresIn: '15m'
+  //     });
+  //     this.handleSuccess(req, res, { accessToken: newAccessToken });
+  //   } catch (error) {
+  //     this.handleError(req, res, error);
+  //   }
+  // }
 
   @httpPost(
     '/approve/super-admin',
