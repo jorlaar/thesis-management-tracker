@@ -96,6 +96,56 @@ class EmailService {
 
     this.sendEmail(recipient, subject, text, html);
   }
+
+  sendThesisReviewEmail(recipient: string, name: string) {
+    const subject = 'Thesis Review Notification';
+
+    const text = `Hello ${name},\n\nYour thesis has been reviewed. Please check the feedback and make the necessary revisions.\n\nBest regards,\n The Thesis Management Team`;
+    const html = `<p>Hello ${name},</p><p>Your thesis has been reviewed. Please check the feedback and make the necessary revisions.</p><p>Best regards,<br>The Thesis Management Team</p>`;
+
+    this.sendEmail(recipient, subject, text, html);
+  }
+
+  sendResendPasswordResetEmail(
+    recipient: string,
+    name: string,
+    reset_link: string
+  ) {
+    const subject = 'Password Reset Request';
+
+    // Extract token from reset_link (assuming format like: https://yourapp.com/reset?token=123456)
+    const token =
+      new URL(reset_link).searchParams.get('token') ||
+      reset_link.split('/').pop() ||
+      reset_link;
+
+    const text = `Hello ${name},\n\nWe received a request to reset your password.\n\nYour reset token is: ${token}\n\nYou can also use this link: ${reset_link}\n\nIf you did not request a password reset, please ignore this email.\n\nBest regards,\nThe Thesis Management Team`;
+
+    // const html = `<p>Hello ${name},</p><p>Your thesis has been reviewed. Please check the feedback and make the necessary revisions.</p><p>Best regards,<br>The Thesis Management Team</p>`;
+
+    // this.sendEmail(recipient, subject, text, html);
+    this.sendEmail(recipient, subject, text);
+  }
+
+  sendResendForgotPasswordResetEmailV2(
+    recipient: string,
+    name: string,
+    otp: string
+  ) {
+    const subject = 'Your Password Reset Code';
+
+    const text =
+      `Hello ${name},\n\n` +
+      `We received a request to reset your password.\n\n` +
+      `Your reset code is: ${otp}\n\n` +
+      `Please enter this code on the password reset page to continue.\n\n` +
+      `If you didn't request this, you can safely ignore this email.\n\n` +
+      `Best regards,\nThe Thesis Management Team`;
+    // const html = `<p>Hello ${name},</p><p>Your thesis has been reviewed. Please check the feedback and make the necessary revisions.</p><p>Best regards,<br>The Thesis Management Team</p>`;
+
+    // this.sendEmail(recipient, subject, text, html);
+    this.sendEmail(recipient, subject, text);
+  }
 }
 
 export default new EmailService();

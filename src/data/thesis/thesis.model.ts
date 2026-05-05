@@ -20,7 +20,11 @@ export interface IThesis extends Model {
   thesis_chapter?: THESIS_CHAPTER[];
 }
 
-export type THESIS_LEVEL = 'pre_field' | 'post_field' | 'full_thesis';
+export type THESIS_LEVEL =
+  | 'pre_field'
+  | 'post_field'
+  | 'full_thesis'
+  | 'partial_thesis';
 
 export enum THESIS_STATUS {
   approved_by_supervisor = 'approved_by_supervisor',
