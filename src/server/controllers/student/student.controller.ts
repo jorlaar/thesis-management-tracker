@@ -13,9 +13,9 @@ import thesisRepo from '@app/data/thesis/thesis.repo';
 import { ActionNotAllowedError, NotFoundError } from '../base';
 import { PaginationQueryDTO } from '../thesis/thesis.dto';
 
-@controller('/student')
+@controller('/student', authVerify)
 export default class StudentController extends BaseController {
-  @httpGet('/auth/me', authVerify)
+  @httpGet('/auth/me')
   async getStudentProfile(@request() req: Request, @response() res: Response) {
     try {
       if (!['student'].includes(req.user_data?.type)) {
@@ -36,7 +36,7 @@ export default class StudentController extends BaseController {
     }
   }
 
-  @httpGet('/student/profile', authVerify)
+  @httpGet('/student/profile')
   async getAllAStudentsProfileDetails(
     @request() req: Request,
     @response() res: Response,
@@ -72,7 +72,18 @@ export default class StudentController extends BaseController {
     }
   }
 
-  // todo: forget-password
+  @httpGet('/get-all') // add rate limit
+  async getAllStudent(@request() req: Request, @response() res: Response) {
+    const student = await studentRepo.model
+      .find({})
+      .select('first_name last_name full_name') // include the source fields
+      .exec();
+
+    console.log('>>>>>>>. student', student);
+    this.handleSuccess(req, res, student);
+  }
+
+  // todo: forget-password DONE THOUGH STILL NEED REFINING
   // to for public api do ratelimiting for ip addresses
   // todo: use postman to fetch the reset password token from redis and test the reset password endpoint
   // todo: use postman to run the ratelimiting reset for just incase you can access redis on staging or prod
@@ -82,4 +93,6 @@ export default class StudentController extends BaseController {
   // todo: activity log
   // todo: account verification
   // todo: profile update
+  // TODO: SIGNEDURL 
+  // TODO: USE AWS IN LIEU OF CLOUDINARY
 }

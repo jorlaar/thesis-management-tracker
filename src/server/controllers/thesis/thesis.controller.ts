@@ -27,15 +27,15 @@ import authVerify from '@app/server/middlewares/auth.verify';
 import lecturerRepo from '@app/data/lecturer/lecturer.repo';
 import { generateUlid } from '@app/server/utils';
 import thesisRepo from '@app/data/thesis/thesis.repo';
-import { THESIS_CHAPTER, THESIS_STATUS } from '@app/data/thesis/thesis.model';
+import { THESIS_STATUS } from '@app/data/thesis/thesis.model';
 import studentRepo from '@app/data/student/student.repo';
 // import methodologyRepo from '@app/data/methodology/methodology.repo';
 import { ActionNotAllowedError, BadRequestError, NotFoundError } from '../base';
 import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
-import upload from '@app/server/middlewares/multerConfig';
+import { upload } from '@app/server/middlewares/multerConfig';
 import {
-  ThesisSupportedContentType,
-  ThesisSupportedContentTypes
+  ThesisSupportedMimeType,
+  ThesisSupportedMimeTypes
 } from '@app/server/services/s3/s3.type';
 import cloudinaryService from '@app/server/services/cloudinary/cloudinary.service';
 import { generateCsvFile } from '@app/server/factories/export-csv';
@@ -45,7 +45,7 @@ import env from '@app/common/config/env';
 export default class ThesisController extends BaseController {
   @httpPut(
     '/student',
-    upload.single('file'),
+    upload,
     fileAndBodyValidator(studentUploadThesisValidator)
   )
   async studentUploadThesis(
@@ -59,8 +59,8 @@ export default class ThesisController extends BaseController {
       const { fieldname, mimetype } = req.file;
 
       if (
-        ![...ThesisSupportedContentTypes].includes(
-          mimetype as ThesisSupportedContentType
+        ![...ThesisSupportedMimeTypes].includes(
+          mimetype as ThesisSupportedMimeType
         )
       ) {
         throw new ActionNotAllowedError('Unsupported content type');
@@ -98,21 +98,21 @@ export default class ThesisController extends BaseController {
         file_url: fileUpload.secure_url,
         thesis_tracking_id,
         lecturer: supervisor_details._id,
-        thesis_level: body?.thesis_level || 'partial_thesis',
+        ...(body?.thesis_level && { thesis_level: body.thesis_level }),
         thesis_title: body.thesis_title,
         // thesis_chapter: isMultiSave
         //   ? [...body.thesis_chapter]
         //   : body.thesis_chapter,
-        thesis_chapter: body?.thesis_chapter || THESIS_CHAPTER.ONE,
+        // thesis_chapter: body?.thesis_chapter || THESIS_CHAPTER.ONE,
+        ...(body?.thesis_chapter && { thesis_chapter: body?.thesis_chapter }),
         thesis_status: THESIS_STATUS.awaiting_supervisor_review,
         student_upload_time_stamp: new Date(),
         ...(body?.comment && { comment: body.comment }) // Only include if usercomment exists
-        // ...(body?.tracker && { tracker: body.tracker }) // Only include if body.tracker exists
       });
 
       console.log('thesisDetails >>>>', thesisDetails);
 
-      this.handleSuccess(req, res, { id: thesisDetails._id });
+      this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
       console.log('req, res, ', error);
       this.handleError(req, res, error);
@@ -239,6 +239,7 @@ export default class ThesisController extends BaseController {
 
   @httpPut(
     '/lecturer/review',
+    upload,
     fileAndBodyValidator(lecturerUploadCommentValidator)
   )
   async lecturerUploadThesisComment(
@@ -250,8 +251,8 @@ export default class ThesisController extends BaseController {
       const { fieldname, mimetype } = req.file;
 
       if (
-        ![...ThesisSupportedContentTypes].includes(
-          mimetype as ThesisSupportedContentType
+        ![...ThesisSupportedMimeTypes].includes(
+          mimetype as ThesisSupportedMimeType
         )
       ) {
         throw new ActionNotAllowedError('Unsupported content type');
@@ -288,7 +289,7 @@ export default class ThesisController extends BaseController {
         `${thesis_saving_id}`
       );
 
-      const thesis = await thesisRepo.create({
+      const thesisDetails = await thesisRepo.create({
         student: student_details._id,
         comment: body.comment,
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -304,7 +305,7 @@ export default class ThesisController extends BaseController {
         `${req.user_data.first_name} ${req.user_data.last_name}`
       );
 
-      this.handleSuccess(req, res, { id: thesis._id });
+      this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
       this.handleError(req, res, error);
     }
@@ -312,6 +313,7 @@ export default class ThesisController extends BaseController {
 
   @httpPut(
     '/lecturer/approve',
+    upload,
     fileAndBodyValidator(lecturerUploadCommentValidator)
   )
   async lecturerApproveThesis(
@@ -323,8 +325,8 @@ export default class ThesisController extends BaseController {
       const { fieldname, mimetype } = req.file;
 
       if (
-        ![...ThesisSupportedContentTypes].includes(
-          mimetype as ThesisSupportedContentType
+        ![...ThesisSupportedMimeTypes].includes(
+          mimetype as ThesisSupportedMimeType
         )
       ) {
         throw new ActionNotAllowedError('Unsupported content type');
@@ -361,7 +363,7 @@ export default class ThesisController extends BaseController {
         `${thesis_saving_id}`
       );
 
-      const thesisId = await thesisRepo.create({
+      const thesisDetails = await thesisRepo.create({
         student: student_details._id,
         comment: body.comment,
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -377,7 +379,7 @@ export default class ThesisController extends BaseController {
         `${req.user_data.first_name} ${req.user_data.last_name}`
       );
 
-      this.handleSuccess(req, res, { id: thesisId._id });
+      this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
       this.handleError(req, res, error);
     }
@@ -385,6 +387,7 @@ export default class ThesisController extends BaseController {
 
   @httpPut(
     '/lecturer/reject',
+    upload,
     fileAndBodyValidator(lecturerUploadCommentValidator)
   )
   async lecturerRejectThesis(
@@ -396,8 +399,8 @@ export default class ThesisController extends BaseController {
       const { fieldname, mimetype } = req.file;
 
       if (
-        ![...ThesisSupportedContentTypes].includes(
-          mimetype as ThesisSupportedContentType
+        ![...ThesisSupportedMimeTypes].includes(
+          mimetype as ThesisSupportedMimeType
         )
       ) {
         throw new ActionNotAllowedError('Unsupported content type');
@@ -452,7 +455,7 @@ export default class ThesisController extends BaseController {
         thesisDetails.file_url
       );
 
-      this.handleSuccess(req, res, { id: thesisDetails._id });
+      this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
       this.handleError(req, res, error);
     }
@@ -563,6 +566,7 @@ export default class ThesisController extends BaseController {
 
   @httpPut(
     '/methodology/review',
+    upload,
     fileAndBodyValidator(methodologyUploadCommentValidator)
   )
   async methodologyUploadThesisComment(
@@ -574,8 +578,8 @@ export default class ThesisController extends BaseController {
       const { fieldname, mimetype } = req.file;
 
       if (
-        ![...ThesisSupportedContentTypes].includes(
-          mimetype as ThesisSupportedContentType
+        ![...ThesisSupportedMimeTypes].includes(
+          mimetype as ThesisSupportedMimeType
         )
       ) {
         throw new ActionNotAllowedError('Unsupported content type');
@@ -616,7 +620,7 @@ export default class ThesisController extends BaseController {
         `${thesis_saving_id}`
       );
 
-      const thesisId = await thesisRepo.create({
+      const thesisDetails = await thesisRepo.create({
         student: student_details._id,
         comment: body.comment,
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -633,7 +637,7 @@ export default class ThesisController extends BaseController {
         `${req.user_data.first_name} ${req.user_data.last_name}`
       );
 
-      this.handleSuccess(req, res, { id: thesisId._id });
+      this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
       this.handleError(req, res, error);
     }
@@ -641,6 +645,7 @@ export default class ThesisController extends BaseController {
 
   @httpPut(
     '/methodology/approve',
+    upload,
     fileAndBodyValidator(methodologyUploadCommentValidator)
   )
   async methodologyApproveThesis(
@@ -652,8 +657,8 @@ export default class ThesisController extends BaseController {
       const { fieldname, mimetype } = req.file;
 
       if (
-        ![...ThesisSupportedContentTypes].includes(
-          mimetype as ThesisSupportedContentType
+        ![...ThesisSupportedMimeTypes].includes(
+          mimetype as ThesisSupportedMimeType
         )
       ) {
         throw new ActionNotAllowedError('Unsupported content type');
@@ -688,7 +693,7 @@ export default class ThesisController extends BaseController {
         `${thesis_saving_id}`
       );
 
-      const thesisId = await thesisRepo.create({
+      const thesisDetails = await thesisRepo.create({
         student: student_details._id,
         comment: body.comment,
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -705,7 +710,7 @@ export default class ThesisController extends BaseController {
         `${req.user_data.first_name} ${req.user_data.last_name}`
       );
 
-      this.handleSuccess(req, res, { id: thesisId._id });
+      this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
       this.handleError(req, res, error);
     }
@@ -713,6 +718,7 @@ export default class ThesisController extends BaseController {
 
   @httpPut(
     '/methodology/reject',
+    upload,
     fileAndBodyValidator(methodologyUploadCommentValidator)
   )
   async methodologyRejectThesis(
@@ -724,8 +730,8 @@ export default class ThesisController extends BaseController {
       const { fieldname, mimetype } = req.file;
 
       if (
-        ![...ThesisSupportedContentTypes].includes(
-          mimetype as ThesisSupportedContentType
+        ![...ThesisSupportedMimeTypes].includes(
+          mimetype as ThesisSupportedMimeType
         )
       ) {
         throw new ActionNotAllowedError('Unsupported content type');
@@ -781,7 +787,7 @@ export default class ThesisController extends BaseController {
         thesisDetails.file_url
       );
 
-      this.handleSuccess(req, res, { id: thesisDetails._id });
+      this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
       this.handleError(req, res, error);
     }

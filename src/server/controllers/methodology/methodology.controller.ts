@@ -15,9 +15,9 @@ import { PaginationQueryDTO } from '../thesis/thesis.dto';
 import studentRepo from '@app/data/student/student.repo';
 import { THESIS_STATUS } from '@app/data/thesis/thesis.model';
 
-@controller('/methodology')
+@controller('/methodology', authVerify)
 export default class MethodologyController extends BaseController {
-  @httpGet('/profile', authVerify)
+  @httpGet('/profile')
   async getMethodologyProfile(
     @request() req: Request,
     @response() res: Response
@@ -42,7 +42,7 @@ export default class MethodologyController extends BaseController {
   }
 
   // add approval status to return only those approved by the lecturer
-  @httpGet('/all/thesis', authVerify)
+  @httpGet('/all/thesis')
   async methodologygetAllThesisByDepartment(
     @request() req: Request,
     @response() res: Response,
@@ -93,8 +93,8 @@ export default class MethodologyController extends BaseController {
     }
   }
 
-  @httpGet('/get-all', authVerify) // add rate limit
-  async getAllLecturer(@request() req: Request, @response() res: Response) {
+  @httpGet('/get-all') // add rate limit
+  async getAllMethodology(@request() req: Request, @response() res: Response) {
     const methodology = await methodologyRepo.model
       .find({})
       .select('first_name last_name full_name') // include the source fields

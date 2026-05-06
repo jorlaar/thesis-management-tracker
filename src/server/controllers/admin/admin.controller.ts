@@ -269,4 +269,15 @@ export default class AdminController extends BaseController {
       this.handleError(req, res, error);
     }
   }
+
+  @httpGet('/get-all') // add rate limit
+  async getAllAdmin(@request() req: Request, @response() res: Response) {
+    const admin = await adminRepo.model
+      .find({})
+      .select('first_name last_name full_name') // include the source fields
+      .exec();
+
+    console.log('>>>>>>>. admin', admin);
+    this.handleSuccess(req, res, admin);
+  }
 }

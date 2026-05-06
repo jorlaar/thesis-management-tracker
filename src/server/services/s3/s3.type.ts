@@ -19,16 +19,19 @@ export const SupportedContentTypes = [
   'image/jpg',
   'image/png',
   'application/pdf',
-  'text/csv'
+  'text/csv',
+  'application/msword', // .doc
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // .docx
 ] as const;
 export type SupportedContentType = (typeof SupportedContentTypes)[number];
 
-export const ThesisSupportedContentTypes = [
+export const ThesisSupportedMimeTypes = [
   'application/pdf',
-  'text/csv'
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ] as const;
-export type ThesisSupportedContentType =
-  (typeof ThesisSupportedContentTypes)[number];
+export type ThesisSupportedMimeType =
+  (typeof ThesisSupportedMimeTypes)[number];
 
 export interface GetDownloadSignedURLRequest {
   Bucket: string;

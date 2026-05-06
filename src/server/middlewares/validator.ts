@@ -54,6 +54,12 @@ export default (schema: AnySchema, context: ValidatorContext = 'body') => {
 
 export const fileAndBodyValidator = (schema: joi.AnySchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
+
+    // console.log('>>>>>>>>', {
+    //   ...req.body,
+    //   file: req.file // multer adds this
+    // });
+
     const combined = {
       ...req.body,
       file: req.file // multer adds this

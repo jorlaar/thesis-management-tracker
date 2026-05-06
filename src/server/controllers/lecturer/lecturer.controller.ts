@@ -10,7 +10,7 @@ import lecturerRepo from '@app/data/lecturer/lecturer.repo';
 import { ActionNotAllowedError, NotFoundError } from '../base';
 import authVerify from '@app/server/middlewares/auth.verify';
 
-@controller('/lecturer')
+@controller('/lecturer', authVerify)
 export default class LecturerController extends BaseController {
   @httpGet('/profile', authVerify)
   async getLecturerProfile(@request() req: Request, @response() res: Response) {
@@ -30,7 +30,7 @@ export default class LecturerController extends BaseController {
     }
   }
 
-  @httpGet('/get-all', authVerify) // add rate limit
+  @httpGet('/get-all') // add rate limit
   async getAllLecturer(@request() req: Request, @response() res: Response) {
     const lecturer = await lecturerRepo.model
       .find({})

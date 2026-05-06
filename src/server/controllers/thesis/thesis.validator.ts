@@ -1,5 +1,5 @@
-import { THESIS_CHAPTER } from '@app/data/thesis/thesis.model';
-import { ThesisSupportedContentTypes } from '@app/server/services/s3/s3.type';
+// import { THESIS_CHAPTER } from '@app/data/thesis/thesis.model';
+import { ThesisSupportedMimeTypes } from '@app/server/services/s3/s3.type';
 import joi from 'joi';
 
 // export const studentUploadThesisValidator = joi.object({
@@ -9,14 +9,14 @@ import joi from 'joi';
 //   // .message('File must be a Word (.doc/.docx) or PDF (.pdf)'),
 //   // file: joi.string().required().valid('pdf', 'doc', 'docx'),
 //   // file: joi.object({
-//   //   mimetype: joi.string().valid(...ThesisSupportedContentTypes)
+//   //   mimetype: joi.string().valid(...ThesisSupportedMimeTypes)
 //   // }).required(),
 //   file: joi
 //     .object({
 //       fieldname: joi.string().required(), // e.g. "thesis"
 //       mimetype: joi
 //         .string()
-//         .valid(...ThesisSupportedContentTypes) // your allowed MIME types the whitelist of MIME types
+//         .valid(...ThesisSupportedMimeTypes) // your allowed MIME types the whitelist of MIME types
 //         .required()
 //         .messages({ 'any.only': 'Unsupported file type' })
 //       // optionally validate size, originalname, etc.
@@ -98,23 +98,15 @@ export const lecturerUploadCommentValidator = joi.object({
     fieldname: joi.string().required(), // e.g. "thesis"
     mimetype: joi
       .string()
-      .valid(...ThesisSupportedContentTypes) // your allowed MIME types the whitelist of MIME types
+      .valid(...ThesisSupportedMimeTypes) // your allowed MIME types the whitelist of MIME types
       .required()
       .messages({ 'any.only': 'Unsupported file type' })
   }), // it's optional for lecturer and methodology,
-  comment: joi.string().trim().required(), // required drop down on the front end
-  student_email: joi
-    .string()
-    .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
-    // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
-    .trim()
-    .required()
-    .messages({
-      // 'string.pattern.base':
-      //   'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
-      'string.empty': 'Email is required',
-      'any.required': 'Email is required'
-    })
+  comment: joi.string().trim(), // required drop down on the front end
+  student: joi.string().trim().required().messages({
+    'string.empty': 'lecturer details is required',
+    'any.required': 'lecturer details is required'
+  })
 });
 
 export const methodologyUploadCommentValidator = joi.object({
@@ -125,23 +117,15 @@ export const methodologyUploadCommentValidator = joi.object({
     fieldname: joi.string().required(), // e.g. "thesis"
     mimetype: joi
       .string()
-      .valid(...ThesisSupportedContentTypes) // your allowed MIME types the whitelist of MIME types
+      .valid(...ThesisSupportedMimeTypes) // your allowed MIME types the whitelist of MIME types
       .required()
       .messages({ 'any.only': 'Unsupported file type' })
   }), // it's optional for methodology and lecturer
-  comment: joi.string().trim().required(),
-  student_email: joi
-    .string()
-    .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
-    // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
-    .trim()
-    .required()
-    .messages({
-      // 'string.pattern.base':
-      //   'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
-      'string.empty': 'Email is required',
-      'any.required': 'Email is required'
-    })
+  comment: joi.string().trim(),
+  student: joi.string().trim().required().messages({
+    'string.empty': 'methodology details is required',
+    'any.required': 'methodology details is required'
+  })
 });
 
 export const studentUploadThesisValidator = joi.object({
@@ -150,7 +134,7 @@ export const studentUploadThesisValidator = joi.object({
       fieldname: joi.string().required(), // e.g. "thesis"
       mimetype: joi
         .string()
-        .valid(...ThesisSupportedContentTypes) // your allowed MIME types the whitelist of MIME types
+        .valid(...ThesisSupportedMimeTypes) // your allowed MIME types the whitelist of MIME types
         .required()
         .messages({ 'any.only': 'Unsupported file type' })
     })
@@ -159,38 +143,70 @@ export const studentUploadThesisValidator = joi.object({
   comment: joi.string().trim(),
   thesis_title: joi.string().trim().required(),
   lecturer: joi.string().trim().required().messages({
+    // drop down of registered lecturers
     'string.empty': 'lecturer details is required',
     'any.required': 'lecturer details is required'
   }),
   thesis_level: joi
     .string()
-    .valid('pre_field', 'post_field', 'full_thesis', 'partial_thesis')
-    .default('partial_thesis'),
-    // .required(),
+    .trim()
+    .empty(null) // treat null as "empty" → converts to undefined
+    .empty('') // treat '' (after trim) as empty → converts to undefined
+    // .default('partial_thesis') // apply default when value is undefined (including converted undefined)
+      .optional()
+    .valid('pre_field', 'post_field', 'full_thesis', 'partial_thesis'),
+  
 
+  // thesis_chapter: joi.custom((value, helpers) => {
+  //   // Always convert to array for consistency
+  //   let chaptersArray = [];
+
+  //   if (typeof value === 'string') {
+  //     chaptersArray = value.split(',').map((item) => item.trim());
+  //   } else if (Array.isArray(value)) {
+  //     chaptersArray = value;
+  //   } else {
+  //     return helpers.error('any.invalid');
+  //   }
+  //   // const validValues = Object.values(THESIS_CHAPTER);
+  //   // const invalidChapters = chaptersArray.filter(
+  //   //   (chap) => !validValues.includes(chap)
+  //   // );
+
+  //   // if (invalidChapters.length > 0) {
+  //   //   return helpers.error('any.invalid', {
+  //   //     message: `Invalid chapters: ${invalidChapters.join(', ')}`
+  //   //   });
+  //   // }
+
+  //   return chaptersArray; // Always returns array
+  // })
   thesis_chapter: joi
     .custom((value, helpers) => {
-      // Always convert to array for consistency
+      // 1. If the field is completely absent or explicitly null → treat as undefined (field not set)
+      if (value === undefined || value === null) {
+        return undefined; // .optional() will accept this
+      }
+
       let chaptersArray = [];
 
+      // 2. Convert from string (comma-separated) or array
       if (typeof value === 'string') {
-        chaptersArray = value.split(',').map((item) => item.trim());
+        chaptersArray = value
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean); // removes empty strings after trim
       } else if (Array.isArray(value)) {
-        chaptersArray = value;
+        // Convert all entries to trimmed strings, then filter out null & empty
+        chaptersArray = value
+          .map((item) => (typeof item === 'string' ? item.trim() : item))
+          .filter((item) => item !== null && item !== '');
       } else {
         return helpers.error('any.invalid');
       }
-      const validValues = Object.values(THESIS_CHAPTER);
-      const invalidChapters = chaptersArray.filter(
-        (chap) => !validValues.includes(chap)
-      );
 
-      if (invalidChapters.length > 0) {
-        return helpers.error('any.invalid', {
-          message: `Invalid chapters: ${invalidChapters.join(', ')}`
-        });
-      }
-
-      return chaptersArray; // Always returns array
+      // 3. Return the cleaned array – even if it becomes empty
+      return chaptersArray.length === 0 ? undefined : chaptersArray;
     })
+    .optional() // allows the whole field to be undefined
 });
