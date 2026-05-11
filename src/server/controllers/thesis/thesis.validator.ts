@@ -3,14 +3,14 @@ import { ThesisSupportedMimeTypes } from '@app/server/services/s3/s3.type';
 import joi from 'joi';
 
 // export const studentUploadThesisValidator = joi.object({
-//   // file_url: joi.string().required().uri(), // Ensure it's a valid URL
-//   // file: joi.string().required().valid('pdf', 'doc', 'docx'),
-//   // .regex(/\.(docx?|pdf)$/i) // Match .doc, .docx, or .pdf (case-insensitive)
-//   // .message('File must be a Word (.doc/.docx) or PDF (.pdf)'),
-//   // file: joi.string().required().valid('pdf', 'doc', 'docx'),
-//   // file: joi.object({
-//   //   mimetype: joi.string().valid(...ThesisSupportedMimeTypes)
-//   // }).required(),
+// file_url: joi.string().required().uri(), // Ensure it's a valid URL
+// file: joi.string().required().valid('pdf', 'doc', 'docx'),
+// .regex(/\.(docx?|pdf)$/i) // Match .doc, .docx, or .pdf (case-insensitive)
+// .message('File must be a Word (.doc/.docx) or PDF (.pdf)'),
+// file: joi.string().required().valid('pdf', 'doc', 'docx'),
+// file: joi.object({
+//   mimetype: joi.string().valid(...ThesisSupportedMimeTypes)
+// }).required(),
 //   file: joi
 //     .object({
 //       fieldname: joi.string().required(), // e.g. "thesis"
@@ -19,7 +19,7 @@ import joi from 'joi';
 //         .valid(...ThesisSupportedMimeTypes) // your allowed MIME types the whitelist of MIME types
 //         .required()
 //         .messages({ 'any.only': 'Unsupported file type' })
-//       // optionally validate size, originalname, etc.
+// optionally validate size, originalname, etc.
 //     })
 //     .required()
 //     .messages({ 'any.required': 'No file uploaded' }),
@@ -28,12 +28,12 @@ import joi from 'joi';
 //   lecturer_email: joi
 //     .string()
 //     .email({ tlds: { allow: false } }) // disables TLD validation to allow custom domains
-//     // .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
+// .pattern(/^[a-zA-Z0-9._%+-]+@([a-zA-Z]+\.)*babcock\.edu\.ng$/)
 //     .trim()
 //     .required()
 //     .messages({
-//       // 'string.pattern.base':
-//       //   'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
+// 'string.pattern.base':
+//   'Please enter a valid Babcock University email (e.g., name@pg.babcock.edu.ng or name@babcock.edu.ng)',
 //       'string.empty': 'Email is required',
 //       'any.required': 'Email is required'
 //     }),
@@ -41,26 +41,26 @@ import joi from 'joi';
 //     .string()
 //     .valid('pre_field', 'post_field', 'full_thesis')
 //     .required(),
-//   // thesis_chapter: joi
-//   //   .alternatives()
-//   //   .try(
-//   //     joi.string().valid(...Object.values(THESIS_CHAPTER)),
-//   //     joi.array().items(joi.string().valid(...Object.values(THESIS_CHAPTER))),
-//   //     joi.string().custom((value, helpers) => {
-//   //       // Split comma-separated string and trim each part
-//   //       const items = value.split(',').map((item) => item.trim());
+// thesis_chapter: joi
+//   .alternatives()
+//   .try(
+//     joi.string().valid(...Object.values(THESIS_CHAPTER)),
+//     joi.array().items(joi.string().valid(...Object.values(THESIS_CHAPTER))),
+//     joi.string().custom((value, helpers) => {
+//       // Split comma-separated string and trim each part
+//       const items = value.split(',').map((item) => item.trim());
 
-//   //       // Validate each item
-//   //       for (const item of items) {
-//   //         if (!Object.values(THESIS_CHAPTER).includes(item)) {
-//   //           return helpers.error('any.invalid');
-//   //         }
-//   //       }
+//       // Validate each item
+//       for (const item of items) {
+//         if (!Object.values(THESIS_CHAPTER).includes(item)) {
+//           return helpers.error('any.invalid');
+//         }
+//       }
 
-//   //       return items; // Returns array for further validation
-//   //     }, 'CSV to array transformation')
-//   //   )
-//   //   .required()
+//       return items; // Returns array for further validation
+//     }, 'CSV to array transformation')
+//   )
+//   .required()
 
 //   thesis_chapter: joi
 //     .custom((value, helpers) => {
@@ -153,9 +153,8 @@ export const studentUploadThesisValidator = joi.object({
     .empty(null) // treat null as "empty" → converts to undefined
     .empty('') // treat '' (after trim) as empty → converts to undefined
     // .default('partial_thesis') // apply default when value is undefined (including converted undefined)
-      .optional()
+    .optional()
     .valid('pre_field', 'post_field', 'full_thesis', 'partial_thesis'),
-  
 
   // thesis_chapter: joi.custom((value, helpers) => {
   //   // Always convert to array for consistency
@@ -168,29 +167,29 @@ export const studentUploadThesisValidator = joi.object({
   //   } else {
   //     return helpers.error('any.invalid');
   //   }
-  //   // const validValues = Object.values(THESIS_CHAPTER);
-  //   // const invalidChapters = chaptersArray.filter(
-  //   //   (chap) => !validValues.includes(chap)
-  //   // );
+  // const validValues = Object.values(THESIS_CHAPTER);
+  // const invalidChapters = chaptersArray.filter(
+  //   (chap) => !validValues.includes(chap)
+  // );
 
-  //   // if (invalidChapters.length > 0) {
-  //   //   return helpers.error('any.invalid', {
-  //   //     message: `Invalid chapters: ${invalidChapters.join(', ')}`
-  //   //   });
-  //   // }
+  // if (invalidChapters.length > 0) {
+  //   return helpers.error('any.invalid', {
+  //     message: `Invalid chapters: ${invalidChapters.join(', ')}`
+  //   });
+  // }
 
   //   return chaptersArray; // Always returns array
   // })
   thesis_chapter: joi
     .custom((value, helpers) => {
-      // 1. If the field is completely absent or explicitly null → treat as undefined (field not set)
+      // If the field is completely absent or explicitly null → treat as undefined (field not set)
       if (value === undefined || value === null) {
         return undefined; // .optional() will accept this
       }
 
       let chaptersArray = [];
 
-      // 2. Convert from string (comma-separated) or array
+      // Convert from string (comma-separated) or array
       if (typeof value === 'string') {
         chaptersArray = value
           .split(',')
@@ -205,7 +204,7 @@ export const studentUploadThesisValidator = joi.object({
         return helpers.error('any.invalid');
       }
 
-      // 3. Return the cleaned array – even if it becomes empty
+      // Return the cleaned array – even if it becomes empty
       return chaptersArray.length === 0 ? undefined : chaptersArray;
     })
     .optional() // allows the whole field to be undefined

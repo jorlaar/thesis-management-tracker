@@ -264,9 +264,7 @@ export default class ThesisController extends BaseController {
         );
       }
 
-      const student_details = await studentRepo.model.findOne({
-        email: body.student_email
-      });
+      const student_details = await studentRepo.model.findById(body.student);
 
       if (!student_details) {
         throw new NotFoundError('Student not found');
@@ -338,9 +336,7 @@ export default class ThesisController extends BaseController {
         );
       }
 
-      const student_details = await studentRepo.model.findOne({
-        email: body.student_email
-      });
+      const student_details = await studentRepo.model.findById(body.student);
 
       if (!student_details) {
         throw new NotFoundError('Student not found');
@@ -412,9 +408,7 @@ export default class ThesisController extends BaseController {
         );
       }
 
-      const student_details = await studentRepo.model.findOne({
-        email: body.student_email
-      });
+      const student_details = await studentRepo.model.findById(body.student);
 
       if (!student_details) {
         throw new NotFoundError('Student not found');
@@ -591,9 +585,7 @@ export default class ThesisController extends BaseController {
         );
       }
 
-      const student_details = await studentRepo.model.findOne({
-        email: body.student_email
-      });
+      const student_details = await studentRepo.model.findById(body.student);
 
       if (!student_details) {
         throw new NotFoundError('Student not found');
@@ -669,9 +661,7 @@ export default class ThesisController extends BaseController {
           'Only a methodology can perform this operation'
         );
       }
-      const student_details = await studentRepo.model.findOne({
-        email: body.student_email
-      });
+      const student_details = await studentRepo.model.findById(body.student);
 
       if (!student_details) {
         throw new NotFoundError('Student not found');
@@ -743,9 +733,7 @@ export default class ThesisController extends BaseController {
         );
       }
 
-      const student_details = await studentRepo.model.findOne({
-        email: body.student_email
-      });
+      const student_details = await studentRepo.model.findById(body.student);
 
       if (!student_details) {
         throw new NotFoundError('Student not found');

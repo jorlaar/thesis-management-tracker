@@ -11,14 +11,14 @@ export interface lecturerCommentUpload {
   // file_url?: string;
   file?: string;
   comment: string;
-  student_email: string;
+  student: string;
 }
 
 export interface methodologyCommentUpload {
   // file_url?: string;
   file?: string;
   comment: string;
-  student_email: string;
+  student: string;
 }
 
 export type ThesisQuery = {
