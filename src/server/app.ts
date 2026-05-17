@@ -11,7 +11,7 @@ import { logResponseBody } from './middlewares/logResponseBody';
 import { StatusCodes } from 'http-status-codes';
 import MetricsService from './services/metrics/metrics.service';
 import { redis } from '@app/common/services/redis';
-import logger from '@app/common/services/logger';
+// import logger from '@app/common/services/logger';
 import db from './db';
 // import { handleUploadErrors } from './middlewares/error.upload';
 

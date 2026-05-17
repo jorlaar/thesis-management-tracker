@@ -237,6 +237,43 @@ export default class ThesisController extends BaseController {
     }
   }
 
+  @httpGet('/all/lecturer')
+  async getAllLecturerThesis(
+    @request() req: Request,
+    @response() res: Response,
+    @queryParam() query: PaginationQueryDTO
+  ) {
+    console.log('>>>>>>>>', req.user_data);
+
+    const { page, per_page } = query;
+    try {
+      console.log('>>>>>>>>', req.user_data);
+
+      if (req.user_data.type !== 'lecturer') {
+        throw new ActionNotAllowedError("You can't perform this operation");
+      }
+
+      console.log('>>>>>>>>', req.user_data);
+      console.log('>>>got here>', req.user_data);
+      console.log('>>>>>>>>', req.user_data);
+
+      const viewThesis = await thesisRepo.list({
+        conditions: { lecturer: req.user_data.id },
+        sort: { created_at: -1 },
+        populate: ['student', 'lecturer'],
+        page,
+        per_page,
+        return_total_pages: true
+      });
+
+      console.log('viewThesis >>>>', viewThesis);
+
+      this.handleSuccess(req, res, viewThesis);
+    } catch (error) {
+      this.handleError(req, res, error);
+    }
+  }
+
   @httpPut(
     '/lecturer/review',
     upload,
@@ -292,6 +329,7 @@ export default class ThesisController extends BaseController {
         comment: body.comment,
         thesis_tracking_id: viewThesis.thesis_tracking_id,
         lecturer: req.user_data.id,
+        thesis_title: viewThesis.thesis_title,
         thesis_status: THESIS_STATUS.under_supervisor_review,
         lecturer_review_time_stamp: new Date(),
         file_url: fileUpload.secure_url
@@ -305,6 +343,7 @@ export default class ThesisController extends BaseController {
 
       this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
+      console.log('>>>>>>', error);
       this.handleError(req, res, error);
     }
   }
@@ -558,6 +597,37 @@ export default class ThesisController extends BaseController {
     }
   }
 
+  @httpGet('/all/methodology')
+  async getAllMethodologyThesis(
+    @request() req: Request,
+    @response() res: Response,
+    @queryParam() query: PaginationQueryDTO
+  ) {
+    const { page, per_page } = query;
+    try {
+      if (req.user_data.type !== 'methodology') {
+        throw new ActionNotAllowedError("You can't perform this operation");
+      }
+
+      console.log('>>>>>>>>', req.user_data);
+
+      const viewThesis = await thesisRepo.list({
+        conditions: { methodology: req.user_data.id },
+        sort: { created_at: -1 },
+        populate: ['student', 'lecturer', 'methodology'],
+        page,
+        per_page,
+        return_total_pages: true
+      });
+
+      console.log('viewThesis >>>>', viewThesis);
+
+      this.handleSuccess(req, res, viewThesis);
+    } catch (error) {
+      this.handleError(req, res, error);
+    }
+  }
+
   @httpPut(
     '/methodology/review',
     upload,
@@ -618,6 +688,7 @@ export default class ThesisController extends BaseController {
         thesis_tracking_id: viewThesis.thesis_tracking_id,
         thesis_status: THESIS_STATUS.under_methodology_review,
         methodology_review_time_stamp: new Date(),
+        thesis_title: viewThesis.thesis_title,
         file_url: fileUpload.secure_url
         // ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
         // ...(body?.tracker && { tracker: body.tracker }) // Only include if body.tracker exists

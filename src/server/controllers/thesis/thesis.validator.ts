@@ -104,8 +104,8 @@ export const lecturerUploadCommentValidator = joi.object({
   }), // it's optional for lecturer and methodology,
   comment: joi.string().trim(), // required drop down on the front end
   student: joi.string().trim().required().messages({
-    'string.empty': 'lecturer details is required',
-    'any.required': 'lecturer details is required'
+    'string.empty': 'student details is required',
+    'any.required': 'student details is required'
   })
 });
 

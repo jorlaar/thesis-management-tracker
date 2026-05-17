@@ -27,16 +27,10 @@ module.exports = {
     rules: [
       {
         test: /\.ts?$/,
-        loader: 'ts-loader',
-        options: {
-          transpileOnly: true,
-        }
+        loader: 'ts-loader'
       }
     ]
   },
-   ignoreWarnings: [
-    (warning) => warning.message.includes('export ') && warning.message.includes(' was not found in ')
-  ],
   plugins: [
     new NodemonPlugin({
       stdin: false
