@@ -326,7 +326,7 @@ export default class ThesisController extends BaseController {
 
       const thesisDetails = await thesisRepo.create({
         student: student_details._id,
-        comment: body.comment,
+        ...(body?.comment && { comment: body.comment }),
         thesis_tracking_id: viewThesis.thesis_tracking_id,
         lecturer: req.user_data.id,
         thesis_title: viewThesis.thesis_title,
@@ -400,9 +400,10 @@ export default class ThesisController extends BaseController {
 
       const thesisDetails = await thesisRepo.create({
         student: student_details._id,
-        comment: body.comment,
+        ...(body?.comment && { comment: body.comment }),
         thesis_tracking_id: viewThesis.thesis_tracking_id,
         lecturer: req.user_data.id,
+        thesis_title: viewThesis.thesis_title,
         thesis_status: THESIS_STATUS.approved_by_supervisor,
         lecturer_review_time_stamp: new Date(),
         file_url: fileUpload.secure_url // Only include if usercomment exists
@@ -471,7 +472,8 @@ export default class ThesisController extends BaseController {
 
       const thesisDetails = await thesisRepo.create({
         student: student_details._id,
-        comment: body.comment,
+        ...(body?.comment && { comment: body.comment }),
+        thesis_title: viewThesis.thesis_title,
         thesis_tracking_id: viewThesis.thesis_tracking_id,
         lecturer: req.user_data.id,
         thesis_status: THESIS_STATUS.rejected_by_supervisor,
@@ -684,7 +686,7 @@ export default class ThesisController extends BaseController {
 
       const thesisDetails = await thesisRepo.create({
         student: student_details._id,
-        comment: body.comment,
+        ...(body?.comment && { comment: body.comment }),
         thesis_tracking_id: viewThesis.thesis_tracking_id,
         thesis_status: THESIS_STATUS.under_methodology_review,
         methodology_review_time_stamp: new Date(),
@@ -756,7 +758,8 @@ export default class ThesisController extends BaseController {
 
       const thesisDetails = await thesisRepo.create({
         student: student_details._id,
-        comment: body.comment,
+        ...(body?.comment && { comment: body.comment }),
+        thesis_title: viewThesis.thesis_title,
         thesis_tracking_id: viewThesis.thesis_tracking_id,
         methodology: req.user_data.id,
         thesis_status: THESIS_STATUS.approved_by_methodology,
@@ -829,7 +832,8 @@ export default class ThesisController extends BaseController {
 
       const thesisDetails = await thesisRepo.create({
         student: student_details._id,
-        comment: body.comment,
+        ...(body?.comment && { comment: body.comment }),
+        thesis_title: viewThesis.thesis_title,
         thesis_tracking_id: viewThesis.thesis_tracking_id,
         methodology: req.user_data.id,
         thesis_status: THESIS_STATUS.rejected_by_methodology,
