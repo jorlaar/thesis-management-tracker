@@ -80,7 +80,31 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Supervisor not found');
       }
 
-      const thesis_tracking_id = generateUlid();
+      const student_details = await studentRepo.model.findById(
+        req.user_data.id
+      );
+
+      if (!student_details) {
+        throw new NotFoundError('Student not found');
+      }
+
+      const viewThesis = await thesisRepo.model
+        .findOne({
+          student: student_details.id
+        })
+        .sort({ created_at: 1 });
+
+      let thesis_tracking_id: string;
+      let thesis_title: string;
+
+      if (!viewThesis) {
+        thesis_tracking_id = generateUlid();
+        thesis_title = body.thesis_title;
+      } else {
+        thesis_tracking_id = viewThesis.thesis_tracking_id;
+        thesis_title = viewThesis.thesis_title;
+      }
+
       const thesis_saving_id = generateUlid();
       req.body.otherField;
 
@@ -99,7 +123,7 @@ export default class ThesisController extends BaseController {
         thesis_tracking_id,
         lecturer: supervisor_details._id,
         ...(body?.thesis_level && { thesis_level: body.thesis_level }),
-        thesis_title: body.thesis_title,
+        thesis_title,
         // thesis_chapter: isMultiSave
         //   ? [...body.thesis_chapter]
         //   : body.thesis_chapter,
