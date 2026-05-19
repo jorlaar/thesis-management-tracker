@@ -33,8 +33,8 @@ export enum THESIS_STATUS {
   rejected_by_methodology = 'rejected_by_methodology',
   awaiting_supervisor_review = 'awaiting_supervisor_review',
   awaiting_methodology_review = 'awaiting_methodology_review',
-  under_supervisor_review = 'under_supervisor_review',
-  under_methodology_review = 'under_methodology_review',
+  // under_supervisor_review = 'under_supervisor_review',
+  // under_methodology_review = 'under_methodology_review',
   revision_requested_by_supervisor = 'revision_requested_by_supervisor',
   revision_requested_by_methodology = 'revision_requested_by_methodology'
 }

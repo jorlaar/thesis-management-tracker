@@ -43,7 +43,7 @@ export default class MethodologyController extends BaseController {
 
   // add approval status to return only those approved by the lecturer
   @httpGet('/all/thesis')
-  async methodologygetAllThesisByDepartment(
+  async methodologyGetAllThesisByDepartment(
     @request() req: Request,
     @response() res: Response,
     @queryParam() query: PaginationQueryDTO
@@ -72,7 +72,7 @@ export default class MethodologyController extends BaseController {
           thesis_status: {
             $in: [
               THESIS_STATUS.approved_by_supervisor,
-              THESIS_STATUS.under_methodology_review,
+              THESIS_STATUS.rejected_by_methodology,
               THESIS_STATUS.revision_requested_by_methodology,
               THESIS_STATUS.approved_by_methodology
             ]

@@ -142,11 +142,18 @@ export const studentUploadThesisValidator = joi.object({
     .messages({ 'any.required': 'No file uploaded' }),
   comment: joi.string().trim(),
   thesis_title: joi.string().trim().required(),
-  lecturer: joi.string().trim().required().messages({
-    // drop down of registered lecturers
-    'string.empty': 'lecturer details is required',
-    'any.required': 'lecturer details is required'
-  }),
+  lecturer: joi
+    .string()
+    .trim()
+    .required()
+    .uuid({
+      version: 'uuidv4'
+    })
+    .messages({
+      // drop down of registered lecturers
+      'string.empty': 'lecturer details is required',
+      'any.required': 'lecturer details should be a valid uuid'
+    }),
   thesis_level: joi
     .string()
     .trim()

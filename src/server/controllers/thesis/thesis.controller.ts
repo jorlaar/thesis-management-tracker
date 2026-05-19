@@ -29,7 +29,7 @@ import { generateUlid } from '@app/server/utils';
 import thesisRepo from '@app/data/thesis/thesis.repo';
 import { THESIS_STATUS } from '@app/data/thesis/thesis.model';
 import studentRepo from '@app/data/student/student.repo';
-// import methodologyRepo from '@app/data/methodology/methodology.repo';
+import methodologyRepo from '@app/data/methodology/methodology.repo';
 import { ActionNotAllowedError, BadRequestError, NotFoundError } from '../base';
 import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
 import { upload } from '@app/server/middlewares/multerConfig';
@@ -40,6 +40,7 @@ import {
 import cloudinaryService from '@app/server/services/cloudinary/cloudinary.service';
 import { generateCsvFile } from '@app/server/factories/export-csv';
 import env from '@app/common/config/env';
+import logger from '@app/common/services/logger';
 
 @controller('/thesis', authVerify)
 export default class ThesisController extends BaseController {
@@ -77,36 +78,115 @@ export default class ThesisController extends BaseController {
       );
 
       if (!supervisor_details) {
-        throw new NotFoundError('Supervisor not found');
+        throw new NotFoundError('Lecturer not found');
       }
 
       const student_details = await studentRepo.model.findById(
         req.user_data.id
       );
 
+      // on approval by supervisor get all the methodology for that dept and randomly select one and assign to the project then track going forward
+
       if (!student_details) {
         throw new NotFoundError('Student not found');
       }
 
+      // use the latest upload to track the thesis status and details
       const viewThesis = await thesisRepo.model
         .findOne({
           student: student_details.id
         })
-        .sort({ created_at: 1 });
-
-      let thesis_tracking_id: string;
-      let thesis_title: string;
+        .sort({ created_at: -1 });
 
       if (!viewThesis) {
-        thesis_tracking_id = generateUlid();
-        thesis_title = body.thesis_title;
-      } else {
-        thesis_tracking_id = viewThesis.thesis_tracking_id;
-        thesis_title = viewThesis.thesis_title;
+        const thesis_saving_id = generateUlid();
+
+        const fileUpload = await cloudinaryService.uploadFile(
+          fieldname as string,
+          env.cloudinary_bucket,
+          env.cloudinary_datatype,
+          `${thesis_saving_id}`
+        );
+
+        const thesisDetails = await thesisRepo.create({
+          student: req.user_data.id,
+          file_url: fileUpload.secure_url,
+          thesis_tracking_id: generateUlid(),
+          lecturer: supervisor_details._id,
+          ...(body?.thesis_level && { thesis_level: body.thesis_level }),
+          thesis_title: body.thesis_title,
+          // thesis_chapter: isMultiSave
+          //   ? [...body.thesis_chapter]
+          //   : body.thesis_chapter,
+          // thesis_chapter: body?.thesis_chapter || THESIS_CHAPTER.ONE,
+          ...(body?.thesis_chapter && { thesis_chapter: body?.thesis_chapter }),
+          thesis_status: THESIS_STATUS.awaiting_supervisor_review,
+          student_upload_time_stamp: new Date(),
+          ...(body?.comment && { comment: body.comment }) // Only include if usercomment exists
+        });
+
+        return this.handleSuccess(req, res, thesisDetails);
+      }
+
+      const getOldestRecord = await thesisRepo.model
+        .findOne({
+          student: student_details.id
+        })
+        .sort({ created_at: 1 })
+        .select('lecturer thesis_tracking_id');
+
+      const thesisWithMethodology = await thesisRepo.model
+        .findOne({
+          student: student_details.id,
+          methodology: { $ne: null, $exists: true }
+        })
+        .sort({ created_at: -1 })
+        .select('methodology');
+
+      const DISALLOWED_UPLOAD_STATUSES = [
+        THESIS_STATUS.rejected_by_supervisor,
+        THESIS_STATUS.rejected_by_methodology,
+        THESIS_STATUS.revision_requested_by_supervisor,
+        THESIS_STATUS.revision_requested_by_methodology
+      ];
+
+      if (DISALLOWED_UPLOAD_STATUSES.includes(viewThesis.thesis_status)) {
+        console.log(
+          'got here viewThesis.thesis_status',
+          viewThesis.thesis_status
+        );
+        throw new ActionNotAllowedError(
+          "Your thesis is actively under review and you can't upload"
+        );
+      }
+
+      if (viewThesis.thesis_status === THESIS_STATUS.approved_by_methodology) {
+        throw new ActionNotAllowedError('Thesis has been give final approval');
+      }
+
+      if (viewThesis.thesis_status === THESIS_STATUS.approved_by_supervisor) {
+        throw new ActionNotAllowedError(
+          'Thesis is awaiting methodology review'
+        );
+      }
+
+      let thesis_status: string;
+
+      switch (viewThesis.thesis_status) {
+        case THESIS_STATUS.rejected_by_supervisor:
+        case THESIS_STATUS.revision_requested_by_supervisor:
+          thesis_status = THESIS_STATUS.awaiting_supervisor_review;
+          break;
+        case THESIS_STATUS.rejected_by_methodology:
+        case THESIS_STATUS.revision_requested_by_methodology:
+          thesis_status = THESIS_STATUS.awaiting_methodology_review;
+          break;
+        default:
+          thesis_status = THESIS_STATUS.awaiting_supervisor_review;
       }
 
       const thesis_saving_id = generateUlid();
-      req.body.otherField;
+      // req.body.otherField;
 
       const fileUpload = await cloudinaryService.uploadFile(
         fieldname as string,
@@ -120,16 +200,17 @@ export default class ThesisController extends BaseController {
       const thesisDetails = await thesisRepo.create({
         student: req.user_data.id,
         file_url: fileUpload.secure_url,
-        thesis_tracking_id,
-        lecturer: supervisor_details._id,
+        thesis_tracking_id: getOldestRecord.thesis_tracking_id,
+        lecturer: getOldestRecord.lecturer,
+        methodology: thesisWithMethodology?.methodology,
         ...(body?.thesis_level && { thesis_level: body.thesis_level }),
-        thesis_title,
+        thesis_title: viewThesis.thesis_title,
         // thesis_chapter: isMultiSave
         //   ? [...body.thesis_chapter]
         //   : body.thesis_chapter,
         // thesis_chapter: body?.thesis_chapter || THESIS_CHAPTER.ONE,
         ...(body?.thesis_chapter && { thesis_chapter: body?.thesis_chapter }),
-        thesis_status: THESIS_STATUS.awaiting_supervisor_review,
+        thesis_status,
         student_upload_time_stamp: new Date(),
         ...(body?.comment && { comment: body.comment }) // Only include if usercomment exists
       });
@@ -334,9 +415,16 @@ export default class ThesisController extends BaseController {
       const viewThesis = await thesisRepo.model
         .findOne({
           student: student_details.id,
-          lecturer: req.user_data.id
+          lecturer: req.user_data.id,
+          thesis_status: THESIS_STATUS.awaiting_supervisor_review
         })
-        .sort({ created_at: 1 });
+        .sort({ created_at: -1 });
+
+      if (!viewThesis) {
+        throw new ActionNotAllowedError(
+          'No thesis awaiting lecturer review for this student'
+        );
+      }
 
       const thesis_saving_id = generateUlid();
       req.body.otherField;
@@ -354,16 +442,20 @@ export default class ThesisController extends BaseController {
         thesis_tracking_id: viewThesis.thesis_tracking_id,
         lecturer: req.user_data.id,
         thesis_title: viewThesis.thesis_title,
-        thesis_status: THESIS_STATUS.under_supervisor_review,
+        thesis_status: THESIS_STATUS.revision_requested_by_supervisor,
         lecturer_review_time_stamp: new Date(),
         file_url: fileUpload.secure_url
       });
 
-      emailNodemailerService.sendLecturerThesisReviewEmail(
-        student_details.email,
-        student_details.first_name,
-        `${req.user_data.first_name} ${req.user_data.last_name}`
-      );
+      try {
+        emailNodemailerService.sendLecturerThesisReviewEmail(
+          student_details.email,
+          student_details.first_name,
+          `${req.user_data.first_name} ${req.user_data.last_name}`
+        );
+      } catch (err) {
+        logger.error(err, 'error with lecturer thesis review');
+      }
 
       this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
@@ -408,12 +500,36 @@ export default class ThesisController extends BaseController {
       const viewThesis = await thesisRepo.model
         .findOne({
           student: student_details.id,
-          lecturer: req.user_data.id
+          lecturer: req.user_data.id,
+          thesis_status: THESIS_STATUS.awaiting_supervisor_review
         })
-        .sort({ created_at: 1 });
+        .sort({ created_at: -1 });
+
+      if (!viewThesis) {
+        throw new ActionNotAllowedError(
+          'No thesis awaiting your approval for this student'
+        );
+      }
 
       const thesis_saving_id = generateUlid();
       // req.body.otherField;
+
+      const getMethodologyForThesis = await methodologyRepo.all({
+        conditions: { department: req.user_data.department },
+        projections: { _id: 1 }
+      });
+
+      if (getMethodologyForThesis.length === 0) {
+        throw new Error(
+          'No methodology reviewers available in your department'
+        );
+      }
+
+      // algorithm to assign a methodology to the approve thesis
+      const methodologyToAssign =
+        getMethodologyForThesis[
+          Math.floor(Math.random() * getMethodologyForThesis.length)
+        ];
 
       const fileUpload = await cloudinaryService.uploadFile(
         fieldname as string,
@@ -427,17 +543,22 @@ export default class ThesisController extends BaseController {
         ...(body?.comment && { comment: body.comment }),
         thesis_tracking_id: viewThesis.thesis_tracking_id,
         lecturer: req.user_data.id,
+        methodology: methodologyToAssign, // using algorithm to assign a methodology to the approve thesis
         thesis_title: viewThesis.thesis_title,
         thesis_status: THESIS_STATUS.approved_by_supervisor,
         lecturer_review_time_stamp: new Date(),
         file_url: fileUpload.secure_url // Only include if usercomment exists
       });
 
-      emailNodemailerService.sendLecturerThesisApprovalEmail(
-        student_details.email,
-        student_details.first_name,
-        `${req.user_data.first_name} ${req.user_data.last_name}`
-      );
+      try {
+        emailNodemailerService.sendLecturerThesisApprovalEmail(
+          student_details.email,
+          student_details.first_name,
+          `${req.user_data.first_name} ${req.user_data.last_name}`
+        );
+      } catch (err) {
+        logger.error(err, 'error sending email');
+      }
 
       this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
@@ -480,9 +601,16 @@ export default class ThesisController extends BaseController {
       const viewThesis = await thesisRepo.model
         .findOne({
           student: student_details.id,
-          lecturer: req.user_data.id
+          lecturer: req.user_data.id,
+          thesis_status: THESIS_STATUS.awaiting_supervisor_review
         })
-        .sort({ created_at: 1 });
+        .sort({ created_at: -1 });
+
+      if (!viewThesis) {
+        throw new ActionNotAllowedError(
+          'No thesis awaiting lecturer review for this student'
+        );
+      }
 
       const thesis_saving_id = generateUlid();
       req.body.otherField;
@@ -638,7 +766,17 @@ export default class ThesisController extends BaseController {
       console.log('>>>>>>>>', req.user_data);
 
       const viewThesis = await thesisRepo.list({
-        conditions: { methodology: req.user_data.id },
+        conditions: {
+          methodology: req.user_data.id
+          // thesis_status: {
+          //   $in: [
+          //     THESIS_STATUS.approved_by_supervisor,
+          //     THESIS_STATUS.rejected_by_methodology,
+          //     THESIS_STATUS.revision_requested_by_methodology,
+          //     THESIS_STATUS.approved_by_methodology
+          //   ]
+          // }
+        },
         sort: { created_at: -1 },
         populate: ['student', 'lecturer', 'methodology'],
         page,
@@ -689,14 +827,13 @@ export default class ThesisController extends BaseController {
       const viewThesis = await thesisRepo.model
         .findOne({
           student: student_details.id,
+          methodology: req.user_data.id,
           thesis_status: THESIS_STATUS.approved_by_supervisor
         })
-        .sort({ created_at: 1 });
+        .sort({ created_at: -1 });
 
       if (!viewThesis) {
-        throw new BadRequestError(
-          "Thesis is still awaiting supervisor's approval"
-        );
+        throw new BadRequestError("No Thesis for methodology's review");
       }
 
       const thesis_saving_id = generateUlid();
@@ -712,20 +849,25 @@ export default class ThesisController extends BaseController {
         student: student_details._id,
         ...(body?.comment && { comment: body.comment }),
         thesis_tracking_id: viewThesis.thesis_tracking_id,
-        thesis_status: THESIS_STATUS.under_methodology_review,
+        thesis_status: THESIS_STATUS.revision_requested_by_methodology,
         methodology_review_time_stamp: new Date(),
         thesis_title: viewThesis.thesis_title,
-        file_url: fileUpload.secure_url
+        file_url: fileUpload.secure_url,
+        methodology: req.user_data.id
+
         // ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
         // ...(body?.tracker && { tracker: body.tracker }) // Only include if body.tracker exists
       });
 
-      emailNodemailerService.sendMethodologyThesisReviewEmail(
-        student_details.email,
-        student_details.first_name,
-        `${req.user_data.first_name} ${req.user_data.last_name}`
-      );
-
+      try {
+        emailNodemailerService.sendMethodologyThesisReviewEmail(
+          student_details.email,
+          student_details.first_name,
+          `${req.user_data.first_name} ${req.user_data.last_name}`
+        );
+      } catch (err) {
+        logger.error(err, 'error sending email');
+      }
       this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
       this.handleError(req, res, error);
@@ -767,9 +909,16 @@ export default class ThesisController extends BaseController {
       const viewThesis = await thesisRepo.model
         .findOne({
           student: student_details.id,
+          methodology: req.user_data.id,
           thesis_status: THESIS_STATUS.approved_by_supervisor
         })
-        .sort({ created_at: 1 });
+        .sort({ created_at: -1 });
+
+      if (!viewThesis) {
+        throw new ActionNotAllowedError(
+          'No thesis awaiting your methodology approval for this student'
+        );
+      }
 
       const thesis_saving_id = generateUlid();
 
@@ -792,12 +941,15 @@ export default class ThesisController extends BaseController {
         // ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
       });
 
-      emailNodemailerService.sendMethodologyThesisApprovalEmail(
-        student_details.email,
-        student_details.first_name,
-        `${req.user_data.first_name} ${req.user_data.last_name}`
-      );
-
+      try {
+        emailNodemailerService.sendMethodologyThesisApprovalEmail(
+          student_details.email,
+          student_details.first_name,
+          `${req.user_data.first_name} ${req.user_data.last_name}`
+        );
+      } catch (err) {
+        logger.error(err, 'error sending email');
+      }
       this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
       this.handleError(req, res, error);
@@ -840,9 +992,16 @@ export default class ThesisController extends BaseController {
       const viewThesis = await thesisRepo.model
         .findOne({
           student: student_details.id,
+          methodology: req.user_data.id,
           thesis_status: THESIS_STATUS.approved_by_supervisor
         })
-        .sort({ created_at: 1 });
+        .sort({ created_at: -1 });
+
+      if (!viewThesis) {
+        throw new ActionNotAllowedError(
+          'No thesis awaiting methodology review for this student'
+        );
+      }
 
       const thesis_saving_id = generateUlid();
       req.body.otherField;
@@ -865,14 +1024,18 @@ export default class ThesisController extends BaseController {
         file_url: fileUpload.secure_url
       });
 
-      emailNodemailerService.sendThesisMethodologyRejectionEmail(
-        student_details.email,
-        student_details.first_name,
-        req.user_data.email,
-        `${req.user_data.first_name} ${req.user_data.last_name}`,
-        body?.comment,
-        thesisDetails.file_url
-      );
+      try {
+        emailNodemailerService.sendThesisMethodologyRejectionEmail(
+          student_details.email,
+          student_details.first_name,
+          req.user_data.email,
+          `${req.user_data.first_name} ${req.user_data.last_name}`,
+          body?.comment,
+          thesisDetails.file_url
+        );
+      } catch (err) {
+        logger.error(err, 'error sending email');
+      }
 
       this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
