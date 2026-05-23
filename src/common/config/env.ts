@@ -24,6 +24,8 @@ const env = {
   api_url: process.env.API_URL,
   port: Number(process.env.PORT),
   redis_url: process.env.REDIS_URL,
+  redis_host: process.env.REDIS_HOST,
+  redis_port: Number(process.env.REDIS_PORT),
   jwt_secret: process.env.JWT_SECRET,
   expires_at: parseInt(process.env.EXPIRES_AT),
   jwt_key: process.env.JWT_KEY,

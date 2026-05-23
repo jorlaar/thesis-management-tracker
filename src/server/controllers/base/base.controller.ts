@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { Query, DuplicateModelError, ModelNotFoundError } from '@app/data/base';
 import { ControllerError, InternalServerError } from '.';
 import logger from '@app/common/services/logger/logger';
-import { IrisAPIError } from '@random-guys/iris';
+// import { IrisAPIError } from '@random-guys/iris';
 import axios, { AxiosError } from 'axios';
 import MetricsService from '@app/server/services/metrics/metrics.service';
 
@@ -81,7 +81,7 @@ export class BaseController {
   handleError(
     req: Request,
     res: Response,
-    err: Error | IrisAPIError | AxiosError,
+    err: Error | AxiosError,
     message?: string
   ) {
     /**
@@ -91,11 +91,6 @@ export class BaseController {
     if (res.headersSent) return logger.error(err);
 
     const { error_code } = <ControllerError>err;
-
-    const irisErrormessage =
-      err instanceof IrisAPIError && err.data.message
-        ? err.data.message
-        : undefined;
 
     const axiosErrorMessage =
       axios.isAxiosError(err) && err.response
@@ -115,7 +110,6 @@ export class BaseController {
     } else if (this.getHTTPErrorCode(err) < 500) {
       errorMessage =
         axiosErrorMessage ||
-        irisErrormessage ||
         err.message ||
         'We had issues on our end processing your request, please try again shortly. If issue persists, please contact our support team';
     } else {

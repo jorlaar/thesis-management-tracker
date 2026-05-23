@@ -30,7 +30,6 @@ import {
 } from '../base';
 import authVerify from '@app/server/middlewares/auth.verify';
 import thesisRepo from '@app/data/thesis/thesis.repo';
-import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
 import {
   forgotPasswordValidator,
   // ResetPasswordValidator,
@@ -46,6 +45,7 @@ import {
   OTPRateLimiterService,
   PasswordRateLimiterService
 } from '@app/server/services';
+import { publisher } from '@random-guys/eventbus';
 // import { HashingService } from '@app/server/utils/hashing';
 
 @controller('/auth/lecturer')
@@ -165,7 +165,16 @@ export default class LecturerAuthController extends BaseController {
         page: 1,
         per_page: 2
       });
+      console.log('>>>>>>>.', {
+        ...lecturerPlainDetails,
+        paginatedThesis,
+        token
+      });
 
+      console.log('>>>>>>>.', {
+        dataStudent: paginatedThesis.result[0].student,
+        dataLecturer: paginatedThesis.result[0].lecturer
+      });
       this.handleSuccess(req, res, {
         ...lecturerPlainDetails,
         paginatedThesis,
@@ -352,12 +361,18 @@ export default class LecturerAuthController extends BaseController {
         EX: 1800
       });
 
+      publisher.queue('ONBOARDING_QUEUE', {
+        email: lecturer.email,
+        first_name: lecturer.first_name,
+        otp: forgetPasswordOTP
+      });
+
       // Send the reset token to the lecturer's email
-      emailNodemailerService.sendDForgotPasswordResetEmailV2(
-        lecturer.email,
-        lecturer.first_name,
-        forgetPasswordOTP
-      );
+      // emailNodemailerService.sendDForgotPasswordResetEmailV2(
+      //   lecturer.email,
+      //   lecturer.first_name,
+      //   forgetPasswordOTP
+      // );
 
       // for use in cases where you want to limit after certain api calls as it's a public api
       await OTPRateLimiterService.limit(lecturer.id);
