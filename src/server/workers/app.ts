@@ -3,19 +3,20 @@ import IORedis from 'ioredis';
 import env from '@app/common/config/env';
 import logger from '@app/common/services/logger';
 
-const connection = new IORedis({
-  host: env.redis_host,
-  // host: 'localhost',
-  // port: 6379,
-  port: env.redis_port,
-  maxRetriesPerRequest: null,
-  enableReadyCheck: false
-});
-
-// const connection = new IORedis(env.redis_url, {
+// const connection = new IORedis({
+//   host: env.redis_host,
+//   // host: 'localhost',
+//   // port: 6379,
+//   port: env.redis_port,
 //   maxRetriesPerRequest: null,
 //   enableReadyCheck: false
 // });
+
+// this enables tls connection both on dev and prod for ioredis
+const connection = new IORedis(env.redis_url, {
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false
+});
 
 logger.message(
   `Connected to Redis ${env.redis_host}:${env.redis_port} successfully!`
