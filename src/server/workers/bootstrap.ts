@@ -25,6 +25,9 @@ export const startWorker = async () => {
     await db.connect();
     logger.message('📦  MongoDB Connected!');
 
+    logger.message(
+      `🌋  backend thesis worker connection started!. Health check on port ${env.worker_port}`
+    );
     // redisConn = new IORedis({
     //   host: env.redis_host,
     //   port: env.redis_port,
@@ -69,12 +72,12 @@ export const startWorker = async () => {
 
     // Start simple server for k8s health check
     app.get('/', (req: Request, res: Response) => {
-      res.status(200).json({ status: 'UP' });
+      res.status(200).json({ status: 'Worker Service UP' });
     });
     httpServer = app.listen(env.worker_port);
 
     logger.message(
-      `🌋  backend thesis worker ready!. Health check on port ${env.worker_port}`
+      `🌋  backend thesis worker connection completed!. Health check on port ${env.worker_port}`
     );
   } catch (err) {
     logger.error(err);
