@@ -263,7 +263,7 @@ export default class AdminController extends BaseController {
         return_total_pages: true
       });
 
-      console.log('viewThesis >>>>', viewThesis);
+      // console.log('viewThesis >>>>', viewThesis);
       this.handleSuccess(req, res, viewThesis);
     } catch (error) {
       this.handleError(req, res, error);
@@ -277,7 +277,7 @@ export default class AdminController extends BaseController {
       .select('first_name last_name full_name') // include the source fields
       .exec();
 
-    console.log('>>>>>>>. admin', admin);
+    // console.log('>>>>>>>. admin', admin);
     this.handleSuccess(req, res, admin);
   }
 }

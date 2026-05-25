@@ -94,8 +94,6 @@ export default class UploadController extends BaseController {
       if (![...SupportedContentTypes].includes(mimeType)) {
         throw new ActionNotAllowedError('Unsupported content type');
       }
-      // console.log('>>>>>>>>> operation', operation);
-      console.log('>>>>>>>>> mimeType', mimeType);
 
       const signedUrl = await S3Storage.getSignedUrl(
         // operation,
@@ -108,7 +106,6 @@ export default class UploadController extends BaseController {
 
       this.handleSuccess(req, res, { signedUrl });
     } catch (err) {
-      console.log(err, 'error in getting signed url');
       this.handleError(req, res, err);
     }
   }

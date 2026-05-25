@@ -37,10 +37,11 @@ import {
   ThesisSupportedMimeType,
   ThesisSupportedMimeTypes
 } from '@app/server/services/s3/s3.type';
-import cloudinaryService from '@app/server/services/cloudinary/cloudinary.service';
+// import cloudinaryService from '@app/server/services/cloudinary/cloudinary.service';
 import { generateCsvFile } from '@app/server/factories/export-csv';
 import env from '@app/common/config/env';
 import logger from '@app/common/services/logger';
+import s3Service from '@app/server/services/s3/s3.service';
 
 @controller('/thesis', authVerify)
 export default class ThesisController extends BaseController {
@@ -55,9 +56,9 @@ export default class ThesisController extends BaseController {
     @requestBody() body: ThesisDTO
   ) {
     try {
-      console.log('>>>>>>>> file_url', req.file);
+      console.log('>>>>>>>> req.file', req.file);
       console.log('>>>>>>>> body', body);
-      const { fieldname, mimetype } = req.file;
+      const { buffer, mimetype } = req.file;
 
       if (
         ![...ThesisSupportedMimeTypes].includes(
@@ -101,16 +102,23 @@ export default class ThesisController extends BaseController {
       if (!viewThesis) {
         const thesis_saving_id = generateUlid();
 
-        const fileUpload = await cloudinaryService.uploadFile(
-          fieldname as string,
-          env.cloudinary_bucket,
-          env.cloudinary_datatype,
-          `${thesis_saving_id}`
+        // const fileUpload = await cloudinaryService.uploadFile(
+        //   fieldname as string,
+        //   env.cloudinary_bucket,
+        //   env.cloudinary_datatype,
+        //   `${thesis_saving_id}`
+        // );
+
+        const awsFileUpload = await s3Service.uploadFile(
+          env.thesis_bucket,
+          mimetype as ThesisSupportedMimeType,
+          buffer,
+          `${body.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
         );
 
         const thesisDetails = await thesisRepo.create({
           student: req.user_data.id,
-          file_url: fileUpload.secure_url,
+          file_url: awsFileUpload.Key,
           thesis_tracking_id: generateUlid(),
           lecturer: supervisor_details._id,
           ...(body?.thesis_level && { thesis_level: body.thesis_level }),
@@ -144,17 +152,19 @@ export default class ThesisController extends BaseController {
         .select('methodology');
 
       const DISALLOWED_UPLOAD_STATUSES = [
-        THESIS_STATUS.rejected_by_supervisor,
-        THESIS_STATUS.rejected_by_methodology,
-        THESIS_STATUS.revision_requested_by_supervisor,
-        THESIS_STATUS.revision_requested_by_methodology
+        // THESIS_STATUS.rejected_by_supervisor,
+        // THESIS_STATUS.rejected_by_methodology,
+        // THESIS_STATUS.revision_requested_by_supervisor,
+        // THESIS_STATUS.revision_requested_by_methodology
+        THESIS_STATUS.awaiting_supervisor_review,
+        THESIS_STATUS.awaiting_methodology_review,
       ];
 
       if (DISALLOWED_UPLOAD_STATUSES.includes(viewThesis.thesis_status)) {
-        console.log(
-          'got here viewThesis.thesis_status',
-          viewThesis.thesis_status
-        );
+        // console.log(
+        //   'got here viewThesis.thesis_status',
+        //   viewThesis.thesis_status
+        // );
         throw new ActionNotAllowedError(
           "Your thesis is actively under review and you can't upload"
         );
@@ -188,18 +198,27 @@ export default class ThesisController extends BaseController {
       const thesis_saving_id = generateUlid();
       // req.body.otherField;
 
-      const fileUpload = await cloudinaryService.uploadFile(
-        fieldname as string,
-        env.cloudinary_bucket,
-        env.cloudinary_datatype,
-        `${thesis_saving_id}`
+      // const fileUpload = await cloudinaryService.uploadFile(
+      //   fieldname as string,
+      //   env.cloudinary_bucket,
+      //   env.cloudinary_datatype,
+      //   `${thesis_saving_id}`
+      // );
+
+      const awsFileUpload = await s3Service.uploadFile(
+        env.thesis_bucket,
+        mimetype as ThesisSupportedMimeType,
+        buffer,
+        `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
+        // `${viewThesis.thesis_title}/${thesis_saving_id}`
       );
+
 
       // const isMultiSave = Array.isArray(body.thesis_chapter);
 
       const thesisDetails = await thesisRepo.create({
         student: req.user_data.id,
-        file_url: fileUpload.secure_url,
+        file_url: awsFileUpload.Key,
         thesis_tracking_id: getOldestRecord.thesis_tracking_id,
         lecturer: getOldestRecord.lecturer,
         methodology: thesisWithMethodology?.methodology,
@@ -215,11 +234,8 @@ export default class ThesisController extends BaseController {
         ...(body?.comment && { comment: body.comment }) // Only include if usercomment exists
       });
 
-      console.log('thesisDetails >>>>', thesisDetails);
-
       this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
-      console.log('req, res, ', error);
       this.handleError(req, res, error);
     }
   }
@@ -332,12 +348,9 @@ export default class ThesisController extends BaseController {
         return_total_pages: true
       });
 
-      console.log('viewThesis >>>>', viewThesis);
 
       this.handleSuccess(req, res, viewThesis);
     } catch (error) {
-      console.log('error >>>>', error);
-
       this.handleError(req, res, error);
     }
   }
@@ -348,19 +361,19 @@ export default class ThesisController extends BaseController {
     @response() res: Response,
     @queryParam() query: PaginationQueryDTO
   ) {
-    console.log('>>>>>>>>', req.user_data);
+    // console.log('>>>>>>>>', req.user_data);
 
     const { page, per_page } = query;
     try {
-      console.log('>>>>>>>>', req.user_data);
+      // console.log('>>>>>>>>', req.user_data);
 
       if (req.user_data.type !== 'lecturer') {
         throw new ActionNotAllowedError("You can't perform this operation");
       }
 
-      console.log('>>>>>>>>', req.user_data);
-      console.log('>>>got here>', req.user_data);
-      console.log('>>>>>>>>', req.user_data);
+      // console.log('>>>>>>>>', req.user_data);
+      // console.log('>>>got here>', req.user_data);
+      // console.log('>>>>>>>>', req.user_data);
 
       const viewThesis = await thesisRepo.list({
         conditions: { lecturer: req.user_data.id },
@@ -371,7 +384,6 @@ export default class ThesisController extends BaseController {
         return_total_pages: true
       });
 
-      console.log('viewThesis >>>>', viewThesis);
 
       this.handleSuccess(req, res, viewThesis);
     } catch (error) {
@@ -390,7 +402,7 @@ export default class ThesisController extends BaseController {
     @requestBody() body: lecturerCommentUpload
   ) {
     try {
-      const { fieldname, mimetype } = req.file;
+      const { buffer, mimetype } = req.file;
 
       if (
         ![...ThesisSupportedMimeTypes].includes(
@@ -429,11 +441,19 @@ export default class ThesisController extends BaseController {
       const thesis_saving_id = generateUlid();
       req.body.otherField;
 
-      const fileUpload = await cloudinaryService.uploadFile(
-        fieldname as string,
-        env.cloudinary_bucket,
-        env.cloudinary_datatype,
-        `${thesis_saving_id}`
+      // const fileUpload = await cloudinaryService.uploadFile(
+      //   fieldname as string,
+      //   env.cloudinary_bucket,
+      //   env.cloudinary_datatype,
+      //   `${thesis_saving_id}`
+      // );
+
+      const awsFileUpload = await s3Service.uploadFile(
+        env.thesis_bucket,
+        mimetype as ThesisSupportedMimeType,
+        buffer,
+        `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
+        // `${viewThesis.thesis_title}/${thesis_saving_id}`
       );
 
       const thesisDetails = await thesisRepo.create({
@@ -444,7 +464,7 @@ export default class ThesisController extends BaseController {
         thesis_title: viewThesis.thesis_title,
         thesis_status: THESIS_STATUS.revision_requested_by_supervisor,
         lecturer_review_time_stamp: new Date(),
-        file_url: fileUpload.secure_url
+        file_url: awsFileUpload.Key
       });
 
       try {
@@ -459,7 +479,6 @@ export default class ThesisController extends BaseController {
 
       this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
-      console.log('>>>>>>', error);
       this.handleError(req, res, error);
     }
   }
@@ -475,7 +494,7 @@ export default class ThesisController extends BaseController {
     @requestBody() body: lecturerCommentUpload
   ) {
     try {
-      const { fieldname, mimetype } = req.file;
+      const { buffer, mimetype } = req.file;
 
       if (
         ![...ThesisSupportedMimeTypes].includes(
@@ -531,11 +550,18 @@ export default class ThesisController extends BaseController {
           Math.floor(Math.random() * getMethodologyForThesis.length)
         ];
 
-      const fileUpload = await cloudinaryService.uploadFile(
-        fieldname as string,
-        env.cloudinary_bucket,
-        env.cloudinary_datatype,
-        `${thesis_saving_id}`
+      // const fileUpload = await cloudinaryService.uploadFile(
+      //   fieldname as string,
+      //   env.cloudinary_bucket,
+      //   env.cloudinary_datatype,
+      //   `${thesis_saving_id}`
+      // );
+
+      const awsFileUpload = await s3Service.uploadFile(
+        env.thesis_bucket,
+        mimetype as ThesisSupportedMimeType,
+        buffer,
+        `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
       );
 
       const thesisDetails = await thesisRepo.create({
@@ -547,7 +573,7 @@ export default class ThesisController extends BaseController {
         thesis_title: viewThesis.thesis_title,
         thesis_status: THESIS_STATUS.approved_by_supervisor,
         lecturer_review_time_stamp: new Date(),
-        file_url: fileUpload.secure_url // Only include if usercomment exists
+        file_url: awsFileUpload.Key // Only include if usercomment exists
       });
 
       try {
@@ -577,7 +603,7 @@ export default class ThesisController extends BaseController {
     @requestBody() body: lecturerCommentUpload
   ) {
     try {
-      const { fieldname, mimetype } = req.file;
+      const { buffer, mimetype } = req.file;
 
       if (
         ![...ThesisSupportedMimeTypes].includes(
@@ -615,11 +641,18 @@ export default class ThesisController extends BaseController {
       const thesis_saving_id = generateUlid();
       req.body.otherField;
 
-      const fileUpload = await cloudinaryService.uploadFile(
-        fieldname as string,
-        env.cloudinary_bucket,
-        env.cloudinary_datatype,
-        `${thesis_saving_id}`
+      // const fileUpload = await cloudinaryService.uploadFile(
+      //   fieldname as string,
+      //   env.cloudinary_bucket,
+      //   env.cloudinary_datatype,
+      //   `${thesis_saving_id}`
+      // );
+
+      const awsFileUpload = await s3Service.uploadFile(
+        env.thesis_bucket,
+        mimetype as ThesisSupportedMimeType,
+        buffer,
+        `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
       );
 
       const thesisDetails = await thesisRepo.create({
@@ -630,7 +663,7 @@ export default class ThesisController extends BaseController {
         lecturer: req.user_data.id,
         thesis_status: THESIS_STATUS.rejected_by_supervisor,
         lecturer_review_time_stamp: new Date(),
-        file_url: fileUpload.secure_url
+        file_url: awsFileUpload.Key
       });
 
       emailNodemailerService.sendThesisLecturerRejectionEmail(
@@ -763,7 +796,7 @@ export default class ThesisController extends BaseController {
         throw new ActionNotAllowedError("You can't perform this operation");
       }
 
-      console.log('>>>>>>>>', req.user_data);
+      // console.log('>>>>>>>>', req.user_data);
 
       const viewThesis = await thesisRepo.list({
         conditions: {
@@ -784,7 +817,7 @@ export default class ThesisController extends BaseController {
         return_total_pages: true
       });
 
-      console.log('viewThesis >>>>', viewThesis);
+      // console.log('viewThesis >>>>', viewThesis);
 
       this.handleSuccess(req, res, viewThesis);
     } catch (error) {
@@ -803,7 +836,7 @@ export default class ThesisController extends BaseController {
     @requestBody() body: methodologyCommentUpload
   ) {
     try {
-      const { fieldname, mimetype } = req.file;
+      const { buffer, mimetype } = req.file;
 
       if (
         ![...ThesisSupportedMimeTypes].includes(
@@ -838,11 +871,18 @@ export default class ThesisController extends BaseController {
 
       const thesis_saving_id = generateUlid();
 
-      const fileUpload = await cloudinaryService.uploadFile(
-        fieldname as string,
-        env.cloudinary_bucket,
-        env.cloudinary_datatype,
-        `${thesis_saving_id}`
+      // const fileUpload = await cloudinaryService.uploadFile(
+      //   fieldname as string,
+      //   env.cloudinary_bucket,
+      //   env.cloudinary_datatype,
+      //   `${thesis_saving_id}`
+      // );
+
+      const awsFileUpload = await s3Service.uploadFile(
+        env.thesis_bucket,
+        mimetype as ThesisSupportedMimeType,
+        buffer,
+        `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
       );
 
       const thesisDetails = await thesisRepo.create({
@@ -852,7 +892,7 @@ export default class ThesisController extends BaseController {
         thesis_status: THESIS_STATUS.revision_requested_by_methodology,
         methodology_review_time_stamp: new Date(),
         thesis_title: viewThesis.thesis_title,
-        file_url: fileUpload.secure_url,
+        file_url: awsFileUpload.Key,
         methodology: req.user_data.id
 
         // ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
@@ -885,7 +925,7 @@ export default class ThesisController extends BaseController {
     @requestBody() body: methodologyCommentUpload
   ) {
     try {
-      const { fieldname, mimetype } = req.file;
+      const { buffer, mimetype } = req.file;
 
       if (
         ![...ThesisSupportedMimeTypes].includes(
@@ -922,11 +962,18 @@ export default class ThesisController extends BaseController {
 
       const thesis_saving_id = generateUlid();
 
-      const fileUpload = await cloudinaryService.uploadFile(
-        fieldname as string,
-        env.cloudinary_bucket,
-        env.cloudinary_datatype,
-        `${thesis_saving_id}`
+      // const fileUpload = await cloudinaryService.uploadFile(
+      //   fieldname as string,
+      //   env.cloudinary_bucket,
+      //   env.cloudinary_datatype,
+      //   `${thesis_saving_id}`
+      // );
+
+      const awsFileUpload = await s3Service.uploadFile(
+        env.thesis_bucket,
+        mimetype as ThesisSupportedMimeType,
+        buffer,
+        `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
       );
 
       const thesisDetails = await thesisRepo.create({
@@ -937,7 +984,7 @@ export default class ThesisController extends BaseController {
         methodology: req.user_data.id,
         thesis_status: THESIS_STATUS.approved_by_methodology,
         methodology_review_time_stamp: new Date(),
-        file_url: fileUpload.secure_url
+        file_url: awsFileUpload.Key
         // ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
       });
 
@@ -967,7 +1014,7 @@ export default class ThesisController extends BaseController {
     @requestBody() body: methodologyCommentUpload
   ) {
     try {
-      const { fieldname, mimetype } = req.file;
+      const { buffer, mimetype } = req.file;
 
       if (
         ![...ThesisSupportedMimeTypes].includes(
@@ -1006,11 +1053,18 @@ export default class ThesisController extends BaseController {
       const thesis_saving_id = generateUlid();
       req.body.otherField;
 
-      const fileUpload = await cloudinaryService.uploadFile(
-        fieldname as string,
-        env.cloudinary_bucket,
-        env.cloudinary_datatype,
-        `${thesis_saving_id}`
+      // const fileUpload = await cloudinaryService.uploadFile(
+      //   fieldname as string,
+      //   env.cloudinary_bucket,
+      //   env.cloudinary_datatype,
+      //   `${thesis_saving_id}`
+      // );
+
+      const awsFileUpload = await s3Service.uploadFile(
+        env.thesis_bucket,
+        mimetype as ThesisSupportedMimeType,
+        buffer,
+        `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
       );
 
       const thesisDetails = await thesisRepo.create({
@@ -1021,7 +1075,7 @@ export default class ThesisController extends BaseController {
         methodology: req.user_data.id,
         thesis_status: THESIS_STATUS.rejected_by_methodology,
         methodology_review_time_stamp: new Date(),
-        file_url: fileUpload.secure_url
+        file_url: awsFileUpload.Key
       });
 
       try {
@@ -1065,11 +1119,12 @@ export default class ThesisController extends BaseController {
         per_page,
         return_total_pages: true
       });
-      console.log('>>>>>>>>>> viewThesis', viewThesis);
+      // console.log('>>>>>>>>>> viewThesis', viewThesis);
 
-      const csvFile = await generateCsvFile(res, viewThesis.result);
+      // const csvFile =
+       await generateCsvFile(res, viewThesis.result);
 
-      console.log('>>>>>>>>>> csvFile', csvFile);
+      // console.log('>>>>>>>>>> csvFile', csvFile);
     });
   }
 }

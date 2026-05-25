@@ -37,7 +37,7 @@ export default class LecturerController extends BaseController {
       .select('first_name last_name full_name') // include the source fields
       .exec();
 
-    console.log('>>>>>>>. lecturer', lecturer);
+    // console.log('>>>>>>>. lecturer', lecturer);
     this.handleSuccess(req, res, lecturer);
   }
 }

@@ -60,11 +60,11 @@ export default class MethodologyController extends BaseController {
         })
         .select('_id')
         .lean();
-      console.log('>>>>>> req.user_data.department', req.user_data.department);
-      console.log('>>>>>> allStudentInDept', allStudentInDept);
+      // // console.log('>>>>>> req.user_data.department', req.user_data.department);
+      // console.log('>>>>>> allStudentInDept', allStudentInDept);
       const studentIds = allStudentInDept.map((student) => student._id);
-      console.log('>>>>>> studentIds', studentIds);
-      console.log('>>>>>> ...studentIds', [...studentIds]);
+      // console.log('>>>>>> studentIds', studentIds);
+      // console.log('>>>>>> ...studentIds', [...studentIds]);
 
       const getMethodologyDetails = await thesisRepo.list({
         conditions: {
@@ -84,11 +84,10 @@ export default class MethodologyController extends BaseController {
         per_page,
         return_total_pages: true
       });
-      console.log('>>>>>> getMethodologyDetails', getMethodologyDetails);
+      // console.log('>>>>>> getMethodologyDetails', getMethodologyDetails);
 
       this.handleSuccess(req, res, getMethodologyDetails);
     } catch (error) {
-      console.error('>>>>>>> eror', error);
       this.handleError(req, res, error);
     }
   }
@@ -100,7 +99,7 @@ export default class MethodologyController extends BaseController {
       .select('first_name last_name full_name') // include the source fields
       .exec();
 
-    console.log('>>>>>>>. lecturer', methodology);
+    // console.log('>>>>>>>. lecturer', methodology);
     this.handleSuccess(req, res, methodology);
   }
 }

@@ -36,7 +36,7 @@ export default class StudentController extends BaseController {
     }
   }
 
-  @httpGet('/student/profile')
+  @httpGet('/thesis/all')
   async getAllAStudentsProfileDetails(
     @request() req: Request,
     @response() res: Response,

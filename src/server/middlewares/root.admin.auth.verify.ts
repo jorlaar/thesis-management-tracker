@@ -31,7 +31,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
   try {
     payload = jwt.verify(token, env.jwt_secret);
-    console.log('>>>>>>> payload', payload);
+    // console.log('>>>>>>> payload', payload);
     if (payload.data.role !== AdminRole.ROOT) {
       return res.jSend.error(
         null,
@@ -64,7 +64,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   }
 
   req.user_data = payload.data;
-    console.log('>>>>>>>  req.user_data',  req.user_data);
+    // console.log('>>>>>>>  req.user_data',  req.user_data);
 
   next();
 };

@@ -25,7 +25,7 @@ class S3Storage {
 
   constructor() {
     this.s3 = new S3({
-      endpoint: `s3.${env.aws_region}.${env.aws_host_name}`,
+      // endpoint: env.aws_host_name,
       region: env.aws_region,
       credentials: {
         accessKeyId: env.aws_access_key_id,
@@ -34,15 +34,17 @@ class S3Storage {
       signatureVersion: 'v4'
     });
 
-    this.isMockEnabled = ['test', 'development', 'staging'].includes(
-      env.app_env
-    );
+    // this.isMockEnabled = ['test', 'development', 'staging'].includes(
+    //   env.app_env
+    // );
   }
 
   async uploadFile(
     bucketName: string,
+    ContentType: SupportedContentType,
     file: Body,
     filePath: string
+    // ): Promise<ManagedUpload.SendData & { signedUrl: string }> {
   ): Promise<ManagedUpload.SendData> {
     try {
       if (this.isMockEnabled)
@@ -51,15 +53,21 @@ class S3Storage {
           ETag: faker.internet.mac(),
           Bucket: bucketName,
           Key: filePath
+          // signedUrl: faker.internet.url()
         };
 
       const data = await this.s3
         .upload({
-          Bucket: bucketName,
+          // Bucket: bucketName,
+          Bucket: `${bucketName}/thesis`,
           Key: filePath,
-          Body: file
+          Body: file,
+          ContentType: ContentType
         })
         .promise();
+
+      // upload and generate signed url in parallel to optiimize response time for the user
+      // const signedUrl = await this.getDownloadSignedUrl(bucketName, filePath);
 
       logger.message({
         info: 'file upload to s3 done!',
@@ -67,6 +75,7 @@ class S3Storage {
       });
 
       return data;
+      // return { ...data, signedUrl };
     } catch (err) {
       const errorMessage = `An error occurred while uploading file ${filePath} to s3`;
       logger.error(err, {
@@ -109,16 +118,6 @@ class S3Storage {
     expirationInSeconds: number
   ) {
     try {
-         console.log(
-        'generating signed url for file ${filePath} from s3`',
-        {
-   operation,
-    bucketName, 
-    filePath,
-    contentType,
-    expirationInSeconds
-        }
-      );
       const params: PutObjectRequest = {
         Bucket: bucketName,
         Key: filePath,
@@ -130,11 +129,6 @@ class S3Storage {
 
       return signedUrl;
     } catch (err) {
-      console.log(
-        'An error occurred while generating signed url for file ${filePath} from s3`',
-        err
-      );
-
       const errorMessage = `An error occurred while generating signed url for file ${filePath} from s3`;
       logger.error(err, {
         info: errorMessage,
@@ -147,7 +141,7 @@ class S3Storage {
   async getDownloadSignedUrl(
     bucketName: string,
     filePath: string,
-    expirationInSeconds: number = 300
+    expirationInSeconds: number = 3600 // 1 hour
   ) {
     try {
       const params: GetDownloadSignedURLRequest = {
@@ -172,7 +166,7 @@ class S3Storage {
   getDownloadSignedUrlSync(
     bucketName: string,
     filePath: string,
-    expirationInSeconds: number = 300
+    expirationInSeconds: number = 3600 // 1 hour
   ) {
     try {
       const params: GetDownloadSignedURLRequest = {
@@ -185,9 +179,11 @@ class S3Storage {
 
       return signedUrl;
     } catch (err) {
+      const errorMessage = `An error occurred while generating signed url for file ${filePath} from s3`;
       logger.error(err, {
-        info: `An error occurred while generating signed url for file ${filePath} from s3`
+        info: errorMessage
       });
+      throw new InternalServerError(errorMessage);
     }
   }
 

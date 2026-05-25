@@ -2,6 +2,9 @@ import { Model } from '../base';
 import { ILecturerModel } from '../lecturer';
 import { IMethodology } from '../methodology';
 import { IStudentModel } from '../student';
+// import ThesisSchema from './thesis.Schema';
+// import s3 from '@app/server/services/s3/s3.service';
+// import env from '@app/common/config/env';
 
 export interface IThesis extends Model {
   comment?: string;
@@ -18,6 +21,9 @@ export interface IThesis extends Model {
   thesis_status: THESIS_STATUS;
   thesis_level?: THESIS_LEVEL;
   thesis_chapter?: THESIS_CHAPTER[];
+  download_url?: string;
+  //  disabled alongside the getSignedDownloadUrl method in thesis.Schema.ts
+  // getSignedDownloadUrl: () => Promise<string | null>;
 }
 
 export type THESIS_LEVEL =

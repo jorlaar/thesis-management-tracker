@@ -165,16 +165,7 @@ export default class LecturerAuthController extends BaseController {
         page: 1,
         per_page: 2
       });
-      console.log('>>>>>>>.', {
-        ...lecturerPlainDetails,
-        paginatedThesis,
-        token
-      });
 
-      console.log('>>>>>>>.', {
-        dataStudent: paginatedThesis.result[0].student,
-        dataLecturer: paginatedThesis.result[0].lecturer
-      });
       this.handleSuccess(req, res, {
         ...lecturerPlainDetails,
         paginatedThesis,
