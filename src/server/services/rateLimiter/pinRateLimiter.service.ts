@@ -2,7 +2,7 @@ import { redis } from '@app/common/services/redis';
 import {
   TransactionPinBlockedError,
   InvalidPinError,
-  FrozenWalletError
+  FrozenAccountError
 } from '../../controllers/base';
 
 export const MAX_FAILED_TRIES = 5;
@@ -108,7 +108,7 @@ class auth_passwordateLimiterService {
    */
   async isstudentmobile_numberFrozen(mobile_number_number: string) {
     const isFrozen = await this.ismobile_numberFrozen(mobile_number_number);
-    if (isFrozen) throw new FrozenWalletError();
+    if (isFrozen) throw new FrozenAccountError();
   }
 
   async reset(mobile_number_number: string) {

@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import nock from 'nock';
-import { v4 as uuidV4 } from 'uuid';
+// import { v4 as uuidV4 } from 'uuid';
+import { v4 as uuidV7 } from 'uuid';
 import crypto from 'crypto';
 import { redis } from '../../src/common/services/redis';
 import { StudentSignupDTO } from '../../src/server/controllers/student/student.dto';
@@ -90,7 +91,7 @@ export async function getResponseData<T = any>(promise: Promise<any>) {
  */
 // export const mockHeadlessToken = async (
 //   service: string,
-//   _uuid: string = uuidV4()
+//   _uuid: string = uuidV7()
 // ) => {
 //   const mockGateman = new Gateman({
 //     service,
@@ -177,7 +178,7 @@ export function watchlistNock(IsOnWatchList: boolean, IsPEP: boolean) {
  */
 export async function fundMockWallet(student: string, amount: number) {
   const body = {
-    reference: uuidV4(),
+    reference: uuidV7(),
     adapter: 'paystack',
     source: 'card',
     amount,

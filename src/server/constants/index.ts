@@ -15,7 +15,7 @@ export const validNigerianAccountNumber = trimmedRequiredString
   .max(20)
   .required();
 export const validAmount = joi.number().positive().greater(0).required(); // in kobo
-export const walletFieldSchema = joi
+export const UserFieldSchema = joi
   .alternatives()
   .try(
     joi.string().trim().uuid().required(),

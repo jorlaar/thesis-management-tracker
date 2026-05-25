@@ -147,7 +147,7 @@ export const studentUploadThesisValidator = joi.object({
     .trim()
     .required()
     .uuid({
-      version: 'uuidv4'
+      version: ['uuidv4', 'uuidv7'] // Accepts both uuidv4 and uuidv7 formats
     })
     .messages({
       // drop down of registered lecturers

@@ -1,4 +1,5 @@
-import { v4 as uuidV4, validate as isUUID } from 'uuid';
+// import { v4 as uuidV4, validate as isUUID } from 'uuid';
+import { v7 as uuidV7, validate as isUUID } from 'uuid';
 import joi from 'joi';
 import { Schema, SchemaTypes } from 'mongoose';
 import { CondPairUnary, cond } from 'lodash';
@@ -41,7 +42,8 @@ export const timestamps = {
  */
 export const uuid = {
   type: Schema.Types.String,
-  default: () => uuidV4()
+  // default: () => uuidV4()
+  default: () => uuidV7()
 };
 
 /**

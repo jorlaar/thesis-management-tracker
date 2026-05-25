@@ -9,6 +9,8 @@ import env from '@app/common/config/env';
 import logger from '@app/common/services/logger/logger';
 import App from './app';
 import DB from './db';
+// import { migrateWithRelations } from '../scripts/script2';
+// import { singleUuidSchemaMigrateCollection } from '../scripts/script1';\
 
 const start = async () => {
   try {
@@ -18,6 +20,9 @@ const start = async () => {
 
     await DB.connect();
     logger.message('📦  MongoDB Connected!');
+
+    // await migrateWithRelations();
+    // await singleUuidSchemaMigrateCollection()
 
     httpServer.listen(env.port);
     httpServer.on('listening', () =>

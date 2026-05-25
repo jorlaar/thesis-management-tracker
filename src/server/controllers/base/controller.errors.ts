@@ -547,9 +547,9 @@ export class InvalidstudentAgentError extends ControllerError {
   }
 }
 
-export class WalletBalanceBlockError extends ControllerError {
+export class AccountBalanceBlockError extends ControllerError {
   constructor(tier: number, next_tier: number) {
-    const errorMessage = `You have exceeded the limit for tier ${tier}. You need to upgrade your mobile_number to tier ${next_tier} to continue transacting.`;
+    const errorMessage = `You have exceeded the limit for tier ${tier}. You need to upgrade your account to tier ${next_tier} to continue transacting.`;
     super(errorMessage);
 
     this.code = HttpStatus.BAD_REQUEST;
@@ -557,9 +557,9 @@ export class WalletBalanceBlockError extends ControllerError {
   }
 }
 
-export class FrozenWalletError extends ControllerError {
+export class FrozenAccountError extends ControllerError {
   constructor() {
-    super('Your mobile_number has been frozen. Kindly contact support.');
+    super('Your account has been frozen. Kindly contact support.');
 
     this.code = HttpStatus.BAD_REQUEST;
     this.error_code = 102;
