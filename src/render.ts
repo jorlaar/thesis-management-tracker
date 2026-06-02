@@ -24,10 +24,10 @@ const startAll = async () => {
     const appServer = app.build();
 
     // Add a root handler for your Upstash Keep-Alive ping
-    appServer.get('/', (req, res) => {
-      logger.message('⏰ Keep-alive ping received from Upstash!');
-      res.status(200).json({ status: 'API and Workers are active' });
-    });
+    // appServer.get('/', (req, res) => {
+    //   logger.message('⏰ Keep-alive ping received from Upstash!');
+    //   res.status(200).json({ status: 'API and Workers are active' });
+    // });
 
     const httpServer = http.createServer(appServer);
     httpServer.listen(env.port);

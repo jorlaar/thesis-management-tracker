@@ -13,6 +13,7 @@ import MetricsService from './services/metrics/metrics.service';
 import { redis } from '@app/common/services/redis';
 // import logger from '@app/common/services/logger';
 import db from './db';
+import logger from '@app/common/services/logger';
 // import { handleUploadErrors } from './middlewares/error.upload';
 
 export default class App {
@@ -46,6 +47,13 @@ export default class App {
       app.use(logResponseBody);
 
       app.use(jsend);
+
+      // Add a root handler for your Upstash Keep-Alive ping
+      app.get('/', (req, res) => {
+        logger.message('⏰ Keep-alive ping received from Upstash!');
+        console.log('⏰ Keep-alive ping received from Upstash!');
+        res.status(200).json({ status: 'API and Workers are active' });
+      });
     });
   }
 
