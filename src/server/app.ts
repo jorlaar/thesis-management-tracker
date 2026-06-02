@@ -56,7 +56,7 @@ export default class App {
     this.server.setErrorConfig((app: Application) => {
       // app.use(handleUploadErrors);
 
-      app.get('/', (req, res) => {
+      app.get('/health', (req, res) => {
         res.status(200).json({ status: 'UP' });
       });
 
