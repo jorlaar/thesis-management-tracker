@@ -17,7 +17,8 @@
     "build:tsc": "rm -rf ./dist && NODE_ENV=production webpack",
     "watch:tsc": "webpack --watch",
     "compile": "tsc",
-    "test": "rm -f logs.json && NODE_ENV=test jest --runInBand --forceExit --verbose"
+    "test": "rm -f logs.json && NODE_ENV=test jest --runInBand --forceExit --verbose",
+    "start:render": "node ./dist/render.js"
   },
   "keywords": [],
   "resolutions": {

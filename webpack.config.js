@@ -13,7 +13,8 @@ module.exports = {
   context: path.resolve(__dirname, 'src'),
   entry: {
     'server/index': './server/index.ts',
-    'server/workers/index': './server/workers/index.ts'
+    'server/workers/index': './server/workers/index.ts',
+    'render': './render.ts'
   },
   output: {
     filename: '[name].js',

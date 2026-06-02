@@ -10,7 +10,8 @@ import logger from '@app/common/services/logger/logger';
 import App from './app';
 import DB from './db';
 // import { migrateWithRelations } from '../scripts/script2';
-// import { singleUuidSchemaMigrateCollection } from '../scripts/script1';\
+// import { singleUuidSchemaMigrateCollection } from '../scripts/script1';
+// import { resetAllPasswordsScript } from 'scripts/script3';
 
 const start = async () => {
   try {
@@ -23,6 +24,7 @@ const start = async () => {
 
     // await migrateWithRelations();
     // await singleUuidSchemaMigrateCollection()
+    // await resetAllPasswordsScript();
 
     httpServer.listen(env.port);
     httpServer.on('listening', () =>
