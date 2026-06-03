@@ -139,7 +139,7 @@ export default class MethodologyAuthController extends BaseController {
         return_total_pages: true,
         sort: { created_at: -1 },
         page: 1,
-        per_page: 2
+        per_page: 10
       });
 
       await PasswordRateLimiterService.reset(methodology.id);

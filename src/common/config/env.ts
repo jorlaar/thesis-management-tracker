@@ -21,6 +21,7 @@ if (['production', 'staging'].includes(process.env.NODE_ENV))
 
 const env = {
   amqp_url: process.env.AMQP_URL,
+  default_password: process.env.DEFAULT_PASSWORD,
   api_url: process.env.API_URL,
   port: Number(process.env.PORT),
   redis_url: process.env.REDIS_URL,

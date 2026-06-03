@@ -8,6 +8,7 @@ import { studentSchema } from '@app/data/student';
 import AdminSchema from '@app/data/admin/admin.Schema';
 import LecturerSchema from '@app/data/lecturer/lecturer.schema';
 import { MethodologySchema } from '@app/data/methodology';
+import env from '@app/common/config/env';
 
 // 1. Interfaces & Schema Definitions (Include all collections affected by the migration)
 // interface IUser {
@@ -51,11 +52,11 @@ const Methodology = mongoose.model<IMethodology>(
 );
 
 export async function resetAllPasswordsScript() {
-  const DEFAULT_PASSWORD = 'Password123'; // 👈 Set your desired temp password here
+  const DEFAULT_PASSWORD = env.default_password;
   const targetModels = [Admin, Student, Lecturer, Methodology];
 
   console.log('🔄 Connecting to database to repair passwords...');
-  //   await mongoose.connect('mongodb://localhost:27017/thesis-management-tracker');
+  //   await mongoose.connect('mongodb://localhost:27017/thesis');
 
   for (const rawModel of targetModels) {
     const Model = rawModel as any;

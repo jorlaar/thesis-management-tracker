@@ -163,7 +163,7 @@ export default class LecturerAuthController extends BaseController {
         return_total_pages: true,
         sort: { created_at: -1 },
         page: 1,
-        per_page: 2
+        per_page: 10
       });
 
       this.handleSuccess(req, res, {
