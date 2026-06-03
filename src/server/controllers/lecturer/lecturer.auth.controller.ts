@@ -29,7 +29,7 @@ import {
   NotFoundError
 } from '../base';
 import authVerify from '@app/server/middlewares/auth.verify';
-import thesisRepo from '@app/data/thesis/thesis.repo';
+// import thesisRepo from '@app/data/thesis/thesis.repo';
 import {
   forgotPasswordValidator,
   // ResetPasswordValidator,
@@ -157,18 +157,18 @@ export default class LecturerAuthController extends BaseController {
 
       await PasswordRateLimiterService.reset(lecturer.id);
 
-      const paginatedThesis = await thesisRepo.list({
-        conditions: { lecturer: lecturer._id },
-        populate: ['student', 'lecturer', 'methodology'],
-        return_total_pages: true,
-        sort: { created_at: -1 },
-        page: 1,
-        per_page: 10
-      });
+      // const paginatedThesis = await thesisRepo.list({
+      //   conditions: { lecturer: lecturer._id },
+      //   populate: ['student', 'lecturer', 'methodology'],
+      //   return_total_pages: true,
+      //   sort: { created_at: -1 },
+      //   page: 1,
+      //   per_page: 10
+      // });
 
       this.handleSuccess(req, res, {
         ...lecturerPlainDetails,
-        paginatedThesis,
+        // paginatedThesis,
         token
       });
     } catch (err) {

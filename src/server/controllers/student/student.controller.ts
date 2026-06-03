@@ -42,7 +42,11 @@ export default class StudentController extends BaseController {
     @response() res: Response,
     @queryParam() query: PaginationQueryDTO
   ) {
-    const { page, per_page } = query;
+    let { page, per_page } = query;
+    if (!page || !per_page) {
+      page = 1;
+      per_page = 20;
+    }
     try {
       if (!['student'].includes(req.user_data?.type)) {
         throw new ActionNotAllowedError("You can't perform this operation");
@@ -93,6 +97,6 @@ export default class StudentController extends BaseController {
   // todo: activity log
   // todo: account verification
   // todo: profile update
-  // TODO: SIGNEDURL 
+  // TODO: SIGNEDURL
   // TODO: USE AWS IN LIEU OF CLOUDINARY
 }

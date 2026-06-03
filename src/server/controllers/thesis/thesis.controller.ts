@@ -157,7 +157,7 @@ export default class ThesisController extends BaseController {
         // THESIS_STATUS.revision_requested_by_supervisor,
         // THESIS_STATUS.revision_requested_by_methodology
         THESIS_STATUS.awaiting_supervisor_review,
-        THESIS_STATUS.awaiting_methodology_review,
+        THESIS_STATUS.awaiting_methodology_review
       ];
 
       if (DISALLOWED_UPLOAD_STATUSES.includes(viewThesis.thesis_status)) {
@@ -212,7 +212,6 @@ export default class ThesisController extends BaseController {
         `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
         // `${viewThesis.thesis_title}/${thesis_saving_id}`
       );
-
 
       // const isMultiSave = Array.isArray(body.thesis_chapter);
 
@@ -348,7 +347,6 @@ export default class ThesisController extends BaseController {
         return_total_pages: true
       });
 
-
       this.handleSuccess(req, res, viewThesis);
     } catch (error) {
       this.handleError(req, res, error);
@@ -363,7 +361,12 @@ export default class ThesisController extends BaseController {
   ) {
     // console.log('>>>>>>>>', req.user_data);
 
-    const { page, per_page } = query;
+    let { page, per_page } = query;
+    if (!page || !per_page) {
+      page = 1;
+      per_page = 20;
+    }
+
     try {
       // console.log('>>>>>>>>', req.user_data);
 
@@ -383,7 +386,6 @@ export default class ThesisController extends BaseController {
         per_page,
         return_total_pages: true
       });
-
 
       this.handleSuccess(req, res, viewThesis);
     } catch (error) {
@@ -790,7 +792,12 @@ export default class ThesisController extends BaseController {
     @response() res: Response,
     @queryParam() query: PaginationQueryDTO
   ) {
-    const { page, per_page } = query;
+    let { page, per_page } = query;
+    if (!page || !per_page) {
+      page = 1;
+      per_page = 20;
+    }
+
     try {
       if (req.user_data.type !== 'methodology') {
         throw new ActionNotAllowedError("You can't perform this operation");
@@ -1122,7 +1129,7 @@ export default class ThesisController extends BaseController {
       // console.log('>>>>>>>>>> viewThesis', viewThesis);
 
       // const csvFile =
-       await generateCsvFile(res, viewThesis.result);
+      await generateCsvFile(res, viewThesis.result);
 
       // console.log('>>>>>>>>>> csvFile', csvFile);
     });

@@ -30,7 +30,7 @@ import {
   NotFoundError
 } from '../base';
 import authVerify from '@app/server/middlewares/auth.verify';
-import thesisRepo from '@app/data/thesis/thesis.repo';
+// import thesisRepo from '@app/data/thesis/thesis.repo';
 import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
 import {
   forgotPasswordValidator,
@@ -133,20 +133,20 @@ export default class MethodologyAuthController extends BaseController {
       delete methodologyPlainDetails.password;
       delete methodologyPlainDetails.__v;
 
-      const paginatedThesis = await thesisRepo.list({
-        conditions: { methodology: methodology._id },
-        populate: ['student', 'lecturer', 'methodology'],
-        return_total_pages: true,
-        sort: { created_at: -1 },
-        page: 1,
-        per_page: 10
-      });
+      // const paginatedThesis = await thesisRepo.list({
+      //   conditions: { methodology: methodology._id },
+      //   populate: ['student', 'lecturer', 'methodology'],
+      //   return_total_pages: true,
+      //   sort: { created_at: -1 },
+      //   page: 1,
+      //   per_page: 10
+      // });
 
       await PasswordRateLimiterService.reset(methodology.id);
 
       this.handleSuccess(req, res, {
         ...methodologyPlainDetails,
-        paginatedThesis,
+        // paginatedThesis,
         token
       });
     } catch (err) {

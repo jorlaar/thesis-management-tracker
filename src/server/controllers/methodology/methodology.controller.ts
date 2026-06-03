@@ -48,7 +48,12 @@ export default class MethodologyController extends BaseController {
     @response() res: Response,
     @queryParam() query: PaginationQueryDTO
   ) {
-    const { page, per_page } = query;
+    let { page, per_page } = query;
+    if (!page || !per_page) {
+      page = 1;
+      per_page = 20;
+    }
+
     try {
       if (req.user_data.type !== 'methodology') {
         throw new ActionNotAllowedError("You can't perform this operation");
