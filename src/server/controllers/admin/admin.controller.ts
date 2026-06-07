@@ -281,3 +281,16 @@ export default class AdminController extends BaseController {
     this.handleSuccess(req, res, admin);
   }
 }
+
+/**
+ * Todo backend
+ * add filter to view records for student using the tracking id and student id and lecturer id
+ *
+ * todo frontend
+ * methodology actions and also tracking id with filter
+ * admin view one record and also tracking thesis with tracking id
+ * download thesis
+ * register page toast for account waiting for approval
+ * 
+ *
+ */

@@ -9,16 +9,21 @@ export const AdminSchema = SchemaFactory({
   email: { ...trimmedString, unique: true, required: true },
   first_name: { ...trimmedString, index: true, required: true },
   last_name: { ...trimmedString },
-  password_changed_at: { type: SchemaTypes.Date },
+  password_changed_at: { type: SchemaTypes.Date, select: false },
   role: {
     type: String,
     enum: ['root', 'admin', 'super_admin'],
     required: true,
     default: 'admin'
   },
-  is_approved: { type: Boolean, default: false },
-  approved_at: { type: SchemaTypes.Date, default: null },
-  approved_by: { ref: 'Admin', type: SchemaTypes.String, default: null }
+  is_approved: { type: Boolean, default: false, select: false },
+  approved_at: { type: SchemaTypes.Date, default: null, select: false },
+  approved_by: {
+    ref: 'Admin',
+    type: SchemaTypes.String,
+    default: null,
+    select: false
+  }
 });
 
 /**

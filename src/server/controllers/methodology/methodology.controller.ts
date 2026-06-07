@@ -51,7 +51,7 @@ export default class MethodologyController extends BaseController {
     let { page, per_page } = query;
     if (!page || !per_page) {
       page = 1;
-      per_page = 20;
+      per_page = 10;
     }
 
     try {
