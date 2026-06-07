@@ -11,10 +11,7 @@ import { Repository, Query, QueryResult, PaginationQuery } from '.';
 
 export class BaseRepository<T extends Document> implements Repository<T> {
   model: Model<T>;
-  constructor(
-    private name: string,
-    schema: Schema
-  ) {
+  constructor(private name: string, schema: Schema) {
     this.model = mongoose.model<T>(name, schema);
   }
 
@@ -158,9 +155,7 @@ export class BaseRepository<T extends Document> implements Repository<T> {
     if (!query.return_total_pages) return result;
 
     const totalDocuments = await this.model.countDocuments(conditions);
-    // const total_pages = Math.ceil(totalDocuments / per_page);
-    const total_pages = Math.ceil(totalDocuments);
-    // const total_pages = Math.ceil(totalDocuments / per_page);
+    const total_pages = Math.ceil(totalDocuments / per_page);
 
     return { ...result, total_pages };
   }

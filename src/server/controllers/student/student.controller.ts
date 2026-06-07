@@ -45,7 +45,7 @@ export default class StudentController extends BaseController {
     let { page, per_page } = query;
     if (!page || !per_page) {
       page = 1;
-      per_page = 10;
+      per_page = 20;
     }
     try {
       if (!['student'].includes(req.user_data?.type)) {
@@ -62,7 +62,7 @@ export default class StudentController extends BaseController {
       }
 
       const viewThesis = await thesisRepo.list({
-        conditions: { student: req.user_data.id },
+        conditions: { student: student_details._id },
         sort: { created_at: -1 },
         populate: ['student', 'lecturer', 'methodology'],
         page,
