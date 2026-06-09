@@ -12,6 +12,8 @@ import authVerify from '@app/server/middlewares/auth.verify';
 import thesisRepo from '@app/data/thesis/thesis.repo';
 import { ActionNotAllowedError, NotFoundError } from '../base';
 import { PaginationQueryDTO } from '../thesis/thesis.dto';
+import { PaginationValidator } from '../thesis/thesis.validator';
+import validator from '@app/server/middlewares/validator';
 
 @controller('/student', authVerify)
 export default class StudentController extends BaseController {
@@ -36,17 +38,22 @@ export default class StudentController extends BaseController {
     }
   }
 
-  @httpGet('/thesis/all')
+  @httpGet('/thesis/all', validator(PaginationValidator, 'query'))
   async getAllAStudentsProfileDetails(
     @request() req: Request,
     @response() res: Response,
     @queryParam() query: PaginationQueryDTO
   ) {
-    let { page, per_page } = query;
-    if (!page || !per_page) {
-      page = 1;
-      per_page = 20;
-    }
+    let {
+      page = 1,
+      per_page = 10,
+      tracking_id,
+      start_date,
+      end_date,
+      methodology,
+      lecturer
+    } = query;
+
     try {
       if (!['student'].includes(req.user_data?.type)) {
         throw new ActionNotAllowedError("You can't perform this operation");
@@ -61,8 +68,23 @@ export default class StudentController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
+      const conditions: any = { student: req.user_data.id };
+      if (tracking_id) conditions.tracking_id = tracking_id; // ULID string
+      if (lecturer) conditions.lecturer = lecturer; // UUIDv7 string
+      if (methodology) conditions.methodology = methodology; // UUIDv7 string
+
+      if (start_date || end_date) {
+        conditions.created_at = {};
+        if (start_date) conditions.created_at.$gte = new Date(start_date);
+        if (end_date) {
+          const end = new Date(end_date);
+          end.setHours(23, 59, 59, 999); // inclusive end date
+          conditions.created_at.$lte = end;
+        }
+      }
+
       const viewThesis = await thesisRepo.list({
-        conditions: { student: student_details._id },
+        conditions,
         sort: { created_at: -1 },
         populate: ['student', 'lecturer', 'methodology'],
         page,

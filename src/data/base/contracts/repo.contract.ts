@@ -1,4 +1,9 @@
-import { ClientSession, QueryWithHelpers, SortOrder, UpdateWriteOpResult } from 'mongoose';
+import {
+  ClientSession,
+  QueryWithHelpers,
+  SortOrder,
+  UpdateWriteOpResult
+} from 'mongoose';
 
 export type Sort =
   | string
@@ -16,6 +21,7 @@ export interface QueryResult<T> {
   sorted_by: Sort;
   result: T[];
   total_pages?: number;
+  total_documents?: number;
 }
 
 /**
@@ -49,7 +55,10 @@ export interface Repository<T> {
   all(query: Query): Promise<T[]>;
   update(condition: string | object, update: any): Promise<T>;
   updateWithOperators(condition: string | object, update: any): Promise<T>;
-  updateAll(condition: string | object, update: any): Promise<QueryWithHelpers<UpdateWriteOpResult, T[]>>;
+  updateAll(
+    condition: string | object,
+    update: any
+  ): Promise<QueryWithHelpers<UpdateWriteOpResult, T[]>>;
   remove(condition: string | object): Promise<T>;
   destroy(condition: string | object): Promise<T>;
 }

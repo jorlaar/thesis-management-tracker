@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { BaseController } from '@app/server/controllers/base/base.controller';
-import { fileAndBodyValidator } from '@app/server/middlewares/validator';
+import validator, {
+  fileAndBodyValidator
+} from '@app/server/middlewares/validator';
 import {
   controller,
   response,
@@ -14,6 +16,7 @@ import {
 import {
   lecturerUploadCommentValidator,
   methodologyUploadCommentValidator,
+  PaginationValidator,
   studentUploadThesisValidator
 } from './thesis.validator';
 import {
@@ -353,33 +356,44 @@ export default class ThesisController extends BaseController {
     }
   }
 
-  @httpGet('/all/lecturer')
+  @httpGet('/all/lecturer', validator(PaginationValidator, 'query'))
   async getAllLecturerThesis(
     @request() req: Request,
     @response() res: Response,
     @queryParam() query: PaginationQueryDTO
   ) {
-    // console.log('>>>>>>>>', req.user_data);
-
-    let { page, per_page } = query;
-    if (!page || !per_page) {
-      page = 1;
-      per_page = 20;
-    }
+    let {
+      page = 1,
+      per_page = 10,
+      tracking_id,
+      start_date,
+      end_date,
+      student,
+      methodology
+    } = query;
 
     try {
-      // console.log('>>>>>>>>', req.user_data);
-
       if (req.user_data.type !== 'lecturer') {
         throw new ActionNotAllowedError("You can't perform this operation");
       }
 
-      // console.log('>>>>>>>>', req.user_data);
-      // console.log('>>>got here>', req.user_data);
-      // console.log('>>>>>>>>', req.user_data);
+      const conditions: any = { lecturer: req.user_data.id };
+      if (tracking_id) conditions.tracking_id = tracking_id; // ULID string
+      if (student) conditions.student = student; // UUIDv7 string
+      if (methodology) conditions.methodology = methodology; // UUIDv7 string
+
+      if (start_date || end_date) {
+        conditions.created_at = {};
+        if (start_date) conditions.created_at.$gte = new Date(start_date);
+        if (end_date) {
+          const end = new Date(end_date);
+          end.setHours(23, 59, 59, 999); // inclusive end date
+          conditions.created_at.$lte = end;
+        }
+      }
 
       const viewThesis = await thesisRepo.list({
-        conditions: { lecturer: req.user_data.id },
+        conditions,
         sort: { created_at: -1 },
         populate: ['student', 'lecturer'],
         page,
@@ -786,37 +800,55 @@ export default class ThesisController extends BaseController {
     }
   }
 
-  @httpGet('/all/methodology')
+  @httpGet('/all/methodology', validator(PaginationValidator, 'query'))
   async getAllMethodologyThesis(
     @request() req: Request,
     @response() res: Response,
     @queryParam() query: PaginationQueryDTO
   ) {
-    let { page, per_page } = query;
-    if (!page || !per_page) {
-      page = 1;
-      per_page = 20;
-    }
+    let {
+      page = 1,
+      per_page = 10,
+      tracking_id,
+      start_date,
+      end_date,
+      student,
+      lecturer
+    } = query;
 
     try {
       if (req.user_data.type !== 'methodology') {
         throw new ActionNotAllowedError("You can't perform this operation");
       }
 
-      // console.log('>>>>>>>>', req.user_data);
+      const conditions: any = { methodology: req.user_data.id };
+      if (tracking_id) conditions.tracking_id = tracking_id; // ULID string
+      if (student) conditions.student = student; // UUIDv7 string
+      if (lecturer) conditions.lecturer = lecturer; // UUIDv7 string
+
+      if (start_date || end_date) {
+        conditions.created_at = {};
+        if (start_date) conditions.created_at.$gte = new Date(start_date);
+        if (end_date) {
+          const end = new Date(end_date);
+          end.setHours(23, 59, 59, 999); // inclusive end date
+          conditions.created_at.$lte = end;
+        }
+      }
 
       const viewThesis = await thesisRepo.list({
-        conditions: {
-          methodology: req.user_data.id
-          // thesis_status: {
-          //   $in: [
-          //     THESIS_STATUS.approved_by_supervisor,
-          //     THESIS_STATUS.rejected_by_methodology,
-          //     THESIS_STATUS.revision_requested_by_methodology,
-          //     THESIS_STATUS.approved_by_methodology
-          //   ]
-          // }
-        },
+        // conditions: {
+        //   methodology: req.user_data.id
+        //   // thesis_status: {
+        //   //   $in: [
+        //   //     THESIS_STATUS.approved_by_supervisor,
+        //   //     THESIS_STATUS.rejected_by_methodology,
+        //   //     THESIS_STATUS.revision_requested_by_methodology,
+        //   //     THESIS_STATUS.approved_by_methodology
+        //   //   ]
+        //   // }
+        // },
+        conditions,
         sort: { created_at: -1 },
         populate: ['student', 'lecturer', 'methodology'],
         page,

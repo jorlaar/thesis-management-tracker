@@ -9,6 +9,7 @@ settings.json
 /data
 /coverage
 gc-logs.txt
+TODO.md
 
 infra/
 Dockerfile.local

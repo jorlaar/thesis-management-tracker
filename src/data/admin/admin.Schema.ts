@@ -9,7 +9,7 @@ export const AdminSchema = SchemaFactory({
   email: { ...trimmedString, unique: true, required: true },
   first_name: { ...trimmedString, index: true, required: true },
   last_name: { ...trimmedString },
-  password_changed_at: { type: SchemaTypes.Date },
+  password_changed_at: { type: SchemaTypes.Date, select: false },
   role: {
     type: String,
     enum: ['root', 'admin', 'super_admin'],

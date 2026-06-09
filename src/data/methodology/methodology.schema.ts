@@ -11,7 +11,7 @@ const MethodologySchema = SchemaFactory({
   last_name: { ...trimmedString },
   department: { ...trimmedString },
   faculty: { ...trimmedString },
-  password_changed_at: { type: SchemaTypes.Date },
+  password_changed_at: { type: SchemaTypes.Date, select: false },
   is_approved: { type: Boolean, default: false },
   approved_at: { type: SchemaTypes.Date, default: null },
   approved_by: { ref: 'Admin', type: SchemaTypes.String, default: null }

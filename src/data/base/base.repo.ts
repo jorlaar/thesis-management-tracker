@@ -11,7 +11,10 @@ import { Repository, Query, QueryResult, PaginationQuery } from '.';
 
 export class BaseRepository<T extends Document> implements Repository<T> {
   model: Model<T>;
-  constructor(private name: string, schema: Schema) {
+  constructor(
+    private name: string,
+    schema: Schema
+  ) {
     this.model = mongoose.model<T>(name, schema);
   }
 
@@ -154,10 +157,10 @@ export class BaseRepository<T extends Document> implements Repository<T> {
 
     if (!query.return_total_pages) return result;
 
-    const totalDocuments = await this.model.countDocuments(conditions);
-    const total_pages = Math.ceil(totalDocuments / per_page);
+    const total_documents = await this.model.countDocuments(conditions);
+    const total_pages = Math.ceil(total_documents / per_page);
 
-    return { ...result, total_pages };
+    return { ...result, total_pages, total_documents };
   }
 
   /**
@@ -197,10 +200,10 @@ export class BaseRepository<T extends Document> implements Repository<T> {
 
     if (!query.return_total_pages) return result;
 
-    const totalDocuments = await this.model.countDocuments(conditions);
-    const total_pages = Math.ceil(totalDocuments / per_page);
+    const total_documents = await this.model.countDocuments(conditions);
+    const total_pages = Math.ceil(total_documents / per_page);
 
-    return { ...result, total_pages };
+    return { ...result, total_pages, total_documents };
   }
 
   /**
@@ -291,5 +294,133 @@ export class BaseRepository<T extends Document> implements Repository<T> {
     if (!result) throw new ModelNotFoundError(`${this.name} not found`);
 
     return result;
+  }
+
+  async searchList(
+    query: PaginationQuery & { search?: string }
+  ): Promise<QueryResult<any>> {
+    const page = Number(query.page) - 1 || 0;
+    const per_page = Number(query.per_page) || 10;
+    const sortField = query.sort;
+        // const sortField = query.sort || { created_at: -1 };
+    // const sortField = 'created_at desc';
+    // const sortField = 'created_at';
+    const conditions: any = { ...query.conditions }; // from controller
+
+    // Build $search stage – only if a search string is provided
+    const searchStage = query.search
+      ? {
+          $search: {
+            index: 'thesis_search', // Atlas Search index name
+            text: {
+              query: query.search,
+              // path: ['thesis_title', 'comment', 'thesis_chapter'] // fields to search
+              path: 'thesis_title' // fields to search
+            }
+          }
+        }
+      : null; // fallback: just a pass‑through if no search (but you'd rather use the normal list method)
+
+    // Build $match stage from all the other filter conditions
+    const matchStage = { $match: { ...conditions } };
+
+    // Populate: use $lookup for each referenced collection
+    const studentLookup = {
+      $lookup: {
+        from: 'students', // collection name
+        localField: 'student',
+        foreignField: '_id',
+        as: 'student'
+      }
+    };
+    const lecturerLookup = {
+      $lookup: {
+        from: 'lecturers',
+        localField: 'lecturer',
+        foreignField: '_id',
+        as: 'lecturer'
+      }
+    };
+    const methodologyLookup = {
+      $lookup: {
+        from: 'methodologies',
+        localField: 'methodology',
+        foreignField: '_id',
+        as: 'methodology'
+      }
+    };
+
+    // Unwind to convert array to object (since populate gives a single object)
+    const unwindStudent = {
+      $unwind: { path: '$student', preserveNullAndEmptyArrays: true }
+    };
+    const unwindLecturer = {
+      $unwind: { path: '$lecturer', preserveNullAndEmptyArrays: true }
+    };
+    const unwindMethodology = {
+      $unwind: { path: '$methodology', preserveNullAndEmptyArrays: true }
+    };
+
+    // Sorting
+    const sortStage = { $sort: sortField };
+
+    // Pagination
+    const skipStage = { $skip: page * per_page };
+    const limitStage = { $limit: per_page };
+      console.log('adminGetAllThesis sortStage >>>', sortStage);
+
+    // For total count and pages, use $facet to run two pipelines in parallel
+    // const facetStage = {
+    //   $facet: {
+    //     metadata: [{ $count: 'total' }],
+    //     data: [] // data will be filled by previous stages? Actually we need to do facet at the end.
+    //   }
+    // };
+
+    // A cleaner approach: run aggregation for data and count separately, or use a two‑query pattern.
+    // Simpler: run two aggregations. We'll build one for data and one for count.
+
+    const dataPipeline: any[] = [];
+
+    if (searchStage) dataPipeline.push(searchStage);
+
+    //  [ ...(query.search ? [searchStage] : []), // only include $search if searching
+
+    dataPipeline.push(
+      matchStage,
+      sortStage,
+      skipStage,
+      limitStage,
+      studentLookup,
+      unwindStudent,
+      lecturerLookup,
+      unwindLecturer,
+      methodologyLookup,
+      unwindMethodology
+    );
+    // ];
+
+    const countPipeline: any[] = [];
+    if (searchStage) countPipeline.push(searchStage);
+    countPipeline.push(matchStage, { $count: 'total' }); // count total documents matching the conditions (and search if applicable);
+    // [...(query.search ? [searchStage] : []), matchStage, { $count: 'total' }];
+
+    // Execute
+    const [dataResult, countResult] = await Promise.all([
+      this.model.aggregate(dataPipeline).exec(),
+      this.model.aggregate(countPipeline).exec()
+    ]);
+
+    const total_documents = countResult[0]?.total || 0;
+    const total_pages = Math.ceil(total_documents / per_page);
+
+    return {
+      page: page + 1,
+      per_page,
+      sorted_by: JSON.stringify(sortField), // or store the field name better
+      result: dataResult,
+      total_pages,
+      total_documents
+    };
   }
 }

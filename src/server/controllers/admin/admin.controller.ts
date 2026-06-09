@@ -14,6 +14,10 @@ import thesisRepo from '@app/data/thesis/thesis.repo';
 import adminAuthVerify from '@app/server/middlewares/admin.auth.verify';
 import { ActionNotAllowedError, NotFoundError } from '../base';
 import { PaginationQueryDTO } from '../thesis/thesis.dto';
+import { QueryResult } from '@app/data/base';
+import { IThesis } from '@app/data/thesis/thesis.model';
+import validator from '@app/server/middlewares/validator';
+import { PaginationValidator } from '../thesis/thesis.validator';
 
 @controller('/admin', adminAuthVerify)
 export default class AdminController extends BaseController {
@@ -122,38 +126,62 @@ export default class AdminController extends BaseController {
     }
   }
 
-  @httpGet('/all') // todo add filter by student email, lecturer email, methodology email etc
+  @httpGet('/all', validator(PaginationValidator, 'query')) // todo add filter by student email, lecturer email, methodology email etc
   async adminGetAllThesis(
     @request() req: Request,
     @response() res: Response,
     // @requestParam('studentEmail') studentEmail: string,
     @queryParam() query: PaginationQueryDTO
   ) {
-    const { page, per_page } = query;
+    let {
+      page = 1,
+      per_page = 10,
+      tracking_id,
+      start_date,
+      end_date,
+      student,
+      lecturer,
+      methodology,
+      search
+    } = query;
     try {
-      // if (req.user_data.type !== 'admin') {
-      //   throw new ActionNotAllowedError("You can't perform this operation");
-      // }
+      const conditions: any = {};
+      if (tracking_id) conditions.tracking_id = tracking_id; // ULID string
+      if (student) conditions.student = student; // UUIDv7 string
+      if (lecturer) conditions.lecturer = lecturer; // UUIDv7 string
+      if (methodology) conditions.methodology = methodology; // UUIDv7 string
 
-      // const student_details = await studentRepo.model.findOne(
-      //   { email: studentEmail },
-      //   { _id: 1 } // Only fetch the _id field
-      // );
+      if (start_date || end_date) {
+        conditions.created_at = {};
+        if (start_date) conditions.created_at.$gte = new Date(start_date);
+        if (end_date) {
+          const end = new Date(end_date);
+          end.setHours(23, 59, 59, 999); // inclusive end date
+          conditions.created_at.$lte = end;
+        }
+      }
 
-      // if (!student_details) {
-      //   throw new NotFoundError('Student not found');
-      // }
-
-      const viewThesis = await thesisRepo.list({
-        // conditions: { student: student_details._id },
-        conditions: {},
-        sort: { created_at: -1 },
-        populate: ['student', 'lecturer', 'methodology'],
-        page,
-        per_page,
-        return_total_pages: true
-      });
-
+      let viewThesis: QueryResult<IThesis>;
+      console.log('adminGetAllThesis conditions >>>', conditions);
+      if (search) {
+        viewThesis = await thesisRepo.searchList({
+          conditions,
+          search,
+          sort: { created_at: -1 },
+          page,
+          per_page,
+          return_total_pages: true
+        });
+      } else {
+        viewThesis = await thesisRepo.list({
+          conditions,
+          sort: { created_at: -1 },
+          populate: ['student', 'lecturer', 'methodology'],
+          page,
+          per_page,
+          return_total_pages: true
+        });
+      }
       this.handleSuccess(req, res, viewThesis);
     } catch (error) {
       this.handleError(req, res, error);

@@ -35,7 +35,7 @@ const StudentSchema = SchemaFactory({
     required: true,
     default: StudentLevel.MASTERS
   },
-  password_changed_at: { type: SchemaTypes.Date },
+  password_changed_at: { type: SchemaTypes.Date, select: false },
   is_approved: { type: Boolean, default: false },
   approved_at: { type: SchemaTypes.Date, default: null },
   approved_by: { ref: 'Admin', type: SchemaTypes.String, default: null }

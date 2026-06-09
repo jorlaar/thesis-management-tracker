@@ -14,6 +14,8 @@ import thesisRepo from '@app/data/thesis/thesis.repo';
 import { PaginationQueryDTO } from '../thesis/thesis.dto';
 import studentRepo from '@app/data/student/student.repo';
 import { THESIS_STATUS } from '@app/data/thesis/thesis.model';
+import validator from '@app/server/middlewares/validator';
+import { PaginationValidator } from '../thesis/thesis.validator';
 
 @controller('/methodology', authVerify)
 export default class MethodologyController extends BaseController {
@@ -42,17 +44,13 @@ export default class MethodologyController extends BaseController {
   }
 
   // add approval status to return only those approved by the lecturer
-  @httpGet('/all/thesis')
+  @httpGet('/all/thesis', validator(PaginationValidator, 'query'))
   async methodologyGetAllThesisByDepartment(
     @request() req: Request,
     @response() res: Response,
     @queryParam() query: PaginationQueryDTO
   ) {
-    let { page, per_page } = query;
-    if (!page || !per_page) {
-      page = 1;
-      per_page = 20;
-    }
+    let { page = 1, per_page = 10 } = query;
 
     try {
       if (req.user_data.type !== 'methodology') {

@@ -31,6 +31,13 @@ export type ThesisQuery = {
 export interface PaginationQueryDTO {
   page: number;
   per_page: number;
+  tracking_id?: string;
+  student?: string;
+  lecturer?: string;
+  methodology?: string;
+  start_date?: Date;
+  end_date?: Date;
   archived?: boolean;
   status?: string;
+  search?: string;
 }

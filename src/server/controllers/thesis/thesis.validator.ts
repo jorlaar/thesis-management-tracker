@@ -2,6 +2,8 @@
 import { ThesisSupportedMimeTypes } from '@app/server/services/s3/s3.type';
 import joi from 'joi';
 
+const ulidRegex = /^[0-9A-HJKMNP-TV-Z]{26}$/;
+
 // export const studentUploadThesisValidator = joi.object({
 // file_url: joi.string().required().uri(), // Ensure it's a valid URL
 // file: joi.string().required().valid('pdf', 'doc', 'docx'),
@@ -216,3 +218,69 @@ export const studentUploadThesisValidator = joi.object({
     })
     .optional() // allows the whole field to be undefined
 });
+
+export const PaginationValidator = joi
+  .object({
+    page: joi.number().integer().min(1).default(1),
+    per_page: joi.number().integer().min(1).default(10),
+    archived: joi.boolean().default(false),
+    tracking_id: joi
+      .string()
+      .trim()
+      .optional()
+      .uppercase()
+      .regex(ulidRegex)
+      .messages({
+        'string.pattern.base': 'tracking id should be a valid ulid'
+      }),
+    student: joi
+      .string()
+      .trim()
+      .optional()
+      .uuid({
+        version: ['uuidv4', 'uuidv7'] // Accepts both uuidv4 and uuidv7 formats
+      })
+      .messages({
+        'string.pattern.base': 'student details should be a valid uuid'
+      }),
+    lecturer: joi
+      .string()
+      .trim()
+      .optional()
+      .uuid({
+        version: ['uuidv4', 'uuidv7'] // Accepts both uuidv4 and uuidv7 formats
+      })
+      .messages({
+        'string.pattern.base': 'lecturer details should be a valid uuid'
+      }),
+    methodology: joi
+      .string()
+      .trim()
+      .optional()
+      .uuid({
+        version: ['uuidv4', 'uuidv7'] // Accepts both uuidv4 and uuidv7 formats
+      })
+      .messages({
+        'string.pattern.base': 'methodology details should be a valid uuid'
+      }),
+    start_date: joi.date().optional().less('now').messages({
+      'date.base': 'Start date must be a valid date.',
+      'date.less': 'Start date cannot be in the future.'
+    }),
+    end_date: joi
+      .date()
+      .optional()
+      .greater(joi.ref('start_date'))
+      .less('now')
+      .messages({
+        'date.base': 'End date must be a valid date.',
+        'date.greater': 'End date must be after the start date.',
+        'date.less': 'End date cannot be in the future.'
+      }),
+      search: joi.string().trim().optional().min(2)
+  })
+  .default({
+    page: 1,
+    per_page: 10,
+    archived: false
+  });
