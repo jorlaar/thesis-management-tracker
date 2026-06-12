@@ -108,7 +108,17 @@ export const lecturerUploadCommentValidator = joi.object({
   student: joi.string().trim().required().messages({
     'string.empty': 'student details is required',
     'any.required': 'student details is required'
-  })
+  }),
+  thesis_id: joi
+    .string()
+    .trim()
+    .required()
+    .uuid({
+      version: ['uuidv4', 'uuidv7'] // Accepts both uuidv4 and uuidv7 formats
+    })
+    .messages({
+      'string.pattern': 'thesis id should be a valid uuid'
+    })
 });
 
 export const methodologyUploadCommentValidator = joi.object({
@@ -127,7 +137,17 @@ export const methodologyUploadCommentValidator = joi.object({
   student: joi.string().trim().required().messages({
     'string.empty': 'methodology details is required',
     'any.required': 'methodology details is required'
-  })
+  }),
+  thesis_id: joi
+    .string()
+    .trim()
+    .required()
+    .uuid({
+      version: ['uuidv4', 'uuidv7'] // Accepts both uuidv4 and uuidv7 formats
+    })
+    .messages({
+      'string.pattern': 'thesis id should be a valid uuid'
+    })
 });
 
 export const studentUploadThesisValidator = joi.object({
@@ -277,7 +297,7 @@ export const PaginationValidator = joi
         'date.greater': 'End date must be after the start date.',
         'date.less': 'End date cannot be in the future.'
       }),
-      search: joi.string().trim().optional().min(2)
+    search: joi.string().trim().optional().min(2)
   })
   .default({
     page: 1,

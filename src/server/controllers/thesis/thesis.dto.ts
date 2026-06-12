@@ -12,6 +12,7 @@ export interface lecturerCommentUpload {
   file?: string;
   comment: string;
   student: string;
+  thesis_id: string;
 }
 
 export interface methodologyCommentUpload {
@@ -19,6 +20,7 @@ export interface methodologyCommentUpload {
   file?: string;
   comment: string;
   student: string;
+  thesis_id: string;
 }
 
 export type ThesisQuery = {

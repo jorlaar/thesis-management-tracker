@@ -440,17 +440,26 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      const viewThesis = await thesisRepo.model
-        .findOne({
-          student: student_details.id,
-          lecturer: req.user_data.id,
-          thesis_status: THESIS_STATUS.awaiting_supervisor_review
-        })
-        .sort({ created_at: -1 });
+      // const viewThesis = await thesisRepo.model
+      //   .findOne({
+      //     student: student_details.id,
+      //     lecturer: req.user_data.id,
+      //     thesis_status: THESIS_STATUS.awaiting_supervisor_review
+      //   })
+      //   .sort({ created_at: -1 });
+      const viewThesis = await thesisRepo.model.findById(body.thesis_id);
 
       if (!viewThesis) {
         throw new ActionNotAllowedError(
           'No thesis awaiting lecturer review for this student'
+        );
+      }
+
+      if (
+        viewThesis.thesis_status !== THESIS_STATUS.awaiting_supervisor_review
+      ) {
+        throw new ActionNotAllowedError(
+          'This thesis is not awaiting your review'
         );
       }
 
@@ -532,17 +541,26 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      const viewThesis = await thesisRepo.model
-        .findOne({
-          student: student_details.id,
-          lecturer: req.user_data.id,
-          thesis_status: THESIS_STATUS.awaiting_supervisor_review
-        })
-        .sort({ created_at: -1 });
+      // const viewThesis = await thesisRepo.model
+      //   .findOne({
+      //     student: student_details.id,
+      //     lecturer: req.user_data.id,
+      //     thesis_status: THESIS_STATUS.awaiting_supervisor_review
+      //   })
+      //   .sort({ created_at: -1 });
+      const viewThesis = await thesisRepo.model.findById(body.thesis_id);
 
       if (!viewThesis) {
         throw new ActionNotAllowedError(
           'No thesis awaiting your approval for this student'
+        );
+      }
+
+      if (
+        viewThesis.thesis_status !== THESIS_STATUS.awaiting_supervisor_review
+      ) {
+        throw new ActionNotAllowedError(
+          'This thesis is not awaiting your approval'
         );
       }
 
@@ -640,17 +658,27 @@ export default class ThesisController extends BaseController {
       if (!student_details) {
         throw new NotFoundError('Student not found');
       }
-      const viewThesis = await thesisRepo.model
-        .findOne({
-          student: student_details.id,
-          lecturer: req.user_data.id,
-          thesis_status: THESIS_STATUS.awaiting_supervisor_review
-        })
-        .sort({ created_at: -1 });
+      // const viewThesis = await thesisRepo.model
+      //   .findOne({
+      //     student: student_details.id,
+      //     lecturer: req.user_data.id,
+      //     thesis_status: THESIS_STATUS.awaiting_supervisor_review
+      //   })
+      //   .sort({ created_at: -1 });
+
+      const viewThesis = await thesisRepo.model.findById(body.thesis_id);
 
       if (!viewThesis) {
         throw new ActionNotAllowedError(
           'No thesis awaiting lecturer review for this student'
+        );
+      }
+
+      if (
+        viewThesis.thesis_status !== THESIS_STATUS.awaiting_supervisor_review
+      ) {
+        throw new ActionNotAllowedError(
+          'This thesis is not awaiting your review'
         );
       }
 
@@ -896,16 +924,34 @@ export default class ThesisController extends BaseController {
       if (!student_details) {
         throw new NotFoundError('Student not found');
       }
-      const viewThesis = await thesisRepo.model
-        .findOne({
-          student: student_details.id,
-          methodology: req.user_data.id,
-          thesis_status: THESIS_STATUS.approved_by_supervisor
-        })
-        .sort({ created_at: -1 });
+      // const viewThesis = await thesisRepo.model
+      //   .findOne({
+      //     student: student_details.id,
+      //     methodology: req.user_data.id,
+      //     thesis_status: THESIS_STATUS.approved_by_supervisor
+      //   })
+      //   .sort({ created_at: -1 });
+
+      const viewThesis = await thesisRepo.model.findById(body.thesis_id);
 
       if (!viewThesis) {
         throw new BadRequestError("No Thesis for methodology's review");
+      }
+
+      // if (
+      //   viewThesis.thesis_status !== THESIS_STATUS.approved_by_supervisor &&
+      //   viewThesis.thesis_status !== THESIS_STATUS.awaiting_methodology_review
+      // ) {
+      //   throw new ActionNotAllowedError(
+      //     'This thesis is not awaiting your review'
+      //   );
+      // }
+      const validStatusesForReview = [
+        THESIS_STATUS.approved_by_supervisor,
+        THESIS_STATUS.awaiting_methodology_review
+      ];
+      if (!validStatusesForReview.includes(viewThesis.thesis_status)) {
+        throw new ActionNotAllowedError('This thesis is not ready for review');
       }
 
       const thesis_saving_id = generateUlid();
@@ -985,18 +1031,28 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      const viewThesis = await thesisRepo.model
-        .findOne({
-          student: student_details.id,
-          methodology: req.user_data.id,
-          thesis_status: THESIS_STATUS.approved_by_supervisor
-        })
-        .sort({ created_at: -1 });
+      // const viewThesis = await thesisRepo.model
+      //   .findOne({
+      //     student: student_details.id,
+      //     methodology: req.user_data.id,
+      //     thesis_status: THESIS_STATUS.approved_by_supervisor
+      //   })
+      //   .sort({ created_at: -1 });
+
+      const viewThesis = await thesisRepo.model.findById(body.thesis_id);
 
       if (!viewThesis) {
         throw new ActionNotAllowedError(
           'No thesis awaiting your methodology approval for this student'
         );
+      }
+
+      const validStatusesForReview = [
+        THESIS_STATUS.approved_by_supervisor,
+        THESIS_STATUS.awaiting_methodology_review
+      ];
+      if (!validStatusesForReview.includes(viewThesis.thesis_status)) {
+        throw new ActionNotAllowedError('This thesis is not ready for review');
       }
 
       const thesis_saving_id = generateUlid();
@@ -1075,18 +1131,27 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      const viewThesis = await thesisRepo.model
-        .findOne({
-          student: student_details.id,
-          methodology: req.user_data.id,
-          thesis_status: THESIS_STATUS.approved_by_supervisor
-        })
-        .sort({ created_at: -1 });
+      // const viewThesis = await thesisRepo.model
+      //   .findOne({
+      //     student: student_details.id,
+      //     methodology: req.user_data.id,
+      //     thesis_status: THESIS_STATUS.approved_by_supervisor
+      //   })
+      //   .sort({ created_at: -1 });
+      const viewThesis = await thesisRepo.model.findById(body.thesis_id);
 
       if (!viewThesis) {
         throw new ActionNotAllowedError(
           'No thesis awaiting methodology review for this student'
         );
+      }
+
+      const validStatusesForReview = [
+        THESIS_STATUS.approved_by_supervisor,
+        THESIS_STATUS.awaiting_methodology_review
+      ];
+      if (!validStatusesForReview.includes(viewThesis.thesis_status)) {
+        throw new ActionNotAllowedError('This thesis is not ready for review');
       }
 
       const thesis_saving_id = generateUlid();
