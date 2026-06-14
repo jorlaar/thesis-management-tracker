@@ -10,7 +10,7 @@ export interface ThesisDTO {
 export interface lecturerCommentUpload {
   // file_url?: string;
   file?: string;
-  comment: string;
+  comment?: string;
   student: string;
   thesis_id: string;
 }
@@ -18,7 +18,7 @@ export interface lecturerCommentUpload {
 export interface methodologyCommentUpload {
   // file_url?: string;
   file?: string;
-  comment: string;
+  comment?: string;
   student: string;
   thesis_id: string;
 }

@@ -1,6 +1,6 @@
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 
-dotenv.config();
+// dotenv.config();
 
 /**
  * Environment variables required for all environments (dev, testing, staging, production)
