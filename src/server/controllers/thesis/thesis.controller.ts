@@ -656,11 +656,6 @@ export default class ThesisController extends BaseController {
         );
       }
 
-      const student_details = await studentRepo.model.findById(body.student);
-
-      if (!student_details) {
-        throw new NotFoundError('Student not found');
-      }
       // const viewThesis = await thesisRepo.model
       //   .findOne({
       //     student: student_details.id,
@@ -688,6 +683,14 @@ export default class ThesisController extends BaseController {
       // const thesis_saving_id = generateUlid();
       // req.body.otherField;
 
+      const student_details = await studentRepo.model.findById(
+        viewThesis.student
+      );
+
+      if (!student_details) {
+        throw new NotFoundError('Student not found');
+      }
+
       // const fileUpload = await cloudinaryService.uploadFile(
       //   fieldname as string,
       //   env.cloudinary_bucket,
@@ -703,7 +706,7 @@ export default class ThesisController extends BaseController {
       // );
 
       const thesisDetails = await thesisRepo.create({
-        student: student_details._id,
+        student: viewThesis.student,
         ...(body?.comment && { comment: body.comment }),
         thesis_title: viewThesis.thesis_title,
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -1078,7 +1081,7 @@ export default class ThesisController extends BaseController {
       // );
 
       const thesisDetails = await thesisRepo.create({
-        student: student_details._id,
+        student: viewThesis.student,
         ...(body?.comment && { comment: body.comment }),
         thesis_title: viewThesis.thesis_title,
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -1131,12 +1134,6 @@ export default class ThesisController extends BaseController {
         );
       }
 
-      const student_details = await studentRepo.model.findById(body.student);
-
-      if (!student_details) {
-        throw new NotFoundError('Student not found');
-      }
-
       // const viewThesis = await thesisRepo.model
       //   .findOne({
       //     student: student_details.id,
@@ -1161,7 +1158,15 @@ export default class ThesisController extends BaseController {
       }
 
       // const thesis_saving_id = generateUlid();
-      req.body.otherField;
+      // req.body.otherField;
+
+      const student_details = await studentRepo.model.findById(
+        viewThesis.student
+      );
+
+      if (!student_details) {
+        throw new NotFoundError('Student not found');
+      }
 
       // const fileUpload = await cloudinaryService.uploadFile(
       //   fieldname as string,
@@ -1178,7 +1183,7 @@ export default class ThesisController extends BaseController {
       // );
 
       const thesisDetails = await thesisRepo.create({
-        student: student_details._id,
+        student: viewThesis.student,
         ...(body?.comment && { comment: body.comment }),
         thesis_title: viewThesis.thesis_title,
         thesis_tracking_id: viewThesis.thesis_tracking_id,
