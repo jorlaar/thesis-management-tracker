@@ -622,6 +622,7 @@ export default class ThesisController extends BaseController {
 
       this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
+      console.log(">>>>>> nerr", error)
       this.handleError(req, res, error);
     }
   }
