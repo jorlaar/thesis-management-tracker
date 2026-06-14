@@ -510,8 +510,8 @@ export default class ThesisController extends BaseController {
 
   @httpPut(
     '/lecturer/approve',
-    // upload,
-    validator(lecturerUploadCommentValidator)
+    upload,
+    fileAndBodyValidator(lecturerUploadCommentValidator)
   )
   async lecturerApproveThesis(
     @request() req: Request,
@@ -1002,7 +1002,7 @@ export default class ThesisController extends BaseController {
 
   @httpPut(
     '/methodology/approve',
-    // upload,
+    upload,
     fileAndBodyValidator(methodologyUploadCommentValidator)
   )
   async methodologyApproveThesis(
