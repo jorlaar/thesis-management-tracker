@@ -535,12 +535,6 @@ export default class ThesisController extends BaseController {
         );
       }
 
-      const student_details = await studentRepo.model.findById(body.student);
-
-      if (!student_details) {
-        throw new NotFoundError('Student not found');
-      }
-
       // const viewThesis = await thesisRepo.model
       //   .findOne({
       //     student: student_details.id,
@@ -562,6 +556,14 @@ export default class ThesisController extends BaseController {
         throw new ActionNotAllowedError(
           'This thesis is not awaiting your approval'
         );
+      }
+
+      const student_details = await studentRepo.model.findById(
+        viewThesis.student
+      );
+
+      if (!student_details) {
+        throw new NotFoundError('Student not found');
       }
 
       // const thesis_saving_id = generateUlid();
@@ -599,7 +601,7 @@ export default class ThesisController extends BaseController {
       // );
 
       const thesisDetails = await thesisRepo.create({
-        student: student_details._id,
+        student: viewThesis.student,
         ...(body?.comment && { comment: body.comment }),
         thesis_tracking_id: viewThesis.thesis_tracking_id,
         lecturer: req.user_data.id,
@@ -622,7 +624,7 @@ export default class ThesisController extends BaseController {
 
       this.handleSuccess(req, res, thesisDetails);
     } catch (error) {
-      console.log(">>>>>> nerr", error)
+      console.log('>>>>>> nerr', error);
       this.handleError(req, res, error);
     }
   }
@@ -1026,11 +1028,6 @@ export default class ThesisController extends BaseController {
           'Only a methodology can perform this operation'
         );
       }
-      const student_details = await studentRepo.model.findById(body.student);
-
-      if (!student_details) {
-        throw new NotFoundError('Student not found');
-      }
 
       // const viewThesis = await thesisRepo.model
       //   .findOne({
@@ -1054,6 +1051,14 @@ export default class ThesisController extends BaseController {
       ];
       if (!validStatusesForReview.includes(viewThesis.thesis_status)) {
         throw new ActionNotAllowedError('This thesis is not ready for review');
+      }
+
+      const student_details = await studentRepo.model.findById(
+        viewThesis.student
+      );
+
+      if (!student_details) {
+        throw new NotFoundError('Student not found');
       }
 
       // const thesis_saving_id = generateUlid();

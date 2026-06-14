@@ -11,7 +11,7 @@ export interface lecturerCommentUpload {
   // file_url?: string;
   file?: string;
   comment?: string;
-  student: string;
+  student?: string;
   thesis_id: string;
 }
 
@@ -19,7 +19,7 @@ export interface methodologyCommentUpload {
   // file_url?: string;
   file?: string;
   comment?: string;
-  student: string;
+  student?: string;
   thesis_id: string;
 }
 

@@ -105,10 +105,7 @@ export const lecturerUploadCommentValidator = joi.object({
       .messages({ 'any.only': 'Unsupported file type' })
   }), // it's optional for lecturer and methodology,
   comment: joi.string().trim(), // required drop down on the front end
-  student: joi.string().trim().required().messages({
-    'string.empty': 'student details is required',
-    'any.required': 'student details is required'
-  }),
+  student: joi.string().trim(),
   thesis_id: joi
     .string()
     .trim()
@@ -134,10 +131,7 @@ export const methodologyUploadCommentValidator = joi.object({
       .messages({ 'any.only': 'Unsupported file type' })
   }), // it's optional for methodology and lecturer
   comment: joi.string().trim(),
-  student: joi.string().trim().required().messages({
-    'string.empty': 'methodology details is required',
-    'any.required': 'methodology details is required'
-  }),
+  student: joi.string().trim(),
   thesis_id: joi
     .string()
     .trim()
