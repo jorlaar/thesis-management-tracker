@@ -510,8 +510,8 @@ export default class ThesisController extends BaseController {
 
   @httpPut(
     '/lecturer/approve',
-    upload,
-    fileAndBodyValidator(lecturerUploadCommentValidator)
+    // upload,
+    validator(lecturerUploadCommentValidator)
   )
   async lecturerApproveThesis(
     @request() req: Request,
@@ -637,15 +637,15 @@ export default class ThesisController extends BaseController {
     @requestBody() body: lecturerCommentUpload
   ) {
     try {
-      const { buffer, mimetype } = req.file;
+      // const { buffer, mimetype } = req.file;
 
-      if (
-        ![...ThesisSupportedMimeTypes].includes(
-          mimetype as ThesisSupportedMimeType
-        )
-      ) {
-        throw new ActionNotAllowedError('Unsupported content type');
-      }
+      // if (
+      //   ![...ThesisSupportedMimeTypes].includes(
+      //     mimetype as ThesisSupportedMimeType
+      //   )
+      // ) {
+      //   throw new ActionNotAllowedError('Unsupported content type');
+      // }
 
       if (req.user_data.type !== 'lecturer') {
         throw new ActionNotAllowedError(
@@ -682,8 +682,8 @@ export default class ThesisController extends BaseController {
         );
       }
 
-      const thesis_saving_id = generateUlid();
-      req.body.otherField;
+      // const thesis_saving_id = generateUlid();
+      // req.body.otherField;
 
       // const fileUpload = await cloudinaryService.uploadFile(
       //   fieldname as string,
@@ -692,12 +692,12 @@ export default class ThesisController extends BaseController {
       //   `${thesis_saving_id}`
       // );
 
-      const awsFileUpload = await s3Service.uploadFile(
-        env.thesis_bucket,
-        mimetype as ThesisSupportedMimeType,
-        buffer,
-        `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
-      );
+      // const awsFileUpload = await s3Service.uploadFile(
+      //   env.thesis_bucket,
+      //   mimetype as ThesisSupportedMimeType,
+      //   buffer,
+      //   `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
+      // );
 
       const thesisDetails = await thesisRepo.create({
         student: student_details._id,
@@ -707,7 +707,7 @@ export default class ThesisController extends BaseController {
         lecturer: req.user_data.id,
         thesis_status: THESIS_STATUS.rejected_by_supervisor,
         lecturer_review_time_stamp: new Date(),
-        file_url: awsFileUpload.Key
+        file_url: viewThesis.file_url
       });
 
       emailNodemailerService.sendThesisLecturerRejectionEmail(
@@ -1001,7 +1001,7 @@ export default class ThesisController extends BaseController {
 
   @httpPut(
     '/methodology/approve',
-    upload,
+    // upload,
     fileAndBodyValidator(methodologyUploadCommentValidator)
   )
   async methodologyApproveThesis(
@@ -1010,15 +1010,15 @@ export default class ThesisController extends BaseController {
     @requestBody() body: methodologyCommentUpload
   ) {
     try {
-      const { buffer, mimetype } = req.file;
+      // const { buffer, mimetype } = req.file;
 
-      if (
-        ![...ThesisSupportedMimeTypes].includes(
-          mimetype as ThesisSupportedMimeType
-        )
-      ) {
-        throw new ActionNotAllowedError('Unsupported content type');
-      }
+      // if (
+      //   ![...ThesisSupportedMimeTypes].includes(
+      //     mimetype as ThesisSupportedMimeType
+      //   )
+      // ) {
+      //   throw new ActionNotAllowedError('Unsupported content type');
+      // }
 
       if (req.user_data.type !== 'methodology') {
         throw new ActionNotAllowedError(
@@ -1055,7 +1055,7 @@ export default class ThesisController extends BaseController {
         throw new ActionNotAllowedError('This thesis is not ready for review');
       }
 
-      const thesis_saving_id = generateUlid();
+      // const thesis_saving_id = generateUlid();
 
       // const fileUpload = await cloudinaryService.uploadFile(
       //   fieldname as string,
@@ -1064,12 +1064,12 @@ export default class ThesisController extends BaseController {
       //   `${thesis_saving_id}`
       // );
 
-      const awsFileUpload = await s3Service.uploadFile(
-        env.thesis_bucket,
-        mimetype as ThesisSupportedMimeType,
-        buffer,
-        `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
-      );
+      // const awsFileUpload = await s3Service.uploadFile(
+      //   env.thesis_bucket,
+      //   mimetype as ThesisSupportedMimeType,
+      //   buffer,
+      //   `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
+      // );
 
       const thesisDetails = await thesisRepo.create({
         student: student_details._id,
@@ -1079,7 +1079,7 @@ export default class ThesisController extends BaseController {
         methodology: req.user_data.id,
         thesis_status: THESIS_STATUS.approved_by_methodology,
         methodology_review_time_stamp: new Date(),
-        file_url: awsFileUpload.Key
+        file_url: viewThesis.file_url
         // ...(body?.file_url && { file_url: body.file_url }) // Only include if usercomment exists
       });
 
@@ -1109,15 +1109,15 @@ export default class ThesisController extends BaseController {
     @requestBody() body: methodologyCommentUpload
   ) {
     try {
-      const { buffer, mimetype } = req.file;
+      // const { buffer, mimetype } = req.file;
 
-      if (
-        ![...ThesisSupportedMimeTypes].includes(
-          mimetype as ThesisSupportedMimeType
-        )
-      ) {
-        throw new ActionNotAllowedError('Unsupported content type');
-      }
+      // if (
+      //   ![...ThesisSupportedMimeTypes].includes(
+      //     mimetype as ThesisSupportedMimeType
+      //   )
+      // ) {
+      //   throw new ActionNotAllowedError('Unsupported content type');
+      // }
 
       if (req.user_data.type !== 'methodology') {
         throw new ActionNotAllowedError(
@@ -1154,7 +1154,7 @@ export default class ThesisController extends BaseController {
         throw new ActionNotAllowedError('This thesis is not ready for review');
       }
 
-      const thesis_saving_id = generateUlid();
+      // const thesis_saving_id = generateUlid();
       req.body.otherField;
 
       // const fileUpload = await cloudinaryService.uploadFile(
@@ -1164,12 +1164,12 @@ export default class ThesisController extends BaseController {
       //   `${thesis_saving_id}`
       // );
 
-      const awsFileUpload = await s3Service.uploadFile(
-        env.thesis_bucket,
-        mimetype as ThesisSupportedMimeType,
-        buffer,
-        `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
-      );
+      // const awsFileUpload = await s3Service.uploadFile(
+      //   env.thesis_bucket,
+      //   mimetype as ThesisSupportedMimeType,
+      //   buffer,
+      //   `${viewThesis.thesis_title.replace(/ /g, '_')}/${thesis_saving_id}`
+      // );
 
       const thesisDetails = await thesisRepo.create({
         student: student_details._id,
@@ -1179,7 +1179,7 @@ export default class ThesisController extends BaseController {
         methodology: req.user_data.id,
         thesis_status: THESIS_STATUS.rejected_by_methodology,
         methodology_review_time_stamp: new Date(),
-        file_url: awsFileUpload.Key
+        file_url: viewThesis.file_url
       });
 
       try {
