@@ -8,18 +8,30 @@ export interface ThesisDTO {
 }
 
 export interface lecturerCommentUpload {
-  // file_url?: string;
-  file?: string;
+  // file?: string;
   comment?: string;
-  student?: string;
+  // student?: string;
+  thesis_id: string;
+}
+
+export interface lecturerReviewUpload {
+  file: string;
+  comment?: string;
+  student: string;
   thesis_id: string;
 }
 
 export interface methodologyCommentUpload {
-  // file_url?: string;
-  file?: string;
+  // file?: string;
   comment?: string;
-  student?: string;
+  // student?: string;
+  thesis_id: string;
+}
+
+export interface methodologyReviewUpload {
+  file: string;
+  comment?: string;
+  student: string;
   thesis_id: string;
 }
 

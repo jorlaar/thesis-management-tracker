@@ -15,13 +15,17 @@ import {
 } from 'inversify-express-utils';
 import {
   lecturerUploadCommentValidator,
+  lecturerUploadReviewValidator,
   methodologyUploadCommentValidator,
+  methodologyUploadReviewValidator,
   PaginationValidator,
   studentUploadThesisValidator
 } from './thesis.validator';
 import {
   lecturerCommentUpload,
+  lecturerReviewUpload,
   methodologyCommentUpload,
+  methodologyReviewUpload,
   PaginationQueryDTO,
   ThesisDTO,
   ThesisQuery
@@ -410,12 +414,12 @@ export default class ThesisController extends BaseController {
   @httpPut(
     '/lecturer/review',
     upload,
-    fileAndBodyValidator(lecturerUploadCommentValidator)
+    fileAndBodyValidator(lecturerUploadReviewValidator)
   )
   async lecturerUploadThesisComment(
     @request() req: Request,
     @response() res: Response,
-    @requestBody() body: lecturerCommentUpload
+    @requestBody() body: lecturerReviewUpload
   ) {
     try {
       const { buffer, mimetype } = req.file;
@@ -901,12 +905,12 @@ export default class ThesisController extends BaseController {
   @httpPut(
     '/methodology/review',
     upload,
-    fileAndBodyValidator(methodologyUploadCommentValidator)
+    fileAndBodyValidator(methodologyUploadReviewValidator)
   )
   async methodologyUploadThesisComment(
     @request() req: Request,
     @response() res: Response,
-    @requestBody() body: methodologyCommentUpload
+    @requestBody() body: methodologyReviewUpload
   ) {
     try {
       const { buffer, mimetype } = req.file;

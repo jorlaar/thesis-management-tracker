@@ -93,19 +93,6 @@ const ulidRegex = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 // });
 
 export const lecturerUploadCommentValidator = joi.object({
-  //file_url: joi.string().uri(), // Ensure it's a valid URL
-  // .regex(/\.(docx?|pdf)$/i) // Match .doc, .docx, or .pdf (case-insensitive)
-  // .message('File must be a Word (.doc/.docx) or PDF (.pdf)'),
-  file: joi.object({
-    fieldname: joi.string().required(), // e.g. "thesis"
-    mimetype: joi
-      .string()
-      .valid(...ThesisSupportedMimeTypes) // your allowed MIME types the whitelist of MIME types
-      .required()
-      .messages({ 'any.only': 'Unsupported file type' })
-  }), // it's optional for lecturer and methodology,
-  comment: joi.string().trim(), // required drop down on the front end
-  student: joi.string().trim(),
   thesis_id: joi
     .string()
     .trim()
@@ -119,19 +106,6 @@ export const lecturerUploadCommentValidator = joi.object({
 });
 
 export const methodologyUploadCommentValidator = joi.object({
-  // file_url: joi.string().uri(), // Ensure it's a valid URL
-  // .regex(/\.(docx?|pdf)$/i) // Match .doc, .docx, or .pdf (case-insensitive)
-  // .message('File must be a Word (.doc/.docx) or PDF (.pdf)'),
-  file: joi.object({
-    fieldname: joi.string().required(), // e.g. "thesis"
-    mimetype: joi
-      .string()
-      .valid(...ThesisSupportedMimeTypes) // your allowed MIME types the whitelist of MIME types
-      .required()
-      .messages({ 'any.only': 'Unsupported file type' })
-  }), // it's optional for methodology and lecturer
-  comment: joi.string().trim(),
-  student: joi.string().trim(),
   thesis_id: joi
     .string()
     .trim()
@@ -298,3 +272,56 @@ export const PaginationValidator = joi
     per_page: 10,
     archived: false
   });
+
+export const lecturerUploadReviewValidator = joi.object({
+  //file_url: joi.string().uri(), // Ensure it's a valid URL
+  // .regex(/\.(docx?|pdf)$/i) // Match .doc, .docx, or .pdf (case-insensitive)
+  // .message('File must be a Word (.doc/.docx) or PDF (.pdf)'),
+  file: joi.object({
+    fieldname: joi.string().required(), // e.g. "thesis"
+    mimetype: joi
+      .string()
+      .valid(...ThesisSupportedMimeTypes) // your allowed MIME types the whitelist of MIME types
+      .required()
+      .messages({ 'any.only': 'Unsupported file type' })
+  }), // it's optional for lecturer and methodology,
+  comment: joi.string().trim(), // required drop down on the front end
+  student: joi.string().trim().required().messages({
+    'string.empty': 'student id is required'
+  }),
+  thesis_id: joi
+    .string()
+    .trim()
+    .required()
+    .uuid({
+      version: ['uuidv4', 'uuidv7'] // Accepts both uuidv4 and uuidv7 formats
+    })
+    .messages({
+      'string.pattern': 'thesis id should be a valid uuid'
+    })
+});
+
+export const methodologyUploadReviewValidator = joi.object({
+  file: joi.object({
+    fieldname: joi.string().required(), // e.g. "thesis"
+    mimetype: joi
+      .string()
+      .valid(...ThesisSupportedMimeTypes) // your allowed MIME types the whitelist of MIME types
+      .required()
+      .messages({ 'any.only': 'Unsupported file type' })
+  }), // it's optional for methodology and lecturer
+  comment: joi.string().trim(),
+  student: joi.string().trim().required().messages({
+    'string.empty': 'student id is required'
+  }),
+  thesis_id: joi
+    .string()
+    .trim()
+    .required()
+    .uuid({
+      version: ['uuidv4', 'uuidv7'] // Accepts both uuidv4 and uuidv7 formats
+    })
+    .messages({
+      'string.pattern': 'thesis id should be a valid uuid'
+    })
+});
