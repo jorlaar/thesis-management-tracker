@@ -164,6 +164,7 @@ export default class AdminController extends BaseController {
       let viewThesis: QueryResult<IThesis>;
       console.log('adminGetAllThesis conditions >>>', conditions);
       if (search) {
+        // search base method still needs refinement
         viewThesis = await thesisRepo.searchList({
           conditions,
           search,

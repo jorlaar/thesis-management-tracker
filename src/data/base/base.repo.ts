@@ -117,6 +117,7 @@ export class BaseRepository<T extends Document> implements Repository<T> {
         deleted_at: undefined
       })
       .select(query.projections)
+      .populate(query.populate)
       .sort(sort)
       .exec();
   }

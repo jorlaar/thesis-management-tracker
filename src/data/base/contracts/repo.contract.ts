@@ -24,6 +24,15 @@ export interface QueryResult<T> {
   total_documents?: number;
 }
 
+export interface QueryResult<T> {
+  page: number;
+  per_page: number;
+  sorted_by: Sort;
+  result: T[];
+  total_pages?: number;
+  total_documents?: number;
+}
+
 /**
  * A repository query that specifies pagination options
  */
@@ -45,6 +54,7 @@ export interface Query {
   conditions: any;
   projections?: any;
   sort?: Sort;
+  populate?: string[];
 }
 
 export interface Repository<T> {

@@ -52,20 +52,43 @@ export class BaseController {
    * @param res Express response
    * @param writeStream Stream data
    */
+  // async handleFileResponse(
+  //   req: Request,
+  //   res: Response,
+  //   writeStream: (res: Response) => Promise<void>
+  // ) {
+  //   try {
+  //     // Response is streaming, wait for finish to log metrics
+  //     res.on('finish', () => {
+  //       logger.logAPIResponse(req, res);
+  //       if (res.getHeader('X-Response-Time')) {
+  //         MetricsService.record(req, res);
+  //       }
+  //     });
+
+  //     await writeStream(res);
+  //   } catch (error) {
+  //     this.handleError(req, res, error);
+  //   }
+  // }
+
   async handleFileResponse(
     req: Request,
     res: Response,
     writeStream: (res: Response) => Promise<void>
   ) {
     try {
-      await writeStream(res);
-      // Response is streaming, wait for finish to log metrics
+      // Attach listener early (optional – it will fire after res.end())
       res.on('finish', () => {
         logger.logAPIResponse(req, res);
         if (res.getHeader('X-Response-Time')) {
           MetricsService.record(req, res);
         }
       });
+
+      await writeStream(res);
+      // At this point the response is already sent (or streaming).
+      // The 'finish' event will fire when the underlying socket finishes.
     } catch (error) {
       this.handleError(req, res, error);
     }

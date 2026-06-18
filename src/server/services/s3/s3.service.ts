@@ -138,6 +138,13 @@ class S3Storage {
     }
   }
 
+  /**
+   * self‑documenting, and future‑proof
+   * @param bucketName
+   * @param filePath
+   * @param expirationInSeconds
+   * @returns
+   */
   async getDownloadSignedUrl(
     bucketName: string,
     filePath: string,
@@ -163,6 +170,13 @@ class S3Storage {
     }
   }
 
+  /**
+   * not future‑proof will be depreciated
+   * @param bucketName
+   * @param filePath
+   * @param expirationInSeconds
+   * @returns
+   */
   getDownloadSignedUrlSync(
     bucketName: string,
     filePath: string,
@@ -181,7 +195,8 @@ class S3Storage {
     } catch (err) {
       const errorMessage = `An error occurred while generating signed url for file ${filePath} from s3`;
       logger.error(err, {
-        info: errorMessage
+        info: errorMessage,
+        bucketName
       });
       throw new InternalServerError(errorMessage);
     }

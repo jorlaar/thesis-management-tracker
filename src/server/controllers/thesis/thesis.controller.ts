@@ -45,7 +45,10 @@ import {
   ThesisSupportedMimeTypes
 } from '@app/server/services/s3/s3.type';
 // import cloudinaryService from '@app/server/services/cloudinary/cloudinary.service';
-import { generateCsvFile } from '@app/server/factories/export-csv';
+import {
+  // generateCsvFile,
+  generateCsvStream
+} from '@app/server/factories/export-csv';
 import env from '@app/common/config/env';
 import logger from '@app/common/services/logger';
 import s3Service from '@app/server/services/s3/s3.service';
@@ -462,13 +465,26 @@ export default class ThesisController extends BaseController {
       if (
         viewThesis.thesis_status !== THESIS_STATUS.awaiting_supervisor_review
       ) {
+        throw new ActionNotAllowedError('This thesis is not ready for review');
+      }
+
+      const lecturer_details = await studentRepo.model.findById(
+        req.user_data.id
+      );
+
+      const getApprovalStatus = await thesisRepo.model.findOne({
+        thesis_tracking_id: viewThesis.thesis_tracking_id,
+        thesis_status: THESIS_STATUS.approved_by_supervisor
+      });
+
+      if (getApprovalStatus) {
         throw new ActionNotAllowedError(
-          'This thesis is not awaiting your review'
+          `This thesis has already been approved by ${lecturer_details.first_name} ${lecturer_details.last_name}`
         );
       }
 
       const thesis_saving_id = generateUlid();
-      req.body.otherField;
+      // req.body.otherField;
 
       // const fileUpload = await cloudinaryService.uploadFile(
       //   fieldname as string,
@@ -568,6 +584,21 @@ export default class ThesisController extends BaseController {
 
       if (!student_details) {
         throw new NotFoundError('Student not found');
+      }
+
+      const lecturer_details = await studentRepo.model.findById(
+        req.user_data.id
+      );
+
+      const getApprovalStatus = await thesisRepo.model.findOne({
+        thesis_tracking_id: viewThesis.thesis_tracking_id,
+        thesis_status: THESIS_STATUS.approved_by_supervisor
+      });
+
+      if (getApprovalStatus) {
+        throw new ActionNotAllowedError(
+          `This thesis has already been approved by ${lecturer_details.first_name} ${lecturer_details.last_name}`
+        );
       }
 
       // const thesis_saving_id = generateUlid();
@@ -679,9 +710,7 @@ export default class ThesisController extends BaseController {
       if (
         viewThesis.thesis_status !== THESIS_STATUS.awaiting_supervisor_review
       ) {
-        throw new ActionNotAllowedError(
-          'This thesis is not awaiting your review'
-        );
+        throw new ActionNotAllowedError('This thesis is not ready for review');
       }
 
       // const thesis_saving_id = generateUlid();
@@ -694,6 +723,28 @@ export default class ThesisController extends BaseController {
       if (!student_details) {
         throw new NotFoundError('Student not found');
       }
+
+      const lecturer_details = await studentRepo.model.findById(
+        req.user_data.id
+      );
+
+      const getApprovalStatus = await thesisRepo.model.findOne({
+        thesis_tracking_id: viewThesis.thesis_tracking_id,
+        thesis_status: THESIS_STATUS.approved_by_supervisor
+      });
+
+      if (getApprovalStatus) {
+        throw new ActionNotAllowedError(
+          `This thesis has already been approved by ${lecturer_details.first_name} ${lecturer_details.last_name}`
+        );
+      }
+
+      // not needed yet this validation was to handle cases of other status
+      // const getSetOfStatusForReview = await thesisRepo.model.find({
+      //    thesis_tracking_id: viewThesis.thesis_tracking_id
+      // });
+
+      // getSetOfStatusForReview.find((each) =>  each.thesis_status === THESIS_STATUS. )
 
       // const fileUpload = await cloudinaryService.uploadFile(
       //   fieldname as string,
@@ -953,7 +1004,7 @@ export default class ThesisController extends BaseController {
       //   viewThesis.thesis_status !== THESIS_STATUS.awaiting_methodology_review
       // ) {
       //   throw new ActionNotAllowedError(
-      //     'This thesis is not awaiting your review'
+      //     'This thesis is not ready for review'
       //   );
       // }
       const validStatusesForReview = [
@@ -962,6 +1013,21 @@ export default class ThesisController extends BaseController {
       ];
       if (!validStatusesForReview.includes(viewThesis.thesis_status)) {
         throw new ActionNotAllowedError('This thesis is not ready for review');
+      }
+
+      const methodology_details = await studentRepo.model.findById(
+        req.user_data.id
+      );
+
+      const getApprovalStatus = await thesisRepo.model.findOne({
+        thesis_tracking_id: viewThesis.thesis_tracking_id,
+        thesis_status: THESIS_STATUS.approved_by_methodology
+      });
+
+      if (getApprovalStatus) {
+        throw new ActionNotAllowedError(
+          `This thesis has already been approved by ${methodology_details.first_name} ${methodology_details.last_name}`
+        );
       }
 
       const thesis_saving_id = generateUlid();
@@ -1068,6 +1134,21 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
+      const methodology_details = await studentRepo.model.findById(
+        req.user_data.id
+      );
+
+      const getApprovalStatus = await thesisRepo.model.findOne({
+        thesis_tracking_id: viewThesis.thesis_tracking_id,
+        thesis_status: THESIS_STATUS.approved_by_methodology
+      });
+
+      if (getApprovalStatus) {
+        throw new ActionNotAllowedError(
+          `This thesis has already been approved by ${methodology_details.first_name} ${methodology_details.last_name}`
+        );
+      }
+
       // const thesis_saving_id = generateUlid();
 
       // const fileUpload = await cloudinaryService.uploadFile(
@@ -1172,6 +1253,21 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
+      const methodology_details = await studentRepo.model.findById(
+        req.user_data.id
+      );
+
+      const getApprovalStatus = await thesisRepo.model.findOne({
+        thesis_tracking_id: viewThesis.thesis_tracking_id,
+        thesis_status: THESIS_STATUS.approved_by_methodology
+      });
+
+      if (getApprovalStatus) {
+        throw new ActionNotAllowedError(
+          `This thesis has already been approved by ${methodology_details.first_name} ${methodology_details.last_name}`
+        );
+      }
+
       // const fileUpload = await cloudinaryService.uploadFile(
       //   fieldname as string,
       //   env.cloudinary_bucket,
@@ -1216,34 +1312,114 @@ export default class ThesisController extends BaseController {
     }
   }
 
+  @httpGet('/download/:thesis_id')
+  async downloadThesis(
+    @request() req: Request,
+    @response() res: Response,
+    @requestParam('thesis_id') thesis_id: string
+  ) {
+    try {
+      if (
+        req.user_data.type !== 'lecturer' &&
+        req.user_data.type !== 'methodology'
+      ) {
+        throw new ActionNotAllowedError(
+          'Sorry!, You cannot perform this operation'
+        );
+      }
+
+      const viewThesis = await thesisRepo.byID(thesis_id);
+
+      const awsFileDownload = await s3Service.getDownloadSignedUrl(
+        env.thesis_bucket,
+        viewThesis.file_url
+      );
+
+      this.handleSuccess(req, res, awsFileDownload);
+    } catch (err) {
+      this.handleError(req, res, err);
+    }
+  }
+
   @httpGet('/csv-export')
   async exportCsvDocs(
     @request() req: Request,
     @response() res: Response,
     @queryParam() query: PaginationQueryDTO
   ) {
+    let {
+      tracking_id,
+      start_date,
+      end_date,
+      student,
+      lecturer,
+      methodology,
+      search
+    } = query;
+
+    const conditions: any = {};
+    if (tracking_id) conditions.tracking_id = tracking_id; // ULID string
+    if (student) conditions.student = student; // UUIDv7 string
+    if (lecturer) conditions.lecturer = lecturer; // UUIDv7 string
+    if (methodology) conditions.methodology = methodology; // UUIDv7 string
+
+    if (start_date || end_date) {
+      conditions.created_at = {};
+      if (start_date) conditions.created_at.$gte = new Date(start_date);
+      if (end_date) {
+        const end = new Date(end_date);
+        end.setHours(23, 59, 59, 999); // inclusive end date
+        conditions.created_at.$lte = end;
+      }
+    }
+
     if (req.user_data.type !== 'admin') {
       throw new ActionNotAllowedError(
         'Only an Admin can perform this operation'
       );
     }
-    this.handleFileResponse(req, res, async (res) => {
-      const { page, per_page } = query;
-
-      const viewThesis = await thesisRepo.list({
-        conditions: {},
-        sort: { created_at: -1 },
-        populate: ['student', 'lecturer', 'methodology'],
-        page,
-        per_page,
-        return_total_pages: true
+    let thesisList: any;
+      // async handler so errors are caught
+      await this.handleFileResponse(req, res, async (res) => {
+        if (search) {
+          thesisList = await thesisRepo.searchList({
+            conditions,
+            search,
+            sort: { created_at: -1 },
+            populate: ['student', 'lecturer', 'methodology']
+          });
+        } else {
+          thesisList = await thesisRepo.all({
+            conditions,
+            sort: { created_at: -1 },
+            populate: ['student', 'lecturer', 'methodology']
+          });
+        }
+        await generateCsvStream(res, thesisList);
       });
-      // console.log('>>>>>>>>>> viewThesis', viewThesis);
-
-      // const csvFile =
-      await generateCsvFile(res, viewThesis.result);
-
-      // console.log('>>>>>>>>>> csvFile', csvFile);
-    });
   }
+  // async exportCsvDocs(
+  //   @request() req: Request,
+  //   @response() res: Response,
+  //   @queryParam() query: PaginationQueryDTO
+  // ) {
+  //   if (req.user_data.type !== 'admin') {
+  //     throw new ActionNotAllowedError(
+  //       'Only an Admin can perform this operation'
+  //     );
+  //   }
+  //   this.handleFileResponse(req, res, async (res) => {
+  //     const viewThesis = await thesisRepo.all({
+  //       conditions: {},
+  //       sort: { created_at: -1 }
+  //       populate: ['student', 'lecturer', 'methodology']
+  //     });
+  //     // console.log('>>>>>>>>>> viewThesis', viewThesis);
+
+  //     // const csvFile =
+  //     await generateCsvFile(res, viewThesis);
+
+  //     // console.log('>>>>>>>>>> csvFile', csvFile);
+  //   });
+  // }
 }
