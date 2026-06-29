@@ -46,6 +46,9 @@ import {
   PasswordRateLimiterService
 } from '@app/server/services';
 import { publisher } from '@random-guys/eventbus';
+import emailNodemailerService from '@app/server/services/email/email.nodemailer.service';
+import { userType } from '@app/server/constants';
+// import logger from '@app/common/services/logger';
 // import { HashingService } from '@app/server/utils/hashing';
 
 @controller('/auth/lecturer')
@@ -335,11 +338,15 @@ export default class LecturerAuthController extends BaseController {
     @requestBody() body: ForgotPasswordDTO
   ) {
     try {
+      await OTPRateLimiterService.limit(req.ip);
+
       const lecturer = await lecturerRepo.model.findOne({ email: body.email });
 
       if (!lecturer) {
-        await OTPRateLimiterService.limit(lecturer.id);
-        throw new NotFoundError('Lecturer not found');
+        // Still return success to prevent email enumeration attacks
+        return this.handleSuccess(req, res, {
+          message: 'If the email exists, a password reset OTP has been sent'
+        });
       }
 
       // generate random otp and send to email and save the otp in redis with an expiry time of 5 minutes and use the otp to verify the reset password request
@@ -347,7 +354,7 @@ export default class LecturerAuthController extends BaseController {
         100000 + Math.random() * 900000
       ).toString();
 
-      // save the hashed token in redis with an expiry time of 30 minutes
+      // todo save the hashed token in redis with an expiry time of 30 minutes
       await redis.set(`password_reset_otp:${lecturer.id}`, forgetPasswordOTP, {
         EX: 1800
       });
@@ -358,16 +365,16 @@ export default class LecturerAuthController extends BaseController {
         otp: forgetPasswordOTP
       });
 
-      // Send the reset token to the lecturer's email
-      // emailNodemailerService.sendDForgotPasswordResetEmailV2(
-      //   lecturer.email,
-      //   lecturer.first_name,
-      //   forgetPasswordOTP
-      // );
+      emailNodemailerService.sendDForgotPasswordResetEmailV2(
+        lecturer.email,
+        lecturer.first_name,
+        forgetPasswordOTP,
+        userType.lecturer
+      );
 
       // for use in cases where you want to limit after certain api calls as it's a public api
       await OTPRateLimiterService.limit(lecturer.id);
-      await OTPRateLimiterService.limit(req.ip);
+      // await OTPRateLimiterService.limit(req.ip);
 
       this.handleSuccess(req, res, {
         message: 'Forgot Password OTP sent to your email successfully'
@@ -384,10 +391,14 @@ export default class LecturerAuthController extends BaseController {
     @requestBody() body: ResetPasswordDTOV2
   ) {
     try {
+      await OTPRateLimiterService.limit(req.ip);
+
       const lecturer = await lecturerRepo.model.findOne({ email: body.email });
+
       if (!lecturer) {
-        await OTPRateLimiterService.limit(lecturer.id);
-        throw new NotFoundError('Lecturer not found');
+        return this.handleSuccess(req, res, {
+          message: 'Please check the details passed and try again'
+        });
       }
 
       let cachedOTP = await redis.get(`password_reset_otp:${lecturer.id}`);
@@ -405,7 +416,7 @@ export default class LecturerAuthController extends BaseController {
       await lecturer.updatePassword(body.password);
 
       // still limit it as this is a public endpoint and it help to reduce malicous users
-      await OTPRateLimiterService.limit(req.ip);
+      // await OTPRateLimiterService.limit(req.ip);
       await OTPRateLimiterService.limit(lecturer.id);
       await redis.del(`password_reset_otp:${lecturer.id}`);
 

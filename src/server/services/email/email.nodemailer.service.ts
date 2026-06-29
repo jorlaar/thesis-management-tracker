@@ -3,19 +3,31 @@ import { Mail } from '@anjorlar/email';
 import env from '@app/common/config/env';
 import logger from '@app/common/services/logger';
 import { URL } from 'url';
+import * as dns from 'dns';
+
+// Force IPv4 for all connections
+dns.setDefaultResultOrder('ipv4first');
 
 class nodeMailerEmailService {
   private transporter: nodeMailer.Transporter;
   constructor() {
     this.transporter = nodeMailer.createTransport({
-      service: 'gmail',
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT) || 587,
+      secure: false, // Use TLS
       auth: {
         user: env.email_user,
         pass: env.email_password
+      },
+      family: 4, // Force IPv4
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+      tls: {
+        rejectUnauthorized: process.env.NODE_ENV === 'production',
+        minVersion: 'TLSv1.2'
       }
     });
-
-    logger.message('Gmail email service initialized');
   }
 
   private async sendEmail(
@@ -268,20 +280,22 @@ class nodeMailerEmailService {
   sendDForgotPasswordResetEmailV2(
     recipient: string,
     name: string,
-    otp: string
+    otp: string,
+    type: string
   ) {
     console.log(
       'Password otp generated successfully email',
       otp,
       recipient,
-      name
+      name,
+      type
     );
 
     const subject = 'Your Password Reset Code';
     const text =
       `Hello ${name},\n\n` +
-      `We received a request to reset your password.\n\n` +
-      `Your reset code is: ${otp}\n\n` +
+      `We received a request to reset your ${type} account password.\n\n` +
+      `Your reset code for the ${type} account is: ${otp}\n\n` +
       `Please enter this code on the password reset page to continue.\n\n` +
       `If you didn't request this, you can safely ignore this email.\n\n` +
       `Best regards,\nThe Thesis Management Team`;

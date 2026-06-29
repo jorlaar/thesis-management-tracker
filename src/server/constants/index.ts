@@ -27,3 +27,10 @@ export const UpdateWebhookValidator = joi.object({
   webhook: trimmedRequiredString.uri({ scheme: 'https' }),
   webhook_secret: joi.string().trim().min(8).max(30).required()
 });
+
+export enum userType {
+  admim = 'admin',
+  student = 'student',
+  lecturer = 'lecturer',
+  methodology = 'methodology'
+}

@@ -47,6 +47,7 @@ import {
   PasswordRateLimiterService
 } from '@app/server/services';
 import { redis } from '@app/common/services/redis';
+import { userType } from '@app/server/constants';
 // import { HashingService } from '@app/server/utils/hashing';
 
 @controller('/auth/methodology')
@@ -322,13 +323,17 @@ export default class MethodologyAuthController extends BaseController {
     @requestBody() body: ForgotPasswordDTO
   ) {
     try {
+      await OTPRateLimiterService.limit(req.ip);
+
       const methodology = await methodologyRepo.model.findOne({
         email: body.email
       });
 
       if (!methodology) {
-        await OTPRateLimiterService.limit(methodology.id);
-        throw new NotFoundError('Methodology not found');
+        // Still return success to prevent email enumeration attacks
+        return this.handleSuccess(req, res, {
+          message: 'If the email exists, a password reset OTP has been sent'
+        });
       }
 
       // generate random otp and send to email and save the otp in redis with an expiry time of 5 minutes and use the otp to verify the reset password request
@@ -349,12 +354,13 @@ export default class MethodologyAuthController extends BaseController {
       emailNodemailerService.sendDForgotPasswordResetEmailV2(
         methodology.email,
         methodology.first_name,
-        forgetPasswordOTP
+        forgetPasswordOTP,
+        userType.methodology
       );
 
       // for use in cases where you want to limit after certain api calls as it's a public api
       await OTPRateLimiterService.limit(methodology.id);
-      await OTPRateLimiterService.limit(req.ip);
+      // await OTPRateLimiterService.limit(req.ip);
 
       this.handleSuccess(req, res, {
         message: 'Forgot Password OTP sent to your email successfully'
@@ -371,13 +377,16 @@ export default class MethodologyAuthController extends BaseController {
     @requestBody() body: ResetPasswordDTOV2
   ) {
     try {
+      await OTPRateLimiterService.limit(req.ip);
+
       const methodology = await methodologyRepo.model.findOne({
         email: body.email
       });
 
       if (!methodology) {
-        await OTPRateLimiterService.limit(methodology.id);
-        throw new NotFoundError('Methodology not found');
+           return this.handleSuccess(req, res, {
+          message: 'Please check the details passed and try again'
+        });
       }
 
       let cachedOTP = await redis.get(`password_reset_otp:${methodology.id}`);
@@ -395,7 +404,7 @@ export default class MethodologyAuthController extends BaseController {
       await methodology.updatePassword(body.password);
 
       // still limit it as this is a public endpoint and it help to reduce malicous users
-      await OTPRateLimiterService.limit(req.ip);
+      // await OTPRateLimiterService.limit(req.ip);
       await OTPRateLimiterService.limit(methodology.id);
       await redis.del(`password_reset_otp:${methodology.id}`);
 

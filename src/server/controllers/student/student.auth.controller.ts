@@ -43,6 +43,7 @@ import {
   OTPRateLimiterService,
   PasswordRateLimiterService
 } from '@app/server/services';
+import { userType } from '@app/server/constants';
 
 @controller('/auth/student')
 export default class StudentAuthController extends BaseController {
@@ -325,11 +326,15 @@ export default class StudentAuthController extends BaseController {
     @requestBody() body: ForgotPasswordDTO
   ) {
     try {
+      await OTPRateLimiterService.limit(req.ip);
+
       const student = await studentRepo.model.findOne({ email: body.email });
 
       if (!student) {
-        await OTPRateLimiterService.limit(student.id);
-        throw new NotFoundError('Student not found');
+        // Still return success to prevent email enumeration attacks
+        return this.handleSuccess(req, res, {
+          message: 'If the email exists, a password reset OTP has been sent'
+        });
       }
 
       // generate random otp and send to email and save the otp in redis with an expiry time of 5 minutes and use the otp to verify the reset password request
@@ -346,11 +351,12 @@ export default class StudentAuthController extends BaseController {
       nodeMailerEmailService.sendDForgotPasswordResetEmailV2(
         student.email,
         student.first_name,
-        forgetPasswordOTP
+        forgetPasswordOTP,
+        userType.student
       );
       // for use in cases where you want to limit after certain api calls as it's a public api
       await OTPRateLimiterService.limit(student.id);
-      await OTPRateLimiterService.limit(req.ip);
+      // await OTPRateLimiterService.limit(req.ip);
 
       this.handleSuccess(req, res, {
         message: 'Forgot Password OTP sent to your email successfully'
@@ -367,10 +373,14 @@ export default class StudentAuthController extends BaseController {
     @requestBody() body: ResetPasswordDTOV2
   ) {
     try {
+      await OTPRateLimiterService.limit(req.ip);
+
       const student = await studentRepo.model.findOne({ email: body.email });
+
       if (!student) {
-        await OTPRateLimiterService.limit(student.id);
-        throw new NotFoundError('Student not found');
+        return this.handleSuccess(req, res, {
+          message: 'Please check the details passed and try again'
+        });
       }
 
       let cachedOTP = await redis.get(`password_reset_otp:${student.id}`);
@@ -388,7 +398,7 @@ export default class StudentAuthController extends BaseController {
       await student.updatePassword(body.password);
 
       // still limit it as this is a public endpoint and it help to reduce malicous users
-      await OTPRateLimiterService.limit(req.ip);
+      // await OTPRateLimiterService.limit(req.ip);
       await OTPRateLimiterService.limit(student.id);
       await redis.del(`password_reset_otp:${student.id}`);
 

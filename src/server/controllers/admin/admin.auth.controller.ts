@@ -56,6 +56,7 @@ import { ApproveDTO } from '../lecturer/lecturer.dto';
 import lecturerRepo from '@app/data/lecturer/lecturer.repo';
 import methodologyRepo from '@app/data/methodology/methodology.repo';
 import studentRepo from '@app/data/student/student.repo';
+import { userType } from '@app/server/constants';
 
 @controller('/auth/admin')
 export default class AdminAuthController extends BaseController {
@@ -575,11 +576,14 @@ export default class AdminAuthController extends BaseController {
     @requestBody() body: ForgotPasswordDTO
   ) {
     try {
+      await OTPRateLimiterService.limit(req.ip);
+
       const admin = await adminRepo.model.findOne({ email: body.email });
 
       if (!admin) {
-        await OTPRateLimiterService.limit(admin.id);
-        throw new NotFoundError('Admin not found');
+        return this.handleSuccess(req, res, {
+          message: 'If the email exists, a password reset OTP has been sent'
+        });
       }
 
       // generate random otp and send to email and save the otp in redis with an expiry time of 5 minutes and use the otp to verify the reset password request
@@ -596,12 +600,13 @@ export default class AdminAuthController extends BaseController {
       emailNodemailerService.sendDForgotPasswordResetEmailV2(
         admin.email,
         admin.first_name,
-        forgetPasswordOTP
+        forgetPasswordOTP,
+        userType.admim
       );
 
       // for use in cases where you want to limit after certain api calls as it's a public api
       await OTPRateLimiterService.limit(admin.id);
-      await OTPRateLimiterService.limit(req.ip);
+      // await OTPRateLimiterService.limit(req.ip);
 
       this.handleSuccess(req, res, {
         message: 'Forgot Password OTP sent to your email successfully'
@@ -618,10 +623,13 @@ export default class AdminAuthController extends BaseController {
     @requestBody() body: ResetPasswordDTOV2
   ) {
     try {
+      await OTPRateLimiterService.limit(req.ip);
+
       const admin = await adminRepo.model.findOne({ email: body.email });
       if (!admin) {
-        await OTPRateLimiterService.limit(admin.id);
-        throw new NotFoundError('Admin not found');
+        return this.handleSuccess(req, res, {
+          message: 'Please check the details passed and try again'
+        });
       }
 
       let cachedOTP = await redis.get(`password_reset_otp:${admin.id}`);
@@ -639,7 +647,7 @@ export default class AdminAuthController extends BaseController {
       await admin.updatePassword(body.password);
 
       // still limit it as this is a public endpoint and it help to reduce malicous users
-      await OTPRateLimiterService.limit(req.ip);
+      // await OTPRateLimiterService.limit(req.ip);
       await OTPRateLimiterService.limit(admin.id);
       await redis.del(`password_reset_otp:${admin.id}`);
 
