@@ -468,9 +468,13 @@ export default class ThesisController extends BaseController {
         throw new ActionNotAllowedError('This thesis is not ready for review');
       }
 
-      const lecturer_details = await studentRepo.model.findById(
+      const lecturer_details = await lecturerRepo.model.findById(
         req.user_data.id
       );
+
+      if (!lecturer_details) {
+        throw new NotFoundError('Lecturer not found');
+      }
 
       const getApprovalStatus = await thesisRepo.model.findOne({
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -586,9 +590,13 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      const lecturer_details = await studentRepo.model.findById(
+      const lecturer_details = await lecturerRepo.model.findById(
         req.user_data.id
       );
+
+      if (!lecturer_details) {
+        throw new NotFoundError('Lecturer not found');
+      }
 
       const getApprovalStatus = await thesisRepo.model.findOne({
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -649,9 +657,9 @@ export default class ThesisController extends BaseController {
 
       try {
         emailNodemailerService.sendLecturerThesisApprovalEmail(
-          student_details.email,
-          student_details.first_name,
-          `${req.user_data.first_name} ${req.user_data.last_name}`
+          student_details?.email,
+          student_details?.first_name,
+          `${req.user_data?.first_name} ${req.user_data?.last_name}`
         );
       } catch (err) {
         logger.error(err, 'error sending email');
@@ -724,9 +732,13 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      const lecturer_details = await studentRepo.model.findById(
+      const lecturer_details = await lecturerRepo.model.findById(
         req.user_data.id
       );
+
+      if (!lecturer_details) {
+        throw new NotFoundError('Lecturer not found');
+      }
 
       const getApprovalStatus = await thesisRepo.model.findOne({
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -1015,9 +1027,13 @@ export default class ThesisController extends BaseController {
         throw new ActionNotAllowedError('This thesis is not ready for review');
       }
 
-      const methodology_details = await studentRepo.model.findById(
+      const methodology_details = await methodologyRepo.model.findById(
         req.user_data.id
       );
+
+      if (!methodology_details) {
+        throw new NotFoundError('Methodology not found');
+      }
 
       const getApprovalStatus = await thesisRepo.model.findOne({
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -1134,9 +1150,13 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      const methodology_details = await studentRepo.model.findById(
+      const methodology_details = await methodologyRepo.model.findById(
         req.user_data.id
       );
+
+      if (!methodology_details) {
+        throw new NotFoundError('Methodology not found');
+      }
 
       const getApprovalStatus = await thesisRepo.model.findOne({
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -1180,8 +1200,8 @@ export default class ThesisController extends BaseController {
       try {
         emailNodemailerService.sendMethodologyThesisApprovalEmail(
           student_details.email,
-          student_details.first_name,
-          `${req.user_data.first_name} ${req.user_data.last_name}`
+          student_details?.first_name,
+          `${req.user_data?.first_name} ${req.user_data?.last_name}`
         );
       } catch (err) {
         logger.error(err, 'error sending email');
@@ -1253,9 +1273,13 @@ export default class ThesisController extends BaseController {
         throw new NotFoundError('Student not found');
       }
 
-      const methodology_details = await studentRepo.model.findById(
+      const methodology_details = await methodologyRepo.model.findById(
         req.user_data.id
       );
+
+      if (!methodology_details) {
+        throw new NotFoundError('Methodology not found');
+      }
 
       const getApprovalStatus = await thesisRepo.model.findOne({
         thesis_tracking_id: viewThesis.thesis_tracking_id,
@@ -1379,24 +1403,24 @@ export default class ThesisController extends BaseController {
       );
     }
     let thesisList: any;
-      // async handler so errors are caught
-      await this.handleFileResponse(req, res, async (res) => {
-        if (search) {
-          thesisList = await thesisRepo.searchList({
-            conditions,
-            search,
-            sort: { created_at: -1 },
-            populate: ['student', 'lecturer', 'methodology']
-          });
-        } else {
-          thesisList = await thesisRepo.all({
-            conditions,
-            sort: { created_at: -1 },
-            populate: ['student', 'lecturer', 'methodology']
-          });
-        }
-        await generateCsvStream(res, thesisList);
-      });
+    // async handler so errors are caught
+    await this.handleFileResponse(req, res, async (res) => {
+      if (search) {
+        thesisList = await thesisRepo.searchList({
+          conditions,
+          search,
+          sort: { created_at: -1 },
+          populate: ['student', 'lecturer', 'methodology']
+        });
+      } else {
+        thesisList = await thesisRepo.all({
+          conditions,
+          sort: { created_at: -1 },
+          populate: ['student', 'lecturer', 'methodology']
+        });
+      }
+      await generateCsvStream(res, thesisList);
+    });
   }
   // async exportCsvDocs(
   //   @request() req: Request,
